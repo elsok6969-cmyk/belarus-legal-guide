@@ -5,7 +5,7 @@ import {
   Building2, ShoppingCart, BookOpen, Briefcase, Users,
   Clock, Link2, History, ExternalLink,
 } from 'lucide-react';
-import { DisclaimerFull, DisclaimerShort } from '@/components/shared/Disclaimers';
+import { DisclaimerFull } from '@/components/shared/Disclaimers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
