@@ -1,4 +1,5 @@
 import { DisclaimerFull } from '@/components/shared/Disclaimers';
+import { PageSEO } from '@/components/shared/PageSEO';
 
 export default function Legal() {
   return (

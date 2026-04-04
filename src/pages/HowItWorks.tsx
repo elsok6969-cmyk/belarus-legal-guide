@@ -3,6 +3,7 @@ import { Search, Bot, FileText, Bell, ArrowRight, CheckCircle2, XCircle } from '
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DisclaimerFull } from '@/components/shared/Disclaimers';
+import { PageSEO } from '@/components/shared/PageSEO';
 
 const steps = [
   { num: '1', icon: Search, title: 'Поиск', desc: 'Введите ключевые слова, номер или дату документа. Система найдёт релевантные нормативные акты и ранжирует результаты.' },

@@ -3,6 +3,7 @@ import { Check, Minus, ArrowRight, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { PageSEO } from '@/components/shared/PageSEO';
 
 const tiers = [
   {
