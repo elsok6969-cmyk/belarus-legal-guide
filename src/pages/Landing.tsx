@@ -386,8 +386,24 @@ function CTASection() {
    ────────────────────────────────────────────── */
 
 export default function Landing() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Право БY',
+    description: 'Платформа для поиска и работы с нормативными правовыми актами Республики Беларусь.',
+    applicationCategory: 'ReferenceApplication',
+    operatingSystem: 'Web',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'BYN' },
+  };
+
   return (
-    <>
+    <article>
+      <PageSEO
+        title="Платформа правовой информации Беларуси"
+        description="Поиск и работа с нормативными правовыми актами Республики Беларусь. AI-ассистент объясняет нормы простым языком со ссылками на источники."
+        path="/"
+        jsonLd={jsonLd}
+      />
       <HeroSection />
       <WhatSection />
       <AISection />
@@ -395,6 +411,6 @@ export default function Landing() {
       <AudienceSection />
       <TrustSection />
       <CTASection />
-    </>
+    </article>
   );
 }
