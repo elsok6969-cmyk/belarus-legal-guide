@@ -1,8 +1,10 @@
 import { DisclaimerFull } from '@/components/shared/Disclaimers';
+import { PageSEO } from '@/components/shared/PageSEO';
 
 export default function Legal() {
   return (
     <div>
+      <PageSEO title="Правовая информация" description="Отказ от ответственности, условия использования и политика конфиденциальности платформы Право БY." path="/legal" />
       <section className="bg-primary px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">Правовая информация</h1>

@@ -19,7 +19,7 @@ const footerLinks = {
 
 export function PublicFooter() {
   return (
-    <footer className="border-t bg-card px-6 py-12">
+    <footer role="contentinfo" className="border-t bg-card px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           {/* Brand */}

@@ -15,7 +15,7 @@ export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <header role="banner" className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-lg">
           <Scale className="h-5 w-5 text-primary" />
