@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,6 +7,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AppLayout } from '@/components/layout/AppLayout';
 
+import Landing from './pages/Landing';
+import Auth from './pages/Auth';
 import Index from './pages/Index';
 import DocumentViewer from './pages/DocumentViewer';
 import AIChat from './pages/AIChat';
@@ -21,9 +23,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={<Navigate to="/" replace />} />
+          {/* Public */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+
+          {/* Authenticated app */}
           <Route
-            path="/"
+            path="/app"
             element={
               <AuthGuard>
                 <AppLayout>
@@ -33,7 +39,7 @@ const App = () => (
             }
           />
           <Route
-            path="/documents/:id"
+            path="/app/documents/:id"
             element={
               <AuthGuard>
                 <AppLayout>
@@ -43,7 +49,7 @@ const App = () => (
             }
           />
           <Route
-            path="/ai-chat"
+            path="/app/ai-chat"
             element={
               <AuthGuard>
                 <AppLayout>
@@ -52,6 +58,7 @@ const App = () => (
               </AuthGuard>
             }
           />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
