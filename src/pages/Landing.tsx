@@ -6,6 +6,7 @@ import {
   Clock, Link2, History, ExternalLink,
 } from 'lucide-react';
 import { DisclaimerFull } from '@/components/shared/Disclaimers';
+import { PageSEO } from '@/components/shared/PageSEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
