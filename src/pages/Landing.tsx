@@ -204,12 +204,7 @@ function AISection() {
           </Card>
         </div>
 
-        <div className="mt-8 rounded-lg border border-warning/30 bg-warning/5 p-4 text-center text-sm text-muted-foreground">
-          <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-warning" />
-          <strong>Дисклеймер.</strong> Ответы AI носят исключительно информационный характер. 
-          Платформа не оказывает юридических услуг. Для принятия юридически значимых решений 
-          обратитесь к квалифицированному специалисту.
-        </div>
+        <DisclaimerFull className="mt-8" />
       </div>
     </section>
   );
