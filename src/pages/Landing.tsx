@@ -399,12 +399,11 @@ function Footer() {
             <Link to="/app" className="hover:text-foreground transition-colors">Войти</Link>
           </div>
         </div>
-        <div className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground">
-          <p>
-            © {new Date().getFullYear()} Право БY. Платформа не оказывает юридических услуг 
-            и не несёт ответственности за решения, принятые на основе предоставленной информации. 
-            Для получения юридической помощи обратитесь к квалифицированному специалисту.
+        <div className="mt-8 border-t pt-6 space-y-2 text-center">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Право БY
           </p>
+          <DisclaimerShort className="mx-auto max-w-lg" />
         </div>
       </div>
     </footer>
