@@ -21,7 +21,7 @@ export default function Legal() {
             <DisclaimerFull className="mt-4" />
           </div>
 
-          <div>
+          <div id="terms">
             <h2 className="text-2xl font-bold tracking-tight">Условия использования</h2>
             <div className="mt-4 space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
