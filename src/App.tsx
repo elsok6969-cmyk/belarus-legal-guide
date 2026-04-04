@@ -4,11 +4,17 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 import Landing from './pages/Landing';
-import Auth from './pages/Auth';
+import About from './pages/About';
+import HowItWorks from './pages/HowItWorks';
+import Pricing from './pages/Pricing';
+import Legal from './pages/Legal';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Index from './pages/Index';
 import DocumentViewer from './pages/DocumentViewer';
 import AIChat from './pages/AIChat';
@@ -23,41 +29,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
+          {/* Public pages with shared header/footer */}
+          <Route path="/" element={<PublicLayout><Landing /></PublicLayout>} />
+          <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+          <Route path="/how-it-works" element={<PublicLayout><HowItWorks /></PublicLayout>} />
+          <Route path="/pricing" element={<PublicLayout><Pricing /></PublicLayout>} />
+          <Route path="/legal" element={<PublicLayout><Legal /></PublicLayout>} />
+          <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+          <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
 
           {/* Authenticated app */}
-          <Route
-            path="/app"
-            element={
-              <AuthGuard>
-                <AppLayout>
-                  <Index />
-                </AppLayout>
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/app/documents/:id"
-            element={
-              <AuthGuard>
-                <AppLayout>
-                  <DocumentViewer />
-                </AppLayout>
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/app/ai-chat"
-            element={
-              <AuthGuard>
-                <AppLayout>
-                  <AIChat />
-                </AppLayout>
-              </AuthGuard>
-            }
-          />
+          <Route path="/app" element={<AuthGuard><AppLayout><Index /></AppLayout></AuthGuard>} />
+          <Route path="/app/documents/:id" element={<AuthGuard><AppLayout><DocumentViewer /></AppLayout></AuthGuard>} />
+          <Route path="/app/ai-chat" element={<AuthGuard><AppLayout><AIChat /></AppLayout></AuthGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
