@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import {
   Search, FileText, Bot, Shield, RefreshCw, ArrowRight,
-  AlertTriangle, CheckCircle2, XCircle, Scale, Eye,
+  CheckCircle2, XCircle, Scale, Eye,
   Building2, ShoppingCart, BookOpen, Briefcase, Users,
   Clock, Link2, History, ExternalLink,
 } from 'lucide-react';
+import { DisclaimerFull, DisclaimerShort } from '@/components/shared/Disclaimers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
