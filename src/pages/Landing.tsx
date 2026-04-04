@@ -381,42 +381,12 @@ function CTASection() {
 }
 
 /* ──────────────────────────────────────────────
-   Footer
-   ────────────────────────────────────────────── */
-
-function Footer() {
-  return (
-    <footer className="border-t bg-card px-6 py-10">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
-          <div>
-            <span className="text-lg font-bold">Право&nbsp;БY</span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Платформа правовой информации Республики Беларусь
-            </p>
-          </div>
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link to="/app" className="hover:text-foreground transition-colors">Войти</Link>
-          </div>
-        </div>
-        <div className="mt-8 border-t pt-6 space-y-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Право БY
-          </p>
-          <DisclaimerShort className="mx-auto max-w-lg" />
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-/* ──────────────────────────────────────────────
    Page
    ────────────────────────────────────────────── */
 
 export default function Landing() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <HeroSection />
       <WhatSection />
       <AISection />
@@ -424,7 +394,6 @@ export default function Landing() {
       <AudienceSection />
       <TrustSection />
       <CTASection />
-      <Footer />
-    </div>
+    </>
   );
 }
