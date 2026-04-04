@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import {
   Search, FileText, Bot, Shield, RefreshCw, ArrowRight,
-  AlertTriangle, CheckCircle2, XCircle, Scale, Eye,
+  CheckCircle2, XCircle, Scale, Eye,
   Building2, ShoppingCart, BookOpen, Briefcase, Users,
   Clock, Link2, History, ExternalLink,
 } from 'lucide-react';
+import { DisclaimerFull, DisclaimerShort } from '@/components/shared/Disclaimers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -203,12 +204,7 @@ function AISection() {
           </Card>
         </div>
 
-        <div className="mt-8 rounded-lg border border-warning/30 bg-warning/5 p-4 text-center text-sm text-muted-foreground">
-          <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-warning" />
-          <strong>Дисклеймер.</strong> Ответы AI носят исключительно информационный характер. 
-          Платформа не оказывает юридических услуг. Для принятия юридически значимых решений 
-          обратитесь к квалифицированному специалисту.
-        </div>
+        <DisclaimerFull className="mt-8" />
       </div>
     </section>
   );
@@ -403,12 +399,11 @@ function Footer() {
             <Link to="/app" className="hover:text-foreground transition-colors">Войти</Link>
           </div>
         </div>
-        <div className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground">
-          <p>
-            © {new Date().getFullYear()} Право БY. Платформа не оказывает юридических услуг 
-            и не несёт ответственности за решения, принятые на основе предоставленной информации. 
-            Для получения юридической помощи обратитесь к квалифицированному специалисту.
+        <div className="mt-8 border-t pt-6 space-y-2 text-center">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Право БY
           </p>
+          <DisclaimerShort className="mx-auto max-w-lg" />
         </div>
       </div>
     </footer>

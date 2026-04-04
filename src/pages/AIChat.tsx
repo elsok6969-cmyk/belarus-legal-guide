@@ -2,7 +2,7 @@ import { AlertTriangle, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DisclaimerFull, DisclaimerAIResponse } from '@/components/shared/Disclaimers';
 
 export default function AIChat() {
   return (
@@ -14,23 +14,19 @@ export default function AIChat() {
         </p>
       </div>
 
-      <Alert variant="destructive" className="border-warning bg-warning/10">
-        <AlertTriangle className="h-4 w-4 text-warning" />
-        <AlertDescription className="text-warning-foreground text-sm">
-          <strong>Внимание:</strong> Платформа не предоставляет юридических
-          консультаций. Ответы AI носят информационный характер и могут
-          содержать неточности. Всегда проверяйте информацию по первоисточникам.
-        </AlertDescription>
-      </Alert>
+      <DisclaimerFull />
 
       <Card className="flex-1 flex flex-col">
         <CardHeader>
           <CardTitle className="text-base">Чат</CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col justify-end">
+        <CardContent className="flex-1 flex flex-col justify-end gap-4">
           <p className="text-sm text-muted-foreground text-center py-12">
             Начните диалог — введите ваш вопрос ниже.
           </p>
+
+          {/* Example of where DisclaimerAIResponse goes after each AI message */}
+          {/* <DisclaimerAIResponse /> */}
 
           <div className="flex gap-2">
             <Input placeholder="Введите вопрос..." disabled />
