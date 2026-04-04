@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/sidebar';
 
 const items = [
-  { title: 'Главная', url: '/', icon: Home },
-  { title: 'Документы', url: '/documents', icon: FileText },
-  { title: 'AI Ассистент', url: '/ai-chat', icon: MessageSquare },
+  { title: 'Главная', url: '/app', icon: Home },
+  { title: 'Документы', url: '/app/documents', icon: FileText },
+  { title: 'AI Ассистент', url: '/app/ai-chat', icon: MessageSquare },
 ];
 
 export function AppSidebar() {
