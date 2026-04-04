@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Shield, Bot, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { PageSEO } from '@/components/shared/PageSEO';
 
 const values = [
   { icon: FileText, title: 'Доступность', desc: 'Правовая информация должна быть доступна каждому, а не только юристам. Мы делаем законодательство понятнее.' },
