@@ -321,26 +321,26 @@ function AudienceSection() {
    ────────────────────────────────────────────── */
 
 const trustPoints = [
-  { icon: ExternalLink, title: 'Официальные источники', desc: 'Данные берутся из официальных публикаций НПА. Каждый документ содержит ссылку на первоисточник.' },
-  { icon: History, title: 'История версий', desc: 'Все изменения в документах фиксируются. Вы можете посмотреть, как выглядела любая предыдущая редакция.' },
-  { icon: Link2, title: 'Прямые ссылки', desc: 'Ответы AI и результаты поиска содержат ссылки на конкретные статьи. Переходите и проверяйте.' },
-  { icon: Shield, title: 'Чёткие ограничения', desc: 'Мы открыто сообщаем, чего платформа не может. AI не даёт юридических консультаций — и мы это не скрываем.' },
+  { icon: ExternalLink, title: 'Данные из открытых источников', desc: 'Тексты документов берутся из официально опубликованных нормативных правовых актов. Платформа не является государственным ресурсом и не аффилирована с государственными органами.' },
+  { icon: History, title: 'История версий', desc: 'Изменения в документах фиксируются. Вы можете сравнить редакции и увидеть, что именно изменилось. Мы не гарантируем, что все изменения отражены мгновенно.' },
+  { icon: Link2, title: 'Ссылки на первоисточники', desc: 'Каждый документ и ответ AI содержит ссылки на конкретные нормы. Всегда проверяйте информацию по официальным публикациям.' },
+  { icon: Shield, title: 'Открытость об ограничениях', desc: 'Мы прямо сообщаем, что AI может ошибаться, что данные могут быть неполными, и что платформа не заменяет юридическую помощь. Никаких скрытых оговорок.' },
 ];
 
 function TrustSection() {
   return (
-    <section className="bg-background px-6 py-20">
+    <section aria-labelledby="trust-heading" className="bg-background px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        <h2 className="text-center text-3xl font-bold tracking-tight">Прозрачность и доверие</h2>
+        <h2 id="trust-heading" className="text-center text-3xl font-bold tracking-tight">Прозрачность и доверие</h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-          Мы считаем, что доверие строится на честности. 
-          Вот как мы обеспечиваем достоверность информации.
+          Мы не используем сертификаты или знаки качества, которые не можем подтвердить. 
+          Вместо этого — конкретные принципы работы с информацией.
         </p>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2">
           {trustPoints.map((t) => (
             <div key={t.title} className="flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent" aria-hidden="true">
                 <t.icon className="h-5 w-5 text-accent-foreground" />
               </div>
               <div>
@@ -350,6 +350,11 @@ function TrustSection() {
             </div>
           ))}
         </div>
+
+        <p className="mt-10 text-center text-xs text-muted-foreground max-w-2xl mx-auto">
+          Право&nbsp;БY — независимый проект. Платформа не является государственным информационным 
+          ресурсом и не связана с государственными органами Республики Беларусь.
+        </p>
       </div>
     </section>
   );
