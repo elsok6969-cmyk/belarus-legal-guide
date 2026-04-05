@@ -101,7 +101,7 @@ export default function PublicDocuments() {
                             {format(new Date(doc.date_adopted), 'dd.MM.yyyy')}
                           </span>
                         )}
-                        {doc.status === 'active' && <span className="text-green-600">Действует</span>}
+                        {doc.status === 'active' && <span className="text-primary">Действует</span>}
                       </div>
                     </div>
                   </div>

@@ -61,7 +61,7 @@ export default function PublicDocumentView() {
           {docTypeLabel(doc.doc_type)}
         </span>
         {doc.doc_number && <span className="text-sm text-muted-foreground">№ {doc.doc_number}</span>}
-        {doc.status === 'active' && <span className="text-xs text-green-600 font-medium">Действует</span>}
+        {doc.status === 'active' && <span className="text-xs text-primary font-medium">Действует</span>}
       </div>
 
       <h1 className="text-xl md:text-2xl font-bold leading-snug mb-4">{doc.title}</h1>
