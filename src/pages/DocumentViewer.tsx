@@ -398,8 +398,8 @@ export default function DocumentViewer() {
                       </h2>
                     )}
                     {section.content && (
-                      <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                        {section.content}
+                      <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
+                        <ReactMarkdown>{section.content}</ReactMarkdown>
                       </div>
                     )}
                   </div>
