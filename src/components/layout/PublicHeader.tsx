@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
+  { label: 'Новости', to: '/news' },
+  { label: 'Темы', to: '/topics' },
+  { label: 'Эксперты', to: '/experts' },
   { label: 'О платформе', to: '/about' },
-  { label: 'Как это работает', to: '/how-it-works' },
   { label: 'Тарифы', to: '/pricing' },
 ];
 
