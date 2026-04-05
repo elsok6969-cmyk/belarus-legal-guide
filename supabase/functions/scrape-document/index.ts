@@ -44,70 +44,136 @@ interface Section {
   sort_order: number;
 }
 
-function parseMarkdownIntoSections(markdown: string): Section[] {
-  const sections: Section[] = [];
+function cleanMarkdown(markdown: string): string {
+  // Remove social sharing links and navigation junk from beginning
   const lines = markdown.split("\n");
+  let startIdx = 0;
+
+  // Find where actual content starts — look for "ОБЩАЯ ЧАСТЬ", "Раздел", "Глава 1", "Статья 1" etc.
+  for (let i = 0; i < Math.min(lines.length, 200); i++) {
+    const line = lines[i].trim();
+    if (
+      /^(ОБЩАЯ ЧАСТЬ|ОСОБЕННАЯ ЧАСТЬ|РАЗДЕЛ\s+[IVX\d]|ГЛАВА\s+\d|Статья\s+1[\.\s])/i.test(line) ||
+      /^(Оглавление|ОГЛАВЛЕНИЕ)$/i.test(line)
+    ) {
+      startIdx = i;
+      break;
+    }
+  }
+
+  return lines.slice(startIdx).join("\n").trim();
+}
+
+function parseMarkdownIntoSections(markdown: string): Section[] {
+  const cleaned = cleanMarkdown(markdown);
+  const sections: Section[] = [];
+  const lines = cleaned.split("\n");
   let currentHeading = "";
   let currentLevel = 1;
   let currentContent: string[] = [];
   let order = 0;
+  let inTOC = false;
 
   for (const line of lines) {
-    // Match markdown headings
-    const headingMatch = line.match(/^(#{1,4})\s+(.+)/);
-    
-    // Also match bold-styled section headers like **ГЛАВА 1** or **Статья 1.**
-    const boldHeading = !headingMatch && line.match(/^\*\*\s*((?:ГЛАВА|РАЗДЕЛ|Глава|Раздел|ЧАСТЬ|Часть|Статья|СТАТЬЯ|ПОДРАЗДЕЛ)\s*.+?)\s*\*\*/i);
+    const trimmed = line.trim();
 
-    if (headingMatch || boldHeading) {
+    // Skip table of contents block
+    if (/^(Оглавление|ОГЛАВЛЕНИЕ)$/i.test(trimmed)) {
+      inTOC = true;
+      continue;
+    }
+
+    // Detect end of TOC when we hit actual content (a line that's not just a title reference)
+    if (inTOC) {
+      // TOC entries are typically short lines with just headings
+      // Actual content starts when we see long paragraphs or "Статья X. ..." followed by text
+      if (trimmed.length > 200 || /^Статья\s+\d+\.\d+\.\s+\S/.test(trimmed)) {
+        inTOC = false;
+      } else {
+        continue;
+      }
+    }
+
+    // Match markdown headings
+    const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)/);
+
+    // Match plain text structural headers
+    const structMatch = !headingMatch && trimmed.match(
+      /^(ОБЩАЯ ЧАСТЬ|ОСОБЕННАЯ ЧАСТЬ|РАЗДЕЛ\s+[IVX\d]+\.?\s*.*|ПОДРАЗДЕЛ\s+\d+\.?\s*.*|ГЛАВА\s+\d+[\.\\\s].*|Статья\s+\d+[\.\d]*\.?\s+.*)$/i
+    );
+
+    // Also match bold-styled headers
+    const boldHeading = !headingMatch && !structMatch && trimmed.match(
+      /^\*\*\s*((?:ГЛАВА|РАЗДЕЛ|ЧАСТЬ|Статья|ПОДРАЗДЕЛ)\s*.+?)\s*\*\*/i
+    );
+
+    const isNewSection = headingMatch || structMatch || boldHeading;
+
+    if (isNewSection) {
       // Save previous section
-      if (currentHeading && currentContent.length > 0) {
-        sections.push({
-          heading: currentHeading.substring(0, 500),
-          content: currentContent.join("\n").trim(),
-          level: currentLevel,
-          sort_order: order++,
-        });
+      if (currentHeading) {
+        const content = currentContent.join("\n").trim();
+        if (content.length > 0) {
+          sections.push({
+            heading: currentHeading.substring(0, 500),
+            content,
+            level: currentLevel,
+            sort_order: order++,
+          });
+        }
       }
 
+      let newHeading = "";
       if (headingMatch) {
         currentLevel = headingMatch[1].length;
-        currentHeading = headingMatch[2].trim();
+        newHeading = headingMatch[2].trim();
+      } else if (structMatch) {
+        newHeading = structMatch[1].trim().replace(/\\+/g, "");
       } else if (boldHeading) {
-        currentHeading = boldHeading[1].trim();
-        // Determine level from type
-        const lower = currentHeading.toLowerCase();
-        if (lower.startsWith("часть")) currentLevel = 1;
-        else if (lower.startsWith("раздел")) currentLevel = 1;
-        else if (lower.startsWith("подраздел")) currentLevel = 2;
-        else if (lower.startsWith("глава")) currentLevel = 2;
-        else if (lower.startsWith("статья")) currentLevel = 3;
-        else currentLevel = 2;
+        newHeading = boldHeading[1].trim();
       }
+
+      // Determine level
+      const lower = newHeading.toLowerCase();
+      if (/^(общая часть|особенная часть)/.test(lower)) currentLevel = 1;
+      else if (/^раздел\s/.test(lower)) currentLevel = 1;
+      else if (/^подраздел\s/.test(lower)) currentLevel = 2;
+      else if (/^глава\s/.test(lower)) currentLevel = 2;
+      else if (/^статья\s/.test(lower)) currentLevel = 3;
+
+      currentHeading = newHeading;
       currentContent = [];
     } else {
-      currentContent.push(line);
+      if (trimmed) {
+        currentContent.push(line);
+      } else if (currentContent.length > 0) {
+        currentContent.push(""); // preserve paragraph breaks
+      }
     }
   }
 
   // Last section
-  if (currentHeading && currentContent.length > 0) {
-    sections.push({
-      heading: currentHeading.substring(0, 500),
-      content: currentContent.join("\n").trim(),
-      level: currentLevel,
-      sort_order: order,
-    });
+  if (currentHeading) {
+    const content = currentContent.join("\n").trim();
+    if (content.length > 0) {
+      sections.push({
+        heading: currentHeading.substring(0, 500),
+        content,
+        level: currentLevel,
+        sort_order: order,
+      });
+    }
   }
 
   // If no sections found, create one big section
-  if (sections.length === 0 && markdown.length > 100) {
+  if (sections.length === 0 && cleaned.length > 100) {
     sections.push({
       heading: "Текст документа",
-      content: markdown,
+      content: cleaned,
       level: 1,
       sort_order: 0,
     });
+  }
   }
 
   return sections;
