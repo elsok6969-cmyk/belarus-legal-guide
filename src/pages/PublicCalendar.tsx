@@ -5,6 +5,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Download, Bell, ExternalLink, Mail,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
