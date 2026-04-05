@@ -7,8 +7,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Parse pravo.by recent updates page
-const PRAVO_UPDATES_URL = "https://pravo.by/novosti/novosti-pravo-by/";
+// Multiple sections of pravo.by for broader coverage
+const PRAVO_URLS = [
+  "https://pravo.by/novosti/novosti-pravo-by/",
+  "https://pravo.by/novosti/obzory-i-kommentarii/",
+  "https://pravo.by/novosti/novosti-zakonodatelstva/",
+];
 
 interface ParsedLaw {
   title: string;
@@ -21,7 +25,6 @@ interface ParsedLaw {
 }
 
 function extractDateFromText(text: string): string | null {
-  // Match patterns like "12.03.2026" or "12 марта 2026"
   const match = text.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
   if (match) {
     return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
@@ -35,12 +38,64 @@ function detectDocType(title: string): string {
   if (lower.includes("указ")) return "decree";
   if (lower.includes("декрет")) return "decree";
   if (lower.includes("постановлени")) return "resolution";
+  if (lower.includes("распоряжени")) return "resolution";
+  if (lower.includes("приказ")) return "order";
   return "law";
 }
 
 function extractDocNumber(title: string): string | null {
   const match = title.match(/№\s*(\S+)/);
   return match ? match[1] : null;
+}
+
+async function fetchPage(url: string): Promise<string> {
+  const resp = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; LegalPlatform/1.0)",
+      "Accept-Language": "ru-RU,ru;q=0.9",
+    },
+  });
+  if (!resp.ok) {
+    console.warn(`Failed to fetch ${url}: ${resp.status}`);
+    return "";
+  }
+  return await resp.text();
+}
+
+function parseItemsFromHtml(html: string, seen: Set<string>): ParsedLaw[] {
+  const items: ParsedLaw[] = [];
+
+  // Extract all <a> tags with href and text
+  const linkRegex = /<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = linkRegex.exec(html)) !== null) {
+    const [, href, rawTitle] = match;
+    // Strip inner HTML tags from title
+    const title = rawTitle.replace(/<[^>]+>/g, "").trim();
+
+    if (title.length < 15 || seen.has(title)) continue;
+
+    // Filter: must contain legal keywords or be from a document path
+    const isDocumentLink = href.includes("/document/") || href.includes("/pravovaya-informatsiya/");
+    const hasLegalKeyword = /закон|кодекс|указ|декрет|постановлен|распоряжен|приказ|о внесении|об изменении|об утверждении|опубликован/i.test(title);
+
+    if (!isDocumentLink && !hasLegalKeyword) continue;
+
+    seen.add(title);
+
+    items.push({
+      title: title.substring(0, 500),
+      doc_number: extractDocNumber(title),
+      doc_type: detectDocType(title),
+      date_adopted: extractDateFromText(title),
+      summary: null,
+      source_url: href.startsWith("http") ? href : `https://pravo.by${href}`,
+      body_text: null,
+    });
+  }
+
+  return items;
 }
 
 serve(async (req) => {
@@ -53,97 +108,58 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Parse request body for options
-    let options = { mode: "check" }; // "check" = only report, "import" = actually import
+    let options = { mode: "check" };
     try {
       const body = await req.json();
       if (body.mode) options.mode = body.mode;
     } catch {
-      // No body = default check mode
+      // default check mode
     }
 
     console.log(`Fetching pravo.by updates (mode: ${options.mode})...`);
 
-    // Fetch the page
-    const resp = await fetch(PRAVO_UPDATES_URL, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; LegalPlatform/1.0)",
-        "Accept-Language": "ru-RU,ru;q=0.9",
-      },
-    });
-
-    if (!resp.ok) {
-      throw new Error(`pravo.by returned ${resp.status}`);
-    }
-
-    const html = await resp.text();
-
-    // Simple HTML parsing — extract news items
-    // pravo.by uses a list of items with titles and dates
-    const items: ParsedLaw[] = [];
-
-    // Extract <a> tags with titles from the news list
-    const linkRegex = /<a[^>]*href="([^"]*)"[^>]*>([^<]+)<\/a>/gi;
-    let match;
     const seen = new Set<string>();
+    const allItems: ParsedLaw[] = [];
 
-    while ((match = linkRegex.exec(html)) !== null) {
-      const [, href, rawTitle] = match;
-      const title = rawTitle.trim();
+    // Fetch all sections in parallel
+    const pages = await Promise.all(PRAVO_URLS.map(fetchPage));
 
-      // Filter to only law-related links (skip navigation, etc.)
-      if (
-        title.length < 20 ||
-        seen.has(title) ||
-        !href.includes("/document/") && !href.includes("/novosti/")
-      ) {
-        continue;
-      }
-
-      seen.add(title);
-
-      // Only include items that look like legal documents
-      const hasLegalKeyword = /закон|кодекс|указ|декрет|постановлен|о внесении|об изменении/i.test(title);
-      if (!hasLegalKeyword) continue;
-
-      items.push({
-        title,
-        doc_number: extractDocNumber(title),
-        doc_type: detectDocType(title),
-        date_adopted: extractDateFromText(title),
-        summary: null,
-        source_url: href.startsWith("http") ? href : `https://pravo.by${href}`,
-        body_text: null,
-      });
-
-      if (items.length >= 20) break;
+    for (const html of pages) {
+      if (!html) continue;
+      const items = parseItemsFromHtml(html, seen);
+      allItems.push(...items);
     }
 
-    console.log(`Found ${items.length} potential law updates`);
+    console.log(`Found ${allItems.length} potential law updates across ${PRAVO_URLS.length} sections`);
 
     if (options.mode === "check") {
       return new Response(
         JSON.stringify({
           success: true,
           mode: "check",
-          found: items.length,
-          items: items.map((i) => ({ title: i.title, doc_type: i.doc_type, source_url: i.source_url })),
+          found: allItems.length,
+          items: allItems.map((i) => ({ title: i.title, doc_type: i.doc_type, source_url: i.source_url })),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Import mode — check for duplicates and insert new
+    // Import mode
     let imported = 0;
-    for (const item of items) {
-      // Check if already exists by title
+    let skipped = 0;
+
+    for (const item of allItems) {
+      // Check duplicate by title or source_url
       const { data: existing } = await supabase
         .from("documents")
         .select("id")
-        .eq("title", item.title)
+        .or(`title.eq.${item.title},source_url.eq.${item.source_url}`)
         .limit(1);
 
-      if (existing && existing.length > 0) continue;
+      if (existing && existing.length > 0) {
+        skipped++;
+        continue;
+      }
 
       const { error } = await supabase.from("documents").insert({
         title: item.title,
@@ -156,17 +172,22 @@ serve(async (req) => {
         status: "active",
       });
 
-      if (!error) imported++;
+      if (!error) {
+        imported++;
+      } else {
+        console.warn(`Failed to insert: ${error.message}`);
+      }
     }
 
-    console.log(`Imported ${imported} new documents`);
+    console.log(`Imported ${imported}, skipped ${skipped} duplicates`);
 
     return new Response(
       JSON.stringify({
         success: true,
         mode: "import",
-        found: items.length,
+        found: allItems.length,
         imported,
+        skipped,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
