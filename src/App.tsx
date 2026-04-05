@@ -78,6 +78,7 @@ const App = () => (
           {/* Authenticated pages */}
           <Route path="/profile" element={<PublicLayout><AuthGuard><Profile /></AuthGuard></PublicLayout>} />
           <Route path="/subscription" element={<PublicLayout><Subscription /></PublicLayout>} />
+          <Route path="/ai-assistant" element={<AppLayout><AIChat /></AppLayout>} />
 
           {/* App pages */}
           <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
