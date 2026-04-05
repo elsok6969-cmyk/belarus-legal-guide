@@ -136,35 +136,18 @@ export default function Landing() {
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'ПравоБУ',
-    url: 'https://pravoby.by',
+    name: 'Правовой портал Беларуси',
     description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов бесплатно',
     inLanguage: 'ru',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: 'https://pravoby.by/documents?q={search_term_string}',
-      },
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
-  const orgJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'ПравоБУ',
-    url: 'https://pravoby.by',
-    description: 'Бесплатный доступ к законодательству Республики Беларусь',
   };
 
   return (
     <article>
       <PageSEO
-        title="ПравоБУ — Законодательство Беларуси онлайн"
+        title="Законодательство Беларуси онлайн"
         description="Полные тексты 26 кодексов и 200+ законов Беларуси бесплатно. Поиск по НПА, налоговый календарь, AI-ассистент для бухгалтеров и юристов."
         path="/"
-        jsonLd={[websiteJsonLd, orgJsonLd]}
+        jsonLd={[websiteJsonLd]}
       />
 
       {/* ═══ HERO ═══ */}
