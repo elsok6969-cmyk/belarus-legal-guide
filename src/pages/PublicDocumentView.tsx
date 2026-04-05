@@ -283,7 +283,7 @@ export default function PublicDocumentView() {
     publisher: doc.organ ? { '@type': 'Organization', name: doc.organ } : undefined,
     inLanguage: 'ru',
     legislationIdentifier: doc.reg_number || doc.doc_number,
-    url: `https://pravoby.by/doc/${doc.slug || doc.id}`,
+    url: `/doc/${doc.slug || doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
