@@ -383,6 +383,7 @@ export type Database = {
           date_effective: string | null
           doc_number: string | null
           doc_type: string
+          fts: unknown
           id: string
           is_free: boolean | null
           organ: string | null
@@ -403,6 +404,7 @@ export type Database = {
           date_effective?: string | null
           doc_number?: string | null
           doc_type?: string
+          fts?: unknown
           id?: string
           is_free?: boolean | null
           organ?: string | null
@@ -423,6 +425,7 @@ export type Database = {
           date_effective?: string | null
           doc_number?: string | null
           doc_type?: string
+          fts?: unknown
           id?: string
           is_free?: boolean | null
           organ?: string | null
@@ -470,28 +473,79 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_requests_reset_at: string | null
+          ai_requests_today: number | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          email: string | null
+          full_name: string | null
           id: string
+          plan: string | null
+          plan_expires_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_requests_reset_at?: string | null
+          ai_requests_today?: number | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          plan?: string | null
+          plan_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_requests_reset_at?: string | null
+          ai_requests_today?: number | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          plan?: string | null
+          plan_expires_at?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_requests: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          plan: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          plan: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          plan?: string
+          status?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -633,6 +687,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      view_history: {
+        Row: {
+          document_id: string
+          id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          document_id: string
+          id?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          document_id?: string
+          id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "view_history_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
