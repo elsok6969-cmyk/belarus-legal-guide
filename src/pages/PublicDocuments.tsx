@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, FileText, Clock } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
@@ -25,8 +25,24 @@ const docTypes = [
 ];
 
 export default function PublicDocuments() {
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
   const [typeFilter, setTypeFilter] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (search) {
+      setSearchParams({ q: search }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  }, [search]);
+
+  useEffect(() => {
+    if (searchParams.get('q') && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
 
   const { data: docs, isLoading } = useQuery({
     queryKey: ['public-documents', search, typeFilter],
@@ -67,6 +83,7 @@ export default function PublicDocuments() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder="Поиск по названию..."
             value={search}
             onChange={e => setSearch(e.target.value)}
