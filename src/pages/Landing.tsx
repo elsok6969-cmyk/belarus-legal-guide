@@ -1,396 +1,143 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Search, ArrowRight, Scale, TrendingUp, TrendingDown,
-  CalendarDays, FileText, Newspaper, Clock, Eye, Bot, Users,
-} from 'lucide-react';
-import { PageSEO } from '@/components/shared/PageSEO';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageSEO } from '@/components/shared/PageSEO';
+import {
+  Search, ArrowRight, TrendingUp, TrendingDown, Minus,
+  BookOpen, Scale, FileText, Building2, Calculator, Users,
+  HardHat, CalendarDays, Check, Star,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-/* ──────────────────────────────────────────────
-   Currency Rates Sidebar Widget
-   ────────────────────────────────────────────── */
+const quickTags = [
+  { label: 'Кодексы', filter: 'codex' },
+  { label: 'Законы', filter: 'law' },
+  { label: 'Указы', filter: 'decree' },
+  { label: 'НДС', q: 'НДС' },
+  { label: 'Трудовой кодекс', q: 'Трудовой кодекс' },
+  { label: 'Налоговый кодекс', q: 'Налоговый кодекс' },
+  { label: 'ФСЗН', q: 'ФСЗН' },
+  { label: 'УСН', q: 'УСН' },
+];
 
-function CurrencyWidget() {
-  const { data: rates, isLoading } = useQuery({
-    queryKey: ['public-rates-widget'],
-    queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase
-        .from('currency_rates')
-        .select('*')
-        .eq('rate_date', today)
-        .in('currency_code', ['USD', 'EUR', 'RUB', 'CNY'])
-        .order('currency_code');
-      if (!data || data.length === 0) {
-        const { data: latest } = await supabase
-          .from('currency_rates')
-          .select('*')
-          .in('currency_code', ['USD', 'EUR', 'RUB', 'CNY'])
-          .order('rate_date', { ascending: false })
-          .limit(4);
-        return latest || [];
-      }
-      return data;
-    },
-  });
+const popularSections = [
+  { icon: BookOpen, label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
+  { icon: Calculator, label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
+  { icon: Scale, label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
+  { icon: Building2, label: 'Закон об ООО', to: '/documents?q=ООО' },
+  { icon: FileText, label: 'НДС — декларация', to: '/documents?q=НДС' },
+  { icon: Users, label: 'УСН для ИП', to: '/documents?q=УСН' },
+  { icon: HardHat, label: 'Охрана труда', to: '/documents?q=охрана труда' },
+  { icon: CalendarDays, label: 'Налоговый календарь', to: '/calendar' },
+];
 
-  return (
-    <Card className="border shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold flex items-center gap-1.5">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            Курсы НБРБ
-          </h3>
-          <Link to="/rates" className="text-xs text-primary hover:underline">Все →</Link>
-        </div>
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-6 w-full" />)}
-          </div>
-        ) : rates && rates.length > 0 ? (
-          <div className="space-y-2">
-            {rates.map((r) => (
-              <div key={r.currency_code} className="flex items-center justify-between text-sm">
-                <span className="font-medium">{r.currency_code}</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
-                  {r.change_value !== null && r.change_value !== 0 && (
-                    <span className={`flex items-center text-xs ${Number(r.change_value) > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                      {Number(r.change_value) > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-            {rates[0]?.rate_date && (
-              <p className="text-xs text-muted-foreground mt-1">
-                на {format(new Date(rates[0].rate_date), 'dd.MM.yyyy')}
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Курсы загружаются...</p>
-        )}
-      </CardContent>
-    </Card>
-  );
+const pricingPlans = [
+  {
+    name: 'Бесплатный', price: '0',
+    features: ['Кодексы + топ-200 законов', '5 AI-запросов/день', 'Курсы НБРБ и календарь'],
+    cta: 'Начать бесплатно', to: '/register', popular: false,
+  },
+  {
+    name: 'Стандарт', price: '19',
+    features: ['Все НПА без ограничений', 'Закладки', 'Подписки на изменения'],
+    cta: 'Подключить', to: '/pricing', popular: false,
+  },
+  {
+    name: 'Профи', price: '49',
+    features: ['AI без лимитов', 'История редакций', 'Экспорт в PDF', 'Приоритетная поддержка'],
+    cta: 'Подключить', to: '/pricing', popular: true,
+  },
+  {
+    name: 'Бизнес', price: '149',
+    features: ['Всё из Профи', '5 пользователей', 'API доступ', 'SLA'],
+    cta: 'Подключить', to: '/pricing', popular: false,
+  },
+];
+
+const docTypeLabel: Record<string, string> = {
+  codex: 'Кодекс', law: 'Закон', decree: 'Указ', resolution: 'Постановление',
+};
+
+function formatDate(d: string | null) {
+  if (!d) return '';
+  try { return format(new Date(d), 'd MMM yyyy', { locale: ru }); } catch { return d; }
 }
-
-/* ──────────────────────────────────────────────
-   Deadline Calendar Widget
-   ────────────────────────────────────────────── */
-
-function CalendarWidget() {
-  const { data: deadlines, isLoading } = useQuery({
-    queryKey: ['public-deadlines-widget'],
-    queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase
-        .from('deadline_calendar')
-        .select('*')
-        .gte('deadline_date', today)
-        .order('deadline_date')
-        .limit(4);
-      return data || [];
-    },
-  });
-
-  return (
-    <Card className="border shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold flex items-center gap-1.5">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            Ближайшие сроки
-          </h3>
-          <Link to="/calendar" className="text-xs text-primary hover:underline">Все →</Link>
-        </div>
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
-          </div>
-        ) : deadlines && deadlines.length > 0 ? (
-          <div className="space-y-2.5">
-            {deadlines.map((d) => {
-              const daysLeft = Math.ceil((new Date(d.deadline_date).getTime() - Date.now()) / 86400000);
-              return (
-                <div key={d.id} className="flex gap-2 items-start">
-                  <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${daysLeft <= 7 ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-                    {format(new Date(d.deadline_date), 'dd.MM')}
-                  </div>
-                  <span className="text-xs leading-tight line-clamp-2">{d.title}</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Нет ближайших сроков</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Quick service links sidebar (like ilex right panel)
-   ────────────────────────────────────────────── */
-
-function ServiceLinks() {
-  const links = [
-    { icon: Search, label: 'Поиск НПА', to: '/app/search' },
-    { icon: Bot, label: 'AI-ассистент', to: '/app/assistant' },
-    { icon: FileText, label: 'Все документы', to: '/documents' },
-    { icon: Users, label: 'Эксперты', to: '/experts' },
-  ];
-  return (
-    <Card className="border shadow-sm">
-      <CardContent className="p-4">
-        <h3 className="text-sm font-bold mb-3">Сервисы</h3>
-        <div className="space-y-1.5">
-          {links.map(l => (
-            <Link key={l.label} to={l.to} className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-accent transition-colors text-sm">
-              <l.icon className="h-4 w-4 text-primary" />
-              <span>{l.label}</span>
-            </Link>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Search Bar Hero (compact, ilex-style)
-   ────────────────────────────────────────────── */
-
-function SearchHero() {
-  return (
-    <section className="gradient-teal px-6 py-12 md:py-16">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/20">
-            <Scale className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-primary-foreground tracking-tight">
-            Право<span className="opacity-80">&nbsp;БY</span>
-          </h1>
-        </div>
-        <p className="text-primary-foreground/85 text-sm md:text-base max-w-2xl mb-6">
-          Законодательство Беларуси, курсы валют, экспертные обзоры и AI-ассистент — в одном месте
-        </p>
-        <Link to="/app/search">
-          <div className="flex items-center bg-white rounded-lg shadow-lg px-4 py-3 max-w-xl cursor-pointer hover:shadow-xl transition-shadow">
-            <Search className="h-5 w-5 text-muted-foreground mr-3 shrink-0" />
-            <span className="text-muted-foreground text-sm">Поиск по законам, кодексам, указам...</span>
-            <Button size="sm" className="ml-auto shrink-0">Найти</Button>
-          </div>
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Latest documents section ("Коротко о главном")
-   ────────────────────────────────────────────── */
-
-function LatestDocuments() {
-  const { data: docs, isLoading } = useQuery({
-    queryKey: ['public-latest-docs'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('documents')
-        .select('id, title, doc_type, doc_number, date_adopted, summary, source_url')
-        .order('created_at', { ascending: false })
-        .limit(8);
-      return data || [];
-    },
-  });
-
-  const docTypeLabel = (t: string) => {
-    const map: Record<string, string> = { law: 'Закон', codex: 'Кодекс', decree: 'Указ', resolution: 'Постановление', order: 'Приказ' };
-    return map[t] || t;
-  };
-
-  return (
-    <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <Newspaper className="h-5 w-5 text-primary" />
-          Коротко о главном
-        </h2>
-        <Link to="/documents" className="text-sm text-primary hover:underline flex items-center gap-1">
-          Все документы <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {docs?.map((doc) => (
-            <Link key={doc.id} to={`/documents/${doc.id}`}>
-              <Card className="hover:shadow-md transition-shadow border">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 mt-0.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
-                        {docTypeLabel(doc.doc_type)}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold leading-snug line-clamp-2">{doc.title}</h3>
-                      {doc.summary && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{doc.summary}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        {doc.doc_number && <span>№ {doc.doc_number}</span>}
-                        {doc.date_adopted && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {format(new Date(doc.date_adopted), 'dd.MM.yyyy')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Latest articles section ("Эксперты рекомендуют")
-   ────────────────────────────────────────────── */
-
-function LatestArticles() {
-  const { data: articles, isLoading } = useQuery({
-    queryKey: ['public-latest-articles'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('articles')
-        .select('id, title, slug, excerpt, published_at, views, expert_id, experts(name)')
-        .not('published_at', 'is', null)
-        .order('published_at', { ascending: false })
-        .limit(5);
-      return data || [];
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <section>
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Eye className="h-5 w-5 text-primary" /> Эксперты рекомендуют
-        </h2>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
-        </div>
-      </section>
-    );
-  }
-
-  if (!articles || articles.length === 0) return null;
-
-  return (
-    <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <Eye className="h-5 w-5 text-primary" />
-          Эксперты рекомендуют
-        </h2>
-        <Link to="/news" className="text-sm text-primary hover:underline flex items-center gap-1">
-          Все статьи <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-      <div className="space-y-3">
-        {articles.map((a: any) => (
-          <Link key={a.id} to={`/news/${a.slug}`}>
-            <Card className="hover:shadow-md transition-shadow border">
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold leading-snug line-clamp-2">{a.title}</h3>
-                {a.excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{a.excerpt}</p>}
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  {a.experts?.name && <span>{a.experts.name}</span>}
-                  {a.published_at && (
-                    <span>{format(new Date(a.published_at), 'dd.MM.yyyy')}</span>
-                  )}
-                  <span className="flex items-center gap-0.5">
-                    <Eye className="h-3 w-3" /> {a.views}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Popular documents ("Популярное")
-   ────────────────────────────────────────────── */
-
-function PopularTopics() {
-  const { data: topics } = useQuery({
-    queryKey: ['public-topics-widget'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('topics')
-        .select('id, name, slug, document_count')
-        .order('document_count', { ascending: false })
-        .limit(8);
-      return data || [];
-    },
-  });
-
-  if (!topics || topics.length === 0) return null;
-
-  return (
-    <section>
-      <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <FileText className="h-5 w-5 text-primary" />
-        Популярные темы
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {topics.map(t => (
-          <Link key={t.id} to={`/topics/${t.slug}`}>
-            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-accent text-accent-foreground hover:bg-primary/10 transition-colors">
-              {t.name}
-              {t.document_count > 0 && <span className="text-muted-foreground">({t.document_count})</span>}
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ──────────────────────────────────────────────
-   Page
-   ────────────────────────────────────────────── */
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) navigate(`/documents?q=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  const { data: latestDocs } = useQuery({
+    queryKey: ['landing-latest-docs'],
+    queryFn: async () => {
+      const { data } = await supabase.from('documents')
+        .select('id, title, doc_type, date_adopted, updated_at')
+        .order('updated_at', { ascending: false }).limit(5);
+      return data ?? [];
+    },
+  });
+
+  const { data: rates } = useQuery({
+    queryKey: ['landing-rates'],
+    queryFn: async () => {
+      const { data } = await supabase.from('currency_rates')
+        .select('currency_code, currency_name, rate, change_value, rate_date')
+        .in('currency_code', ['USD', 'EUR', 'RUB'])
+        .order('rate_date', { ascending: false }).limit(3);
+      return data ?? [];
+    },
+  });
+
+  const { data: deadlines } = useQuery({
+    queryKey: ['landing-deadlines'],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase.from('deadline_calendar')
+        .select('id, title, deadline_date')
+        .gte('deadline_date', today)
+        .order('deadline_date', { ascending: true }).limit(3);
+      return data ?? [];
+    },
+  });
+
+  // TODO: sort by view_count when column is added
+  const { data: popularDocs } = useQuery({
+    queryKey: ['landing-popular-docs'],
+    queryFn: async () => {
+      const { data } = await supabase.from('documents')
+        .select('id, title, doc_type, date_adopted')
+        .order('created_at', { ascending: false }).limit(10);
+      return data ?? [];
+    },
+  });
+
+  const { data: recentChanges } = useQuery({
+    queryKey: ['landing-recent-changes'],
+    queryFn: async () => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const { data } = await supabase.from('documents')
+        .select('id, title, doc_type, updated_at')
+        .gte('updated_at', weekAgo.toISOString())
+        .order('updated_at', { ascending: false }).limit(10);
+      return data ?? [];
+    },
+  });
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'Право БY',
-    description: 'Платформа правовой информации Республики Беларусь — законы, курсы валют, календарь сроков.',
+    name: 'ПравоБУ',
+    description: 'Законодательство Беларуси бесплатно — поиск по НПА, AI-ассистент, налоговый календарь.',
     applicationCategory: 'ReferenceApplication',
     operatingSystem: 'Web',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'BYN' },
@@ -399,40 +146,221 @@ export default function Landing() {
   return (
     <article>
       <PageSEO
-        title="Право БY — законодательство Беларуси, курсы валют, аналитика"
-        description="Поиск по НПА, курсы НБРБ, календарь дедлайнов, экспертные обзоры и AI-ассистент для бухгалтеров и юристов Беларуси."
+        title="ПравоБУ — Законодательство Беларуси бесплатно"
+        description="Полные тексты 26 кодексов и 200+ законов Беларуси без регистрации. Поиск по НПА, AI-ассистент, налоговый календарь."
         path="/"
         jsonLd={jsonLd}
       />
 
-      <SearchHero />
+      {/* ═══ HERO ═══ */}
+      <section className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16 md:py-24 bg-gradient-to-b from-accent/40 to-background">
+        <h1 className="text-4xl md:text-6xl font-bold text-center max-w-4xl leading-tight">
+          Законодательство Беларуси —{' '}
+          <span className="text-primary">бесплатно</span>
+        </h1>
+        <p className="mt-4 text-lg md:text-xl text-muted-foreground text-center max-w-2xl">
+          Полные тексты 26 кодексов и 200+ законов без регистрации. Поиск по НПА, AI-ассистент, налоговый календарь.
+        </p>
 
-      <div className="mx-auto max-w-6xl px-4 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
-          {/* Main content */}
-          <div className="space-y-10">
-            <LatestDocuments />
-            <LatestArticles />
-            <PopularTopics />
+        <div className="mt-8 w-full max-w-3xl">
+          <div className="flex items-center gap-0 rounded-xl border bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring">
+            <Search className="ml-4 h-5 w-5 text-muted-foreground shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Найдите кодекс, закон, указ... например: Трудовой кодекс"
+              className="flex-1 bg-transparent px-3 py-4 text-base outline-none placeholder:text-muted-foreground"
+            />
+            <Button onClick={handleSearch} className="m-1.5 rounded-lg px-6">Найти</Button>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {quickTags.map((tag) => (
+            <Link
+              key={tag.label}
+              to={tag.filter ? `/documents?filter=${tag.filter}` : `/documents?q=${encodeURIComponent(tag.q!)}`}
+              className="rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+            >
+              {tag.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ THREE COLUMNS ═══ */}
+      <section className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Col 1 — Latest docs */}
+          <Card className="rounded-xl shadow-sm hover:shadow-md transition">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Последние НПА</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {latestDocs?.map((doc) => (
+                <div key={doc.id} className="flex items-start gap-2">
+                  <Badge variant="secondary" className="shrink-0 text-[10px] mt-0.5">
+                    {docTypeLabel[doc.doc_type] || doc.doc_type}
+                  </Badge>
+                  <div className="min-w-0">
+                    <Link to={`/documents/${doc.id}`} className="text-sm font-medium hover:text-primary transition-colors line-clamp-2">
+                      {doc.title}
+                    </Link>
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(doc.date_adopted)}</p>
+                  </div>
+                </div>
+              ))}
+              {(!latestDocs || latestDocs.length === 0) && <p className="text-sm text-muted-foreground">Нет документов</p>}
+              <Button asChild variant="ghost" size="sm" className="w-full mt-2">
+                <Link to="/documents">Все документы <ArrowRight className="h-3 w-3 ml-1" /></Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Col 2 — Rates + Deadlines */}
+          <div className="space-y-6">
+            <Card className="rounded-xl shadow-sm hover:shadow-md transition">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Курсы НБРБ</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {rates?.map((r) => {
+                  const change = Number(r.change_value) || 0;
+                  return (
+                    <div key={r.currency_code} className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{r.currency_code}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                        <span className={`flex items-center text-xs ${change > 0 ? 'text-green-600' : change < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                          {change > 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : change < 0 ? <TrendingDown className="h-3 w-3 mr-0.5" /> : <Minus className="h-3 w-3 mr-0.5" />}
+                          {change !== 0 ? Math.abs(change).toFixed(4) : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(!rates || rates.length === 0) && <p className="text-sm text-muted-foreground">Загрузка курсов...</p>}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-xl shadow-sm hover:shadow-md transition">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Ближайшие дедлайны</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {deadlines?.map((d) => (
+                  <div key={d.id} className="flex items-start gap-3">
+                    <div className="rounded-lg bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground shrink-0">
+                      {formatDate(d.deadline_date)}
+                    </div>
+                    <span className="text-sm">{d.title}</span>
+                  </div>
+                ))}
+                {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет ближайших дедлайнов</p>}
+                <Button asChild variant="ghost" size="sm" className="w-full mt-2">
+                  <Link to="/calendar">Календарь <ArrowRight className="h-3 w-3 ml-1" /></Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right sidebar */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-            <CurrencyWidget />
-            <CalendarWidget />
-            <ServiceLinks />
-          </aside>
+          {/* Col 3 — Popular sections */}
+          <Card className="rounded-xl shadow-sm hover:shadow-md transition">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Популярные разделы</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {popularSections.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    {s.label}
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </section>
 
-      {/* Independence disclaimer */}
-      <div className="border-t bg-muted/40 px-6 py-6">
-        <p className="text-center text-xs text-muted-foreground max-w-2xl mx-auto">
-          Право&nbsp;БY — независимый проект. Не является государственным информационным ресурсом
-          и не связан с государственными органами Республики Беларусь.
-          Информация носит справочный характер и не является юридической консультацией.
-        </p>
-      </div>
+      {/* ═══ POPULAR DOCUMENTS ═══ */}
+      {popularDocs && popularDocs.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16">
+          <h2 className="text-2xl font-bold mb-6">Популярные документы</h2>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+            {popularDocs.map((doc) => (
+              <Link key={doc.id} to={`/documents/${doc.id}`} className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition group">
+                <Badge variant="secondary" className="text-[10px] mb-2">{docTypeLabel[doc.doc_type] || doc.doc_type}</Badge>
+                <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{doc.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(doc.date_adopted)}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ═══ RECENT CHANGES ═══ */}
+      {recentChanges && recentChanges.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16">
+          <h2 className="text-2xl font-bold mb-6">Изменения за последние 7 дней</h2>
+          <div className="rounded-xl border bg-card overflow-hidden">
+            {recentChanges.map((doc, i) => (
+              <Link key={doc.id} to={`/documents/${doc.id}`} className={`flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors ${i !== 0 ? 'border-t' : ''}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Badge variant="secondary" className="shrink-0 text-[10px]">{docTypeLabel[doc.doc_type] || doc.doc_type}</Badge>
+                  <span className="text-sm font-medium truncate">{doc.title}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-4">
+                  <span className="text-xs text-muted-foreground">{formatDate(doc.updated_at)}</span>
+                  <Badge className="bg-warning text-warning-foreground text-[10px]">ИЗМЕНЁН</Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ═══ PRICING ═══ */}
+      <section className="mx-auto max-w-7xl px-4 pb-20">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold">Простые и честные тарифы</h2>
+          <p className="mt-2 text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {pricingPlans.map((plan) => (
+            <Card key={plan.name} className={`rounded-xl shadow-sm hover:shadow-md transition relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-primary text-primary-foreground"><Star className="h-3 w-3 mr-1" /> Популярный</Badge>
+                </div>
+              )}
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-lg">{plan.name}</CardTitle>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground text-sm"> BYN{plan.price !== '0' ? '/мес' : ''}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild variant={plan.popular ? 'default' : 'outline'} className="w-full rounded-lg">
+                  <Link to={plan.to}>{plan.cta}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
     </article>
   );
 }

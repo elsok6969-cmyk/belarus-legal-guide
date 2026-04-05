@@ -1,16 +1,17 @@
 # Project Memory
 
 ## Core
-Belarus Law Platform — ilex-style public content portal + freemium legal service.
+Belarus Law Portal "ПравоБУ" — legal document search + AI assistant (ilex.by alternative).
 All UI in Russian. Lovable Cloud backend. Inter font.
-Primary teal #00B4A0 (HSL 174 72% 46%), dark sidebar.
+Primary teal-600 #0d9488 (HSL 174 84% 32%), rounded-xl, dark mode supported.
 NOT legal advice — AI must ALWAYS show disclaimer + source citations.
-Landing = content portal (NOT marketing). Rates/calendar/docs preview = public. Full text = behind free registration.
+No extra modules (CRM, billing, admin) unless explicitly requested.
+Landing content is STATIC only — never AI-generated. AI assistant only behind login.
 Not affiliated with government — always state independence clearly.
 
 ## Memories
-- [Design tokens](mem://design/tokens) — Color palette, warning tokens, sidebar dark theme
+- [Design tokens](mem://design/tokens) — Teal-600 primary, rounded-xl, dark mode, Inter font
 - [SEO & accessibility](mem://design/seo-accessibility) — Meta tags, headings, ARIA, JSON-LD, trust rules
 - [Auth flow](mem://features/auth) — Email+password, profiles table, auto-create on signup
 - [Audit logging](mem://features/audit-logs) — audit_logs table structure and RLS
-- [Public/App boundary](mem://features/public-app-boundary) — ilex-style public portal with freemium gate, what's public vs auth
+- [Public/App boundary](mem://features/public-app-boundary) — What content goes on landing vs app, redirect rules
