@@ -1,49 +1,76 @@
 
-<lov-plan-name>Belarus Law Platform — Project Skeleton</lov-plan-name>
 
-## Overview
-Set up the foundational skeleton for "Belarus Law Platform" — a legal document search platform with AI assistant. All UI in Russian. Lovable Cloud backend with auth, profiles, and audit logging.
+# Полный редизайн главной страницы ПравоБУ
 
-## Pages & Routing
-- **`/auth`** — Login/Register page (tabs: Вход / Регистрация), email+password auth
-- **`/`** — Home page with search bar and recent documents placeholder
-- **`/documents/:id`** — Document Viewer placeholder (stub content)
-- **`/ai-chat`** — AI Chat placeholder with disclaimer banner: "Платформа не предоставляет юридических консультаций"
-- **`*`** — 404 page in Russian
+## Обзор
+Полная переработка главной страницы `/`, шапки и подвала в стиле ilex.by с новой дизайн-системой (teal-600, rounded-xl, dark mode). Включает hero с поиском, три колонки контента, популярные документы, последние изменения, тарифы и новый footer.
 
-## Core Layout
-- **Top bar**: Search input (non-functional stub), user avatar/menu with logout
-- **Left sidebar**: Navigation links — Главная, Документы, AI Ассистент; collapsible via SidebarTrigger
-- **Main content area**: Renders routed page content
+## Шаги реализации
 
-## Auth Flow
-- Email + password signup/login using Lovable Cloud (Supabase)
-- Protected routes redirect unauthenticated users to `/auth`
-- Auth context provider wrapping the app
+### 1. Обновить дизайн-токены (`src/index.css`)
+- Изменить `--radius` на `0.75rem` (rounded-xl)
+- Скорректировать primary цвет на точный #0d9488 (teal-600): HSL `174 84% 32%`
+- Обновить dark mode фон на #0f172a, карточки на #1e293b
 
-## Database (Lovable Cloud)
-- **profiles** table: `id (uuid, FK auth.users)`, `display_name`, `avatar_url`, `created_at`, `updated_at` — with RLS (users read/update own profile), trigger on signup
-- **audit_logs** table: `id`, `user_id`, `action`, `entity_type`, `entity_id`, `metadata (jsonb)`, `created_at` — insert-only RLS for authenticated users, select own logs
+### 2. Создать хук dark mode (`src/hooks/useTheme.ts`)
+- Читать/записывать тему в `localStorage`
+- Переключать класс `dark` на `<html>`
+- Экспортировать `theme`, `toggleTheme`
 
-## Project Structure
-```
-src/
-  components/
-    layout/AppLayout.tsx      — sidebar + topbar + main area
-    layout/AppSidebar.tsx      — left nav
-    layout/TopBar.tsx          — search + user menu
-    auth/AuthGuard.tsx         — route protection
-  pages/
-    Auth.tsx, Index.tsx, DocumentViewer.tsx, AIChat.tsx, NotFound.tsx
-  hooks/
-    useAuth.ts                 — auth state hook
-  lib/
-    supabase.ts               — Supabase client
-```
+### 3. Переписать шапку (`src/components/layout/PublicHeader.tsx`)
+- Логотип «ПравоБУ» текстом (цвет teal-600)
+- Навигация по центру: Документы | Кодексы | Календарь | Тарифы | AI-помощник
+- Справа: переключатель dark/light (Moon/Sun), «Войти» (outline), «Регистрация» (filled teal)
+- Мобильное hamburger-меню
 
-## TODOs (not implemented in this step)
-- Actual search functionality
-- Document data model & viewer logic
-- AI chat backend integration
-- Server-side logging (edge function)
-- Password reset flow
+### 4. Полностью переписать главную (`src/pages/Landing.tsx`)
+
+**Hero-секция (min-h-[60vh])**:
+- Крупный заголовок: «Законодательство Беларуси — бесплатно»
+- Подзаголовок о 26 кодексах и 200+ законах
+- Центральная поисковая строка (max-w-3xl, py-4) — переход на `/documents?q=...`
+- Быстрые теги-chips под поиском → `/documents?filter=...`
+
+**Три колонки (md:grid-cols-3)**:
+1. **Последние НПА** — 5 документов из `documents` (ORDER BY updated_at DESC), badge типа, ссылка, дата. Кнопка «Все документы»
+2. **Курсы НБРБ + Дедлайны** — USD/EUR/RUB с изменением (зелёный/красный). 3 ближайших дедлайна из `deadline_calendar`
+3. **Популярные разделы** — статический список ссылок с иконками lucide (Трудовой кодекс, Налоговый кодекс и т.д.)
+
+**Популярные документы**:
+- Горизонтальный скролл на мобильном, сетка на десктопе
+- Запрос: документы отсортированные по created_at (view_count пока нет в схеме — используем created_at как fallback)
+- Карточки: badge типа, название, дата
+
+**Последние изменения**:
+- Документы с updated_at за последние 7 дней
+- Оранжевый badge «ИЗМЕНЁН»
+
+**Тарифные планы**:
+- 4 карточки (Бесплатный/Стандарт/Профи/Бизнес) с ценами в BYN
+- «Профи» выделен border-2 border-primary + badge «Популярный»
+- Кнопки → `/pricing` (или `/register`)
+
+### 5. Переписать footer (`src/components/layout/PublicFooter.tsx`)
+- 4 колонки: О проекте | Разделы | Правовые ресурсы | Контакты
+- Внешние ссылки: pravo.by, etalonline.by, nbrb.by
+- Email: info@pravoby.by
+- Копирайт: «© 2025 ПравоБУ. Информация носит справочный характер.»
+
+### 6. Обновить маршруты (`src/App.tsx`)
+- Добавить маршрут `/doc/:slug` для прямых ссылок на документы (редирект на `/documents/:id` или новая страница)
+- Навигация «Кодексы» → `/documents?filter=codex`
+
+## Затрагиваемые файлы
+- `src/index.css` — токены, радиус
+- `src/hooks/useTheme.ts` — новый файл
+- `src/components/layout/PublicHeader.tsx` — полная переработка
+- `src/components/layout/PublicFooter.tsx` — полная переработка
+- `src/pages/Landing.tsx` — полная переработка
+- `src/App.tsx` — возможно новый маршрут `/doc/:slug`
+
+## Технические детали
+- Все данные берутся из существующих таблиц: `documents`, `currency_rates`, `deadline_calendar`
+- В таблице `documents` нет колонки `view_count` — секция «Популярные документы» будет сортировать по `created_at` DESC, с TODO-комментарием для будущей миграции
+- Dark mode через `class="dark"` на `<html>` + `localStorage` — уже настроено в `tailwind.config.ts` (`darkMode: ["class"]`)
+- Карточки: `rounded-xl shadow-sm hover:shadow-md transition`
+
