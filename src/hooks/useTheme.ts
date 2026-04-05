@@ -13,7 +13,7 @@ export function useTheme() {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('pravoby-theme', theme);
+    localStorage.setItem('app-theme', theme);
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
