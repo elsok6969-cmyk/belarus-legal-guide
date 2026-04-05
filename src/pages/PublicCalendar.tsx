@@ -44,7 +44,7 @@ const TAX_TYPE_COLORS: Record<string, { dot: string; badge: string }> = {
 };
 
 function generateICS(deadlines: TaxDeadline[], filename: string) {
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PravoBY//TaxCalendar//RU'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LegalPortal//TaxCalendar//RU'];
   deadlines.forEach((d) => {
     const dateStr = d.deadline_date.replace(/-/g, '');
     lines.push(
