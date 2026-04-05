@@ -5,6 +5,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Download, Bell, ExternalLink, Mail,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -258,10 +259,15 @@ export default function PublicCalendar() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <PageSEO
-        title="Налоговый календарь 2026 — Право БY"
-        description="Все важные даты для бухгалтера и ИП в Беларуси. Дедлайны по НДС, налогу на прибыль, УСН, ФСЗН."
+        title="Налоговый календарь 2026 — дедлайны для бухгалтера"
+        description="Все важные даты для бухгалтера и ИП в Беларуси на 2026 год. Дедлайны по НДС, налогу на прибыль, УСН, ФСЗН. Скачайте ICS-файл."
         path="/calendar"
       />
+
+      <Breadcrumbs items={[
+        { label: 'Главная', href: '/' },
+        { label: 'Налоговый календарь' },
+      ]} />
 
       {/* Header */}
       <div className="mb-6">

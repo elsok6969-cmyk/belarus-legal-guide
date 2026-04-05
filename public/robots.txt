@@ -1,14 +1,12 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Закрыть страницы аккаунта от индексирования
+Disallow: /profile
+Disallow: /profile/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /app/
+Disallow: /app
+
+Sitemap: https://pravoby.by/functions/v1/sitemap

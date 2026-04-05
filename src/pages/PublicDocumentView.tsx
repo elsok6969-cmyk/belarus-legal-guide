@@ -6,6 +6,7 @@ import {
   ChevronRight, BookOpen, ExternalLink, Mail, ListTree,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -272,20 +273,52 @@ export default function PublicDocumentView() {
 
   const changeTypeLabel: Record<string, string> = { amended: 'Изменён', new_version: 'Новая редакция', repealed: 'Утратил силу' };
 
+  const legalDocJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Legislation',
+    name: doc.title,
+    description: `Полный текст ${typeLabel} "${doc.title}"`,
+    datePublished: doc.date_adopted,
+    dateModified: doc.updated_at,
+    publisher: doc.organ ? { '@type': 'Organization', name: doc.organ } : undefined,
+    inLanguage: 'ru',
+    legislationIdentifier: doc.reg_number || doc.doc_number,
+    url: `https://pravoby.by/doc/${doc.slug || doc.id}`,
+    legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://pravoby.by' },
+      { '@type': 'ListItem', position: 2, name: 'Документы', item: 'https://pravoby.by/documents' },
+      { '@type': 'ListItem', position: 3, name: typeLabel },
+      { '@type': 'ListItem', position: 4, name: doc.title },
+    ],
+  };
+
+  const formatDateShort = (d: string | null) => {
+    if (!d) return '';
+    try { return format(new Date(d), 'dd.MM.yyyy'); } catch { return d; }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      <PageSEO title={`${doc.title} — ПравоБУ`} description={doc.summary || doc.title} path={`/doc/${doc.slug || doc.id}`} />
+      <PageSEO
+        title={`${doc.title} — полный текст`}
+        description={`Читайте полный текст ${typeLabel} "${doc.title}"${doc.date_adopted ? ` от ${formatDateShort(doc.date_adopted)}` : ''}. Актуальная редакция.`}
+        path={`/doc/${doc.slug || doc.id}`}
+        type="article"
+        jsonLd={[legalDocJsonLd, breadcrumbJsonLd]}
+      />
 
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4 flex-wrap">
-        <Link to="/" className="hover:text-foreground transition-colors">Главная</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/documents" className="hover:text-foreground transition-colors">Документы</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="hover:text-foreground transition-colors">{typeLabel}</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-medium truncate max-w-xs">{doc.title}</span>
-      </nav>
+      <Breadcrumbs items={[
+        { label: 'Главная', href: '/' },
+        { label: 'Документы', href: '/documents' },
+        { label: typeLabel },
+        { label: doc.title },
+      ]} />
 
       {/* Header + Actions */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">

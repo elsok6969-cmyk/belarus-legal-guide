@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, FileText, Clock } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,7 +46,16 @@ export default function PublicDocuments() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <PageSEO title="Документы — Право БY" description="База нормативных правовых актов Республики Беларусь: законы, кодексы, указы, постановления." path="/documents" />
+      <PageSEO
+        title="Документы — база НПА Беларуси"
+        description="База нормативных правовых актов Республики Беларусь: кодексы, законы, указы, постановления. Полные тексты бесплатно."
+        path="/documents"
+      />
+
+      <Breadcrumbs items={[
+        { label: 'Главная', href: '/' },
+        { label: 'Документы' },
+      ]} />
       
       <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <FileText className="h-6 w-6 text-primary" />
