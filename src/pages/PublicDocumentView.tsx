@@ -122,8 +122,8 @@ export default function PublicDocumentView() {
     queryFn: async () => {
       const col = (isSlugRoute && slug) ? 'slug' : 'id';
       const val = (isSlugRoute && slug) ? slug : id!;
-      const { data } = await supabase.from('documents').select('*').eq(col as any, val).single();
-      return data as any;
+      const { data } = await (supabase.from('documents').select('*') as any).eq(col, val).single();
+      return data;
     },
     enabled: !!(slug || id),
   });
