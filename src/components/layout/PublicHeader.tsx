@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { label: 'Новости', to: '/news' },
   { label: 'Темы', to: '/topics' },
+  { label: 'Документы', to: '/documents' },
+  { label: 'Курсы валют', to: '/rates' },
+  { label: 'Календарь', to: '/calendar' },
   { label: 'Эксперты', to: '/experts' },
-  { label: 'О платформе', to: '/about' },
-  { label: 'Тарифы', to: '/pricing' },
 ];
 
 export function PublicHeader() {
@@ -18,10 +19,10 @@ export function PublicHeader() {
 
   return (
     <header role="banner" className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5 font-extrabold text-xl tracking-tight">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-            <Scale className="h-4.5 w-4.5 text-primary-foreground" />
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
+        <Link to="/" className="flex items-center gap-2 font-extrabold text-lg tracking-tight">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
+            <Scale className="h-4 w-4 text-primary-foreground" />
           </div>
           <span>Право<span className="text-primary">&nbsp;БY</span></span>
         </Link>
@@ -33,8 +34,8 @@ export function PublicHeader() {
               key={l.to}
               to={l.to}
               className={cn(
-                'px-3 py-2 rounded-md text-sm font-medium transition-colors hover:text-primary',
-                location.pathname === l.to
+                'px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors hover:text-primary',
+                location.pathname === l.to || location.pathname.startsWith(l.to + '/')
                   ? 'text-primary'
                   : 'text-muted-foreground'
               )}
@@ -45,11 +46,11 @@ export function PublicHeader() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="font-medium">
+          <Button asChild variant="ghost" size="sm" className="text-xs font-medium">
             <Link to="/login">Войти</Link>
           </Button>
-          <Button asChild size="sm" className="font-medium">
-            <Link to="/register">Регистрация</Link>
+          <Button asChild size="sm" className="text-xs font-medium">
+            <Link to="/app">Войти в сервис</Link>
           </Button>
         </div>
 
@@ -88,7 +89,7 @@ export function PublicHeader() {
               <Link to="/login" onClick={() => setMobileOpen(false)}>Войти</Link>
             </Button>
             <Button asChild size="sm" className="w-full">
-              <Link to="/register" onClick={() => setMobileOpen(false)}>Регистрация</Link>
+              <Link to="/app" onClick={() => setMobileOpen(false)}>Войти в сервис</Link>
             </Button>
           </div>
         </div>

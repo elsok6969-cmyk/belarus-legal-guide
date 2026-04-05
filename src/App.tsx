@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 import Landing from './pages/Landing';
@@ -22,6 +21,10 @@ import Topics from './pages/Topics';
 import TopicDetail from './pages/TopicDetail';
 import Experts from './pages/Experts';
 import ExpertProfile from './pages/ExpertProfile';
+import PublicRates from './pages/PublicRates';
+import PublicCalendar from './pages/PublicCalendar';
+import PublicDocuments from './pages/PublicDocuments';
+import PublicDocumentView from './pages/PublicDocumentView';
 
 import Index from './pages/Index';
 import AppSearch from './pages/AppSearch';
@@ -59,6 +62,12 @@ const App = () => (
           <Route path="/topics/:slug" element={<PublicLayout><TopicDetail /></PublicLayout>} />
           <Route path="/experts" element={<PublicLayout><Experts /></PublicLayout>} />
           <Route path="/experts/:id" element={<PublicLayout><ExpertProfile /></PublicLayout>} />
+
+          {/* Public content pages */}
+          <Route path="/rates" element={<PublicLayout><PublicRates /></PublicLayout>} />
+          <Route path="/calendar" element={<PublicLayout><PublicCalendar /></PublicLayout>} />
+          <Route path="/documents" element={<PublicLayout><PublicDocuments /></PublicLayout>} />
+          <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
 
           {/* App pages — auth temporarily disabled for review */}
           <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
