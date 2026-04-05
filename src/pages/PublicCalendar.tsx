@@ -52,7 +52,7 @@ function generateICS(deadlines: TaxDeadline[], filename: string) {
       `DTSTART;VALUE=DATE:${dateStr}`,
       `SUMMARY:${d.title}`,
       `DESCRIPTION:${d.description || ''}`,
-      `UID:${d.id}@pravoby`,
+      `UID:${d.id}@legalportal`,
       'END:VEVENT'
     );
   });

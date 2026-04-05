@@ -291,8 +291,8 @@ export default function PublicDocumentView() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://pravoby.by' },
-      { '@type': 'ListItem', position: 2, name: 'Документы', item: 'https://pravoby.by/documents' },
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
+      { '@type': 'ListItem', position: 2, name: 'Документы', item: '/documents' },
       { '@type': 'ListItem', position: 3, name: typeLabel },
       { '@type': 'ListItem', position: 4, name: doc.title },
     ],
