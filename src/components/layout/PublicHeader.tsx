@@ -58,10 +58,10 @@ export function PublicHeader() {
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <Button asChild variant="outline" size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/login">Войти</Link>
+            <Link to="/auth">Войти</Link>
           </Button>
           <Button asChild size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/register">Регистрация</Link>
+            <Link to="/auth">Регистрация</Link>
           </Button>
         </div>
 
