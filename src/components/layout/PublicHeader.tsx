@@ -104,10 +104,10 @@ export function PublicHeader() {
           </nav>
           <div className="flex flex-col gap-2 mt-3 pt-3 border-t">
             <Button asChild variant="outline" size="sm" className="w-full rounded-lg">
-              <Link to="/login" onClick={() => setMobileOpen(false)}>Войти</Link>
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>Войти</Link>
             </Button>
             <Button asChild size="sm" className="w-full rounded-lg">
-              <Link to="/register" onClick={() => setMobileOpen(false)}>Регистрация</Link>
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>Регистрация</Link>
             </Button>
           </div>
         </div>

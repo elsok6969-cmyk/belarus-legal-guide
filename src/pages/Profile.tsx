@@ -173,7 +173,7 @@ export default function Profile() {
 
   return (
     <>
-      <PageSEO title="Профиль — ПравоБУ" description="Управление аккаунтом ПравоБУ" />
+      <PageSEO title="Профиль — ПравоБУ" description="Управление аккаунтом ПравоБУ" path="/profile" />
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
         <h1 className="text-2xl font-bold">Профиль</h1>
 

@@ -63,7 +63,7 @@ export default function ResetPassword() {
 
   return (
     <>
-      <PageSEO title="Восстановление пароля — ПравоБУ" description="Сбросьте пароль для аккаунта ПравоБУ" />
+      <PageSEO title="Восстановление пароля — ПравоБУ" description="Сбросьте пароль для аккаунта ПравоБУ" path="/auth/reset-password" />
       <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
