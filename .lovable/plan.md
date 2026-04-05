@@ -1,60 +1,98 @@
 
 
-# Полнотекстовый поиск и расширенные фильтры на /documents
+# Система профилей, подписок и авторизации
 
 ## Обзор
-Полная переработка страницы `/documents`: добавление полнотекстового поиска (tsvector), расширенных фильтров (тип, орган, год, статус), пагинации, сортировки и синхронизации с URL-параметрами.
+Создать новые таблицы (profiles с планами, user_favorites, view_history, user_subscriptions, subscription_requests), переработать страницы авторизации (/auth с табами), профиля (/profile) и подписок (/subscription). Обновить триггер handle_new_user.
+
+## Важные решения по схеме
+
+Уже существует таблица `profiles` с колонками `id, user_id, display_name, avatar_url, created_at, updated_at`. Также существуют таблицы `bookmarks` и `subscriptions`. Предлагаю:
+
+1. **Не создавать дублирующие таблицы** (`user_favorites` → использовать существующую `bookmarks`, `user_subscriptions` → использующую `subscriptions`)
+2. **Расширить существующую `profiles`** — добавить колонки `plan`, `plan_expires_at`, `ai_requests_today`, `ai_requests_reset_at`, `full_name`
+3. **Создать только новые таблицы**: `view_history`, `subscription_requests`
+4. **Обновить триггер** `handle_new_user` чтобы заполнять email
 
 ## Шаг 1. Миграция базы данных
 
-SQL-миграция:
-- Добавить генерируемый столбец `fts tsvector` (GENERATED ALWAYS AS, конфигурация `russian`)
-- Создать GIN-индекс на `fts`
-- Создать B-tree индексы на `doc_type`, `date_adopted`, `organ`
+**Расширить `profiles`:**
+- `plan text DEFAULT 'free'` (без CHECK — используем валидацию триггером)
+- `plan_expires_at timestamptz`
+- `ai_requests_today integer DEFAULT 0`
+- `ai_requests_reset_at date DEFAULT CURRENT_DATE`
+- `full_name text`
+- `email text`
 
-## Шаг 2. Полная переработка `src/pages/PublicDocuments.tsx`
+**Создать `view_history`:**
+- `id uuid PK`, `user_id uuid`, `document_id uuid`, `viewed_at timestamptz DEFAULT now()`
+- RLS: `auth.uid() = user_id` для ALL
+- Индекс на `(user_id, viewed_at DESC)`
 
-**Состояние через `useSearchParams`:**
-- `q` — поисковый запрос (debounce 300ms, мин. 2 символа)
-- `type` — типы документов (через запятую)
-- `organ` — орган принятия
-- `year_from`, `year_to` — диапазон годов
-- `status` — статус документа
-- `sort` — сортировка (relevance, date_desc, date_asc, popularity)
-- `page` — номер страницы
+**Создать `subscription_requests`:**
+- `id uuid PK`, `user_id uuid`, `plan text`, `full_name text`, `email text`, `phone text`, `status text DEFAULT 'pending'`, `created_at timestamptz`
+- RLS: authenticated INSERT own + SELECT own
 
-**Верхняя часть:**
-- Поисковая строка на всю ширину (`py-4`, иконка Search)
-- Счётчик результатов: «Найдено N документов»
-- Кнопка «Очистить фильтры» (условно видима)
-- Быстрые фильтры-чипы: Все | Кодексы | Законы | Указы | Декреты | Постановления
+**Обновить триггер** `handle_new_user` — добавить `email` в INSERT
 
-**Левая панель (w-64, sticky, hidden на мобильном):**
-1. Вид акта — checkboxes (Кодекс, Закон, Указ, Декрет, Постановление)
-2. Орган принятия — Select (Национальное собрание, Президент, Совет Министров и т.д.)
-3. Год принятия — Slider (range 1994–2025)
-4. Статус — radio (Все, Действующий, Утратил силу)
+**Валидационный триггер** для `profiles.plan` — проверять допустимые значения (free, standard, pro, business)
 
-**Правая область — результаты:**
-- Строка сортировки: По релевантности | По дате (новые/старые) | По популярности
-- Карточки: badge типа + badge статуса + дата, название (ссылка на `/doc/{slug}`), орган + номер, excerpt с `<mark>` подсветкой совпадений
-- Пагинация: по 20 результатов, кнопки Назад/Вперёд + номера страниц
-- Состояние «0 результатов»: иконка, текст, кнопка «Сбросить фильтры»
+## Шаг 2. Страница `/auth` — объединённая авторизация
 
-**Supabase-запрос:**
-- Полнотекстовый поиск: `.textSearch('fts', query, { type: 'plain', config: 'russian' })`
-- Фильтры: `.in('doc_type', ...)`, `.ilike('organ', ...)`, `.gte/.lte('date_adopted', ...)`, `.eq('status', ...)`
-- Пагинация: `.range(from, to)` + `{ count: 'exact' }`
-- Select: `id, title, doc_type, organ, date_adopted, reg_number, slug, view_count, status, summary, updated_at`
+Новый файл `src/pages/Auth.tsx`:
+- Табы: «Войти» | «Регистрация»
+- Вход: email + пароль, ссылка «Забыли пароль?», Google OAuth (через `lovable.auth.signInWithOAuth`)
+- Регистрация: email + пароль + подтверждение пароля + чекбокс условий, Google OAuth
+- Валидация: email формат, пароль ≥ 8, подтверждение совпадает
+- После регистрации: сообщение «Проверьте email»
+- Редирект на `/profile` если уже авторизован
+
+## Шаг 3. Страница `/auth/reset-password` — сброс пароля
+
+`src/pages/ResetPassword.tsx`:
+- Форма ввода нового пароля
+- Проверка `type=recovery` в URL hash
+- Вызов `supabase.auth.updateUser({ password })`
+
+## Шаг 4. Страница `/profile` — профиль пользователя
+
+`src/pages/Profile.tsx` (за AuthGuard):
+- **Карточка тарифа**: название плана, дата окончания, прогресс-бар AI-запросов (для free), кнопка «Улучшить»
+- **4 вкладки (Tabs)**:
+  1. Закладки — из `bookmarks JOIN documents`, удаление
+  2. История — из `view_history JOIN documents` (20 последних), кнопка «Очистить»
+  3. Подписки — из `subscriptions JOIN documents`, отписка
+  4. Настройки — имя (editable), email (readonly), смена пароля, удаление аккаунта
+
+## Шаг 5. Страница `/subscription` — тарифы
+
+`src/pages/Subscription.tsx`:
+- 4 карточки (free/standard/pro/business) с ценами в BYN
+- «Профи» выделен border-2 + badge «Популярный»
+- Текущий тариф пользователя подсвечен
+- Кнопка «Подключить» → диалог с формой (имя, email, телефон)
+- Заявка сохраняется в `subscription_requests`
+
+## Шаг 6. Обновить маршруты (`App.tsx`)
+
+- `/auth` → Auth (заменить /login и /register)
+- `/auth/reset-password` → ResetPassword
+- `/profile` → Profile (с AuthGuard)
+- `/subscription` → Subscription
+- Сохранить старые /login, /register как редиректы на /auth
 
 ## Затрагиваемые файлы
-- **Миграция SQL** — fts column + индексы
-- `src/pages/PublicDocuments.tsx` — полная переработка
+- Миграция SQL (profiles extension, view_history, subscription_requests, trigger update)
+- `src/pages/Auth.tsx` — новый
+- `src/pages/ResetPassword.tsx` — новый
+- `src/pages/Profile.tsx` — новый
+- `src/pages/Subscription.tsx` — новый
+- `src/App.tsx` — новые маршруты
+- `src/components/layout/PublicHeader.tsx` — обновить ссылки на /auth
 
 ## Технические детали
-- Debounce через `useEffect` + `setTimeout` (300ms)
-- URL-синхронизация через `useSearchParams` из react-router-dom
-- Подсветка совпадений: простой regex-replace на клиенте по словам из запроса, оборачивая в `<mark>`
-- На мобильном фильтры скрыты в Sheet (drawer), открываются кнопкой «Фильтры»
-- Пагинация: компоненты из `src/components/ui/pagination.tsx`
+- Google OAuth через `lovable.auth.signInWithOAuth("google", ...)` (Lovable Cloud managed)
+- Существующие `bookmarks` и `subscriptions` используются вместо дублирующих таблиц
+- Clipboard API не нужен — используется для /profile только DB-операции
+- Удаление аккаунта: показать предупреждение, фактическое удаление требует edge function (заглушка с toast)
 
