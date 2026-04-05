@@ -24,7 +24,7 @@ export function PublicFooter() {
           <div>
             <h4 className="text-sm font-semibold mb-3">О проекте</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              ПравоБУ — современный правовой портал Беларуси. Не является официальным источником права.
+              Современный правовой портал Беларуси. Не является официальным источником права.
             </p>
           </div>
 
@@ -64,19 +64,13 @@ export function PublicFooter() {
           {/* Contacts */}
           <div>
             <h4 className="text-sm font-semibold mb-3">Контакты</h4>
-            <a
-              href="mailto:info@pravoby.by"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              info@pravoby.by
-            </a>
+            <p className="text-sm text-muted-foreground">—</p>
           </div>
         </div>
 
         <div className="mt-10 border-t pt-6">
           <p className="text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} ПравоБУ. Информация носит справочный характер.
+            © {new Date().getFullYear()} Информация носит справочный характер.
           </p>
         </div>
       </div>

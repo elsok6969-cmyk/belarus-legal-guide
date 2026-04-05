@@ -27,9 +27,8 @@ export function PublicHeader() {
     <header role="banner" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-1.5 font-extrabold text-lg tracking-tight">
-          <span className="text-primary">Право</span>
-          <span className="text-foreground">БУ</span>
+        <Link to="/" className="flex items-center gap-1.5 font-extrabold text-lg tracking-tight text-foreground">
+          Портал
         </Link>
 
         {/* Desktop nav — centered */}
