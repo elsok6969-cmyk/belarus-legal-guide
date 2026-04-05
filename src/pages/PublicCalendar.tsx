@@ -357,7 +357,7 @@ export default function PublicCalendar() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => generateICS(filtered, 'pravoby-calendar-2026.ics')}
+                onClick={() => generateICS(filtered, 'calendar-2026.ics')}
               >
                 <Download className="mr-1.5 h-3.5 w-3.5" />
                 ICS
@@ -436,7 +436,7 @@ export default function PublicCalendar() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => generateICS(filtered, 'pravoby-calendar-2026.ics')}
+              onClick={() => generateICS(filtered, 'calendar-2026.ics')}
             >
               <Download className="mr-2 h-4 w-4" />
               Скачать все дедлайны (ICS)
