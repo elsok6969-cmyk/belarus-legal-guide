@@ -212,6 +212,30 @@ export type Database = {
           },
         ]
       }
+      calendar_subscriptions: {
+        Row: {
+          audience: string | null
+          created_at: string | null
+          email: string
+          id: string
+          tax_types: string[] | null
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          tax_types?: string[] | null
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          tax_types?: string[] | null
+        }
+        Relationships: []
+      }
       currency_rates: {
         Row: {
           change_value: number | null
@@ -577,6 +601,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tax_deadlines: {
+        Row: {
+          audience: string[] | null
+          created_at: string | null
+          deadline_date: string
+          description: string | null
+          document_url: string | null
+          id: string
+          is_recurring: boolean | null
+          recurrence_rule: string | null
+          tax_type: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string[] | null
+          created_at?: string | null
+          deadline_date: string
+          description?: string | null
+          document_url?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          recurrence_rule?: string | null
+          tax_type?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string[] | null
+          created_at?: string | null
+          deadline_date?: string
+          description?: string | null
+          document_url?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          recurrence_rule?: string | null
+          tax_type?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       topics: {
         Row: {
