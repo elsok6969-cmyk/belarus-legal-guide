@@ -384,11 +384,17 @@ export type Database = {
           doc_number: string | null
           doc_type: string
           id: string
+          is_free: boolean | null
+          organ: string | null
+          reg_date: string | null
+          reg_number: string | null
+          slug: string | null
           source_url: string | null
           status: Database["public"]["Enums"]["document_status"]
           summary: string | null
           title: string
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           body_text?: string | null
@@ -398,11 +404,17 @@ export type Database = {
           doc_number?: string | null
           doc_type?: string
           id?: string
+          is_free?: boolean | null
+          organ?: string | null
+          reg_date?: string | null
+          reg_number?: string | null
+          slug?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
           title: string
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           body_text?: string | null
@@ -412,11 +424,17 @@ export type Database = {
           doc_number?: string | null
           doc_type?: string
           id?: string
+          is_free?: boolean | null
+          organ?: string | null
+          reg_date?: string | null
+          reg_number?: string | null
+          slug?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           summary?: string | null
           title?: string
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -628,6 +646,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_view_count: { Args: { doc_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "admin"
