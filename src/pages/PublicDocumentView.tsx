@@ -19,6 +19,8 @@ import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { cleanBodyText } from '@/lib/documentUtils';
 
 /* ── helpers ────────────────────────────────────────── */
 
@@ -205,8 +207,9 @@ export default function PublicDocumentView() {
   });
 
   // Parse TOC & body
-  const tocItems = useMemo(() => doc?.body_text ? parseToc(doc.body_text) : [], [doc?.body_text]);
-  const formattedBody = useMemo(() => doc?.body_text ? formatBodyText(doc.body_text) : [], [doc?.body_text]);
+  const cleanedText = useMemo(() => doc?.body_text ? cleanBodyText(doc.body_text) : '', [doc?.body_text]);
+  const tocItems = useMemo(() => cleanedText ? parseToc(cleanedText) : [], [cleanedText]);
+  const formattedBody = useMemo(() => cleanedText ? formatBodyText(cleanedText) : [], [cleanedText]);
 
   // Intersection Observer for active TOC item
   useEffect(() => {
@@ -426,7 +429,11 @@ export default function PublicDocumentView() {
                       case 'article':
                         return <h5 key={s.id} id={s.id} className="text-base font-medium mt-6 mb-2 text-primary scroll-mt-24">{s.text}</h5>;
                       default:
-                        return <p key={s.id} className="text-sm leading-relaxed mb-3">{s.text}</p>;
+                        return (
+                          <div key={s.id} className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground mb-3">
+                            <ReactMarkdown>{s.text}</ReactMarkdown>
+                          </div>
+                        );
                     }
                   })}
                 </div>
