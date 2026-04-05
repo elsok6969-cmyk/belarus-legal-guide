@@ -1,64 +1,52 @@
 
 
-# Edge Function для импорта документов из pravo.by
+# Профессиональный AI-ассистент с привязкой к базе НПА
 
 ## Обзор
-Создать edge function `import-documents` для автоматического импорта кодексов Беларуси, таблицу `import_logs` для логирования, добавить `content_hash` в `documents`, и настроить ежедневный cron.
+Создать новую edge function `ai-assistant` с поиском по базе документов, лимитами запросов и отображением источников. Переработать UI чата с 6 примерами, счётчиком лимитов и ссылками на НПА.
 
-## Шаг 1. Миграция базы данных
+## Решения по архитектуре
 
-- Создать таблицу `import_logs` (id, type, limit_count, status, imported, updated, errors, duration_ms, error_message, started_at, completed_at)
-- RLS: только service_role может читать/писать
-- Добавить колонку `content_hash text` в `documents`
+- **Не создаём `ai_chat_history`** — уже есть `assistant_conversations` + `assistant_messages` с RLS. Добавим колонку `sources` в `assistant_messages` (уже есть — `jsonb DEFAULT '[]'`). Переиспользуем.
+- **Lovable AI вместо OpenAI** — проект уже использует Lovable AI Gateway. OpenAI из запроса заменяется на `ai.gateway.lovable.dev`.
+- **Streaming сохраняется** — edge function делает поиск документов, проверяет лимиты, затем стримит ответ. Источники возвращаются в отдельном SSE-событии перед стримом.
+- **Профиль: `user_id`** — в таблице `profiles` ключ `user_id`, не `id`. Лимиты проверяются по `user_id`.
 
-## Шаг 2. Edge Function `supabase/functions/import-documents/index.ts`
+## Шаг 1. Edge Function `ai-assistant`
 
-Основная логика из запроса пользователя с доработками:
-- CORS headers для совместимости
-- Список 26 кодексов с кодами pravo.by и slug
-- `fetchDocumentMeta()` — парсинг HTML с pravo.by (title, date_adopted, reg_number, organ)
-- `fetchDocumentText()` — получение markdown через Firecrawl API (если ключ есть)
-- SHA-256 хеширование для определения изменений
-- Upsert логика: insert новых / update изменённых по slug
-- Rate limiting (500ms между запросами)
-- Логирование в `import_logs`
-- Авторизация через Bearer token (`IMPORT_SECRET`)
+Новый файл `supabase/functions/ai-assistant/index.ts`:
 
-**Отличия от пользовательского кода:**
-- Добавлены CORS headers
-- Используется `Deno.serve` вместо устаревшего `serve` из std
-- Колонка в import_logs называется `limit_count` (не `limit` — зарезервированное слово)
+1. Извлечь JWT из заголовка, получить user через `supabase.auth.getUser(token)`
+2. Загрузить профиль (`plan`, `ai_requests_today`, `ai_requests_reset_at`) по `user_id`
+3. Сбросить счётчик если новый день; проверить лимит (free = 5/день)
+4. Принять `question` + `session_id`; поиск по `documents.fts` (русская конфигурация, limit 3)
+5. Собрать контекст из найденных документов (первые 1500 символов body_text)
+6. Загрузить историю сессии (последние 10 сообщений из `assistant_messages`)
+7. Отправить SSE-событие `data: {"sources": [...]}` с найденными документами
+8. Стримить ответ через Lovable AI Gateway (`google/gemini-3-flash-preview`)
+9. После стрима — сохранить оба сообщения в `assistant_messages`, инкрементировать счётчик
 
-## Шаг 3. Секреты
+Лимит-ответ (429): JSON с `error: 'limit_exceeded'`, `requests_used`, `requests_limit`.
 
-Запросить у пользователя два секрета:
-1. **IMPORT_SECRET** — произвольная строка для авторизации cron-вызовов
-2. **FIRECRAWL_API_KEY** — ключ Firecrawl (опционален, без него текст не скачивается)
+## Шаг 2. Переработка UI (`src/pages/AIChat.tsx`)
 
-Firecrawl доступен как коннектор, но у пользователя нет подключений — предложу подключить или ввести ключ вручную.
+- Убрать боковую панель разговоров (упростить до session-based)
+- Шапка: «AI-ассистент» + счётчик запросов (прогресс-бар) + кнопка «Новый диалог»
+- Пустой чат: 6 карточек-примеров в `grid-cols-2 md:grid-cols-3`
+- Сообщения: user (справа, bg-teal-600) / assistant (слева, bg-muted) с markdown
+- Блок источников под ответом ассистента: ссылки на `/documents/{slug}`
+- Анимация загрузки: три точки (bounce)
+- Баннер лимита: textarea disabled + предложение апгрейда
+- Redirect на `/auth?return=/ai-assistant` если не авторизован
 
-## Шаг 4. Cron-задача
+## Шаг 3. Обновить маршрут
 
-Использовать `pg_cron` + `pg_net` для ежедневного вызова в 03:00 UTC:
-```sql
-SELECT cron.schedule('daily-import', '0 3 * * *', $$
-  SELECT net.http_post(
-    url := 'https://zqcuqodccbpwawtlrafw.supabase.co/functions/v1/import-documents',
-    headers := '{"Content-Type":"application/json","Authorization":"Bearer <IMPORT_SECRET>"}'::jsonb,
-    body := '{"type":"codex","limit":26}'::jsonb
-  ) AS request_id;
-$$);
-```
-Это будет выполнено через insert tool (не миграцию), так как содержит пользовательские данные.
+В `App.tsx`: добавить `/ai-assistant` как публичный роут с AuthGuard (редирект на /auth). Оставить `/app/assistant` как алиас.
 
 ## Затрагиваемые файлы
-- Миграция SQL — `import_logs` table + `content_hash` column
-- `supabase/functions/import-documents/index.ts` — новый
-- Cron SQL — через insert tool после получения IMPORT_SECRET
+- `supabase/functions/ai-assistant/index.ts` — новый
+- `src/pages/AIChat.tsx` — полная переработка
+- `src/App.tsx` — добавить маршрут `/ai-assistant`
 
-## Порядок действий
-1. Миграция (import_logs + content_hash)
-2. Создать edge function
-3. Запросить IMPORT_SECRET и FIRECRAWL_API_KEY
-4. После получения секретов — настроить cron
+Существующая edge function `chat` остаётся без изменений (может использоваться как fallback). Миграции БД не нужны — все таблицы и колонки уже существуют.
 
