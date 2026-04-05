@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useState, useMemo, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
