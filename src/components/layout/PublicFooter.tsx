@@ -1,95 +1,82 @@
 import { Link } from 'react-router-dom';
-import { Scale, Mail } from 'lucide-react';
-import { DisclaimerShort } from '@/components/shared/Disclaimers';
+import { Mail } from 'lucide-react';
 
-const footerLinks = {
-  product: [
-    { label: 'О платформе', to: '/about' },
-    { label: 'Как это работает', to: '/how-it-works' },
-    { label: 'Тарифы', to: '/pricing' },
-  ],
-  legal: [
-    { label: 'Отказ от ответственности', to: '/legal' },
-    { label: 'Условия использования', to: '/legal#terms' },
-    { label: 'Политика конфиденциальности', to: '/legal#privacy' },
-  ],
-  account: [
-    { label: 'Войти', to: '/login' },
-    { label: 'Регистрация', to: '/register' },
-  ],
-};
+const sections = [
+  { label: 'Документы', to: '/documents' },
+  { label: 'Кодексы', to: '/documents?filter=codex' },
+  { label: 'Календарь', to: '/calendar' },
+  { label: 'AI-помощник', to: '/app/assistant' },
+  { label: 'Тарифы', to: '/pricing' },
+];
+
+const legalResources = [
+  { label: 'pravo.by', href: 'https://pravo.by' },
+  { label: 'etalonline.by', href: 'https://etalonline.by' },
+  { label: 'НБРБ', href: 'https://nbrb.by' },
+];
 
 export function PublicFooter() {
   return (
     <footer role="contentinfo" className="border-t bg-card px-6 py-12">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
-          {/* Brand + contact */}
+          {/* About */}
           <div>
-            <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-              <Scale className="h-5 w-5 text-primary" aria-hidden="true" />
-              Право&nbsp;БY
-            </Link>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Платформа правовой информации Республики Беларусь
+            <h4 className="text-sm font-semibold mb-3">О проекте</h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              ПравоБУ — современный правовой портал Беларуси. Не является официальным источником права.
             </p>
+          </div>
+
+          {/* Sections */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Разделы</h4>
+            <ul className="space-y-2">
+              {sections.map((l) => (
+                <li key={l.to}>
+                  <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal resources */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Правовые ресурсы</h4>
+            <ul className="space-y-2">
+              {legalResources.map((l) => (
+                <li key={l.href}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {l.label} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contacts */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Контакты</h4>
             <a
-              href="mailto:info@pravo.by"
-              className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              href="mailto:info@pravoby.by"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
-              info@pravo.by
+              info@pravoby.by
             </a>
-          </div>
-
-          {/* Product */}
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Продукт</h4>
-            <ul className="space-y-2">
-              {footerLinks.product.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Правовая информация</h4>
-            <ul className="space-y-2">
-              {footerLinks.legal.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Account */}
-          <div>
-            <h4 className="text-sm font-semibold mb-3">Аккаунт</h4>
-            <ul className="space-y-2">
-              {footerLinks.account.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
 
-        {/* Disclaimer + copyright */}
-        <div className="mt-10 border-t pt-6 space-y-3">
-          <DisclaimerShort className="mx-auto max-w-xl text-center" />
+        <div className="mt-10 border-t pt-6">
           <p className="text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Право БY. Платформа не является государственным информационным ресурсом.
+            © {new Date().getFullYear()} ПравоБУ. Информация носит справочный характер.
           </p>
         </div>
       </div>
