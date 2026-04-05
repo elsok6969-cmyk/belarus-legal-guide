@@ -46,7 +46,7 @@ const tiers = [
 export default function Pricing() {
   return (
     <div>
-      <PageSEO title="Тарифы" description="Бесплатный и профессиональный тарифы Право БY: доступ к документам, AI-ассистент, мониторинг изменений." path="/pricing" />
+      <PageSEO title="Тарифы" description="Бесплатный и профессиональный тарифы: доступ к документам, AI-ассистент, мониторинг изменений." path="/pricing" />
       <section className="bg-primary px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">Тарифы</h1>

@@ -44,7 +44,7 @@ const TAX_TYPE_COLORS: Record<string, { dot: string; badge: string }> = {
 };
 
 function generateICS(deadlines: TaxDeadline[], filename: string) {
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PravoBY//TaxCalendar//RU'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LegalPortal//TaxCalendar//RU'];
   deadlines.forEach((d) => {
     const dateStr = d.deadline_date.replace(/-/g, '');
     lines.push(
@@ -52,7 +52,7 @@ function generateICS(deadlines: TaxDeadline[], filename: string) {
       `DTSTART;VALUE=DATE:${dateStr}`,
       `SUMMARY:${d.title}`,
       `DESCRIPTION:${d.description || ''}`,
-      `UID:${d.id}@pravoby`,
+      `UID:${d.id}@legalportal`,
       'END:VEVENT'
     );
   });
@@ -357,7 +357,7 @@ export default function PublicCalendar() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => generateICS(filtered, 'pravoby-calendar-2026.ics')}
+                onClick={() => generateICS(filtered, 'calendar-2026.ics')}
               >
                 <Download className="mr-1.5 h-3.5 w-3.5" />
                 ICS
@@ -436,7 +436,7 @@ export default function PublicCalendar() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => generateICS(filtered, 'pravoby-calendar-2026.ics')}
+              onClick={() => generateICS(filtered, 'calendar-2026.ics')}
             >
               <Download className="mr-2 h-4 w-4" />
               Скачать все дедлайны (ICS)

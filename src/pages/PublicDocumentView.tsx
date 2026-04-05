@@ -283,7 +283,7 @@ export default function PublicDocumentView() {
     publisher: doc.organ ? { '@type': 'Organization', name: doc.organ } : undefined,
     inLanguage: 'ru',
     legislationIdentifier: doc.reg_number || doc.doc_number,
-    url: `https://pravoby.by/doc/${doc.slug || doc.id}`,
+    url: `/doc/${doc.slug || doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
@@ -291,8 +291,8 @@ export default function PublicDocumentView() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://pravoby.by' },
-      { '@type': 'ListItem', position: 2, name: 'Документы', item: 'https://pravoby.by/documents' },
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
+      { '@type': 'ListItem', position: 2, name: 'Документы', item: '/documents' },
       { '@type': 'ListItem', position: 3, name: typeLabel },
       { '@type': 'ListItem', position: 4, name: doc.title },
     ],

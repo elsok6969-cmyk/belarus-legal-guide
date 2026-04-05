@@ -50,7 +50,7 @@ export default function ExpertProfile() {
     <>
       <PageSEO
         title={expert ? expert.name : 'Эксперт'}
-        description={expert?.bio || 'Профиль эксперта на платформе Право БY.'}
+        description={expert?.bio || 'Профиль эксперта.'}
         path={`/experts/${id}`}
       />
       <section className="mx-auto max-w-3xl px-4 lg:px-8 py-12">

@@ -52,7 +52,7 @@ async function fetchDocumentMeta(
   try {
     const url = `https://pravo.by/document/?guid=3961&p0=${code}`;
     const response = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; PravoBY-Bot/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LegalPortal-Bot/1.0)" },
     });
     if (!response.ok) return null;
     const html = await response.text();
