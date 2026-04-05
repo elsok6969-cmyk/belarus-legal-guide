@@ -120,10 +120,9 @@ export default function PublicDocumentView() {
   const { data: doc, isLoading } = useQuery({
     queryKey: ['public-doc', slug || id],
     queryFn: async () => {
-      let q = supabase.from('documents').select('*');
-      if (isSlugRoute && slug) q = q.eq('slug' as any, slug);
-      else if (id) q = q.eq('id', id);
-      const { data } = await q.single();
+      const col = (isSlugRoute && slug) ? 'slug' : 'id';
+      const val = (isSlugRoute && slug) ? slug : id!;
+      const { data } = await supabase.from('documents').select('*').eq(col as any, val).single();
       return data as any;
     },
     enabled: !!(slug || id),
