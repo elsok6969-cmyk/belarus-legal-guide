@@ -1,98 +1,64 @@
 
 
-# Система профилей, подписок и авторизации
+# Edge Function для импорта документов из pravo.by
 
 ## Обзор
-Создать новые таблицы (profiles с планами, user_favorites, view_history, user_subscriptions, subscription_requests), переработать страницы авторизации (/auth с табами), профиля (/profile) и подписок (/subscription). Обновить триггер handle_new_user.
-
-## Важные решения по схеме
-
-Уже существует таблица `profiles` с колонками `id, user_id, display_name, avatar_url, created_at, updated_at`. Также существуют таблицы `bookmarks` и `subscriptions`. Предлагаю:
-
-1. **Не создавать дублирующие таблицы** (`user_favorites` → использовать существующую `bookmarks`, `user_subscriptions` → использующую `subscriptions`)
-2. **Расширить существующую `profiles`** — добавить колонки `plan`, `plan_expires_at`, `ai_requests_today`, `ai_requests_reset_at`, `full_name`
-3. **Создать только новые таблицы**: `view_history`, `subscription_requests`
-4. **Обновить триггер** `handle_new_user` чтобы заполнять email
+Создать edge function `import-documents` для автоматического импорта кодексов Беларуси, таблицу `import_logs` для логирования, добавить `content_hash` в `documents`, и настроить ежедневный cron.
 
 ## Шаг 1. Миграция базы данных
 
-**Расширить `profiles`:**
-- `plan text DEFAULT 'free'` (без CHECK — используем валидацию триггером)
-- `plan_expires_at timestamptz`
-- `ai_requests_today integer DEFAULT 0`
-- `ai_requests_reset_at date DEFAULT CURRENT_DATE`
-- `full_name text`
-- `email text`
+- Создать таблицу `import_logs` (id, type, limit_count, status, imported, updated, errors, duration_ms, error_message, started_at, completed_at)
+- RLS: только service_role может читать/писать
+- Добавить колонку `content_hash text` в `documents`
 
-**Создать `view_history`:**
-- `id uuid PK`, `user_id uuid`, `document_id uuid`, `viewed_at timestamptz DEFAULT now()`
-- RLS: `auth.uid() = user_id` для ALL
-- Индекс на `(user_id, viewed_at DESC)`
+## Шаг 2. Edge Function `supabase/functions/import-documents/index.ts`
 
-**Создать `subscription_requests`:**
-- `id uuid PK`, `user_id uuid`, `plan text`, `full_name text`, `email text`, `phone text`, `status text DEFAULT 'pending'`, `created_at timestamptz`
-- RLS: authenticated INSERT own + SELECT own
+Основная логика из запроса пользователя с доработками:
+- CORS headers для совместимости
+- Список 26 кодексов с кодами pravo.by и slug
+- `fetchDocumentMeta()` — парсинг HTML с pravo.by (title, date_adopted, reg_number, organ)
+- `fetchDocumentText()` — получение markdown через Firecrawl API (если ключ есть)
+- SHA-256 хеширование для определения изменений
+- Upsert логика: insert новых / update изменённых по slug
+- Rate limiting (500ms между запросами)
+- Логирование в `import_logs`
+- Авторизация через Bearer token (`IMPORT_SECRET`)
 
-**Обновить триггер** `handle_new_user` — добавить `email` в INSERT
+**Отличия от пользовательского кода:**
+- Добавлены CORS headers
+- Используется `Deno.serve` вместо устаревшего `serve` из std
+- Колонка в import_logs называется `limit_count` (не `limit` — зарезервированное слово)
 
-**Валидационный триггер** для `profiles.plan` — проверять допустимые значения (free, standard, pro, business)
+## Шаг 3. Секреты
 
-## Шаг 2. Страница `/auth` — объединённая авторизация
+Запросить у пользователя два секрета:
+1. **IMPORT_SECRET** — произвольная строка для авторизации cron-вызовов
+2. **FIRECRAWL_API_KEY** — ключ Firecrawl (опционален, без него текст не скачивается)
 
-Новый файл `src/pages/Auth.tsx`:
-- Табы: «Войти» | «Регистрация»
-- Вход: email + пароль, ссылка «Забыли пароль?», Google OAuth (через `lovable.auth.signInWithOAuth`)
-- Регистрация: email + пароль + подтверждение пароля + чекбокс условий, Google OAuth
-- Валидация: email формат, пароль ≥ 8, подтверждение совпадает
-- После регистрации: сообщение «Проверьте email»
-- Редирект на `/profile` если уже авторизован
+Firecrawl доступен как коннектор, но у пользователя нет подключений — предложу подключить или ввести ключ вручную.
 
-## Шаг 3. Страница `/auth/reset-password` — сброс пароля
+## Шаг 4. Cron-задача
 
-`src/pages/ResetPassword.tsx`:
-- Форма ввода нового пароля
-- Проверка `type=recovery` в URL hash
-- Вызов `supabase.auth.updateUser({ password })`
-
-## Шаг 4. Страница `/profile` — профиль пользователя
-
-`src/pages/Profile.tsx` (за AuthGuard):
-- **Карточка тарифа**: название плана, дата окончания, прогресс-бар AI-запросов (для free), кнопка «Улучшить»
-- **4 вкладки (Tabs)**:
-  1. Закладки — из `bookmarks JOIN documents`, удаление
-  2. История — из `view_history JOIN documents` (20 последних), кнопка «Очистить»
-  3. Подписки — из `subscriptions JOIN documents`, отписка
-  4. Настройки — имя (editable), email (readonly), смена пароля, удаление аккаунта
-
-## Шаг 5. Страница `/subscription` — тарифы
-
-`src/pages/Subscription.tsx`:
-- 4 карточки (free/standard/pro/business) с ценами в BYN
-- «Профи» выделен border-2 + badge «Популярный»
-- Текущий тариф пользователя подсвечен
-- Кнопка «Подключить» → диалог с формой (имя, email, телефон)
-- Заявка сохраняется в `subscription_requests`
-
-## Шаг 6. Обновить маршруты (`App.tsx`)
-
-- `/auth` → Auth (заменить /login и /register)
-- `/auth/reset-password` → ResetPassword
-- `/profile` → Profile (с AuthGuard)
-- `/subscription` → Subscription
-- Сохранить старые /login, /register как редиректы на /auth
+Использовать `pg_cron` + `pg_net` для ежедневного вызова в 03:00 UTC:
+```sql
+SELECT cron.schedule('daily-import', '0 3 * * *', $$
+  SELECT net.http_post(
+    url := 'https://zqcuqodccbpwawtlrafw.supabase.co/functions/v1/import-documents',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer <IMPORT_SECRET>"}'::jsonb,
+    body := '{"type":"codex","limit":26}'::jsonb
+  ) AS request_id;
+$$);
+```
+Это будет выполнено через insert tool (не миграцию), так как содержит пользовательские данные.
 
 ## Затрагиваемые файлы
-- Миграция SQL (profiles extension, view_history, subscription_requests, trigger update)
-- `src/pages/Auth.tsx` — новый
-- `src/pages/ResetPassword.tsx` — новый
-- `src/pages/Profile.tsx` — новый
-- `src/pages/Subscription.tsx` — новый
-- `src/App.tsx` — новые маршруты
-- `src/components/layout/PublicHeader.tsx` — обновить ссылки на /auth
+- Миграция SQL — `import_logs` table + `content_hash` column
+- `supabase/functions/import-documents/index.ts` — новый
+- Cron SQL — через insert tool после получения IMPORT_SECRET
 
-## Технические детали
-- Google OAuth через `lovable.auth.signInWithOAuth("google", ...)` (Lovable Cloud managed)
-- Существующие `bookmarks` и `subscriptions` используются вместо дублирующих таблиц
-- Clipboard API не нужен — используется для /profile только DB-операции
-- Удаление аккаунта: показать предупреждение, фактическое удаление требует edge function (заглушка с toast)
+## Порядок действий
+1. Миграция (import_logs + content_hash)
+2. Создать edge function
+3. Запросить IMPORT_SECRET и FIRECRAWL_API_KEY
+4. После получения секретов — настроить cron
 
