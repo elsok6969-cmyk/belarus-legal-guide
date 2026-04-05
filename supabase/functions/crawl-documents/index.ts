@@ -129,20 +129,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth check — allow service role or IMPORT_SECRET
-  const authHeader = req.headers.get("Authorization") || "";
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-  const importSecret = Deno.env.get("IMPORT_SECRET");
-  const isServiceRole = authHeader.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "NONE");
-  const isImportAuth = importSecret && authHeader === `Bearer ${importSecret}`;
-  const isAnonKey = authHeader.includes(supabaseAnonKey);
-
-  if (!isServiceRole && !isImportAuth && !isAnonKey) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // No custom auth — rely on edge function config
 
   const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!firecrawlKey) {
