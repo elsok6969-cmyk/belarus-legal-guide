@@ -402,6 +402,7 @@ export type Database = {
       documents: {
         Row: {
           body_text: string | null
+          content_hash: string | null
           created_at: string
           date_adopted: string | null
           date_effective: string | null
@@ -423,6 +424,7 @@ export type Database = {
         }
         Insert: {
           body_text?: string | null
+          content_hash?: string | null
           created_at?: string
           date_adopted?: string | null
           date_effective?: string | null
@@ -444,6 +446,7 @@ export type Database = {
         }
         Update: {
           body_text?: string | null
+          content_hash?: string | null
           created_at?: string
           date_adopted?: string | null
           date_effective?: string | null
@@ -492,6 +495,48 @@ export type Database = {
           id?: string
           name?: string
           specialty?: string | null
+        }
+        Relationships: []
+      }
+      import_logs: {
+        Row: {
+          completed_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          errors: number | null
+          id: string
+          imported: number | null
+          limit_count: number | null
+          started_at: string | null
+          status: string | null
+          type: string | null
+          updated: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          errors?: number | null
+          id?: string
+          imported?: number | null
+          limit_count?: number | null
+          started_at?: string | null
+          status?: string | null
+          type?: string | null
+          updated?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          errors?: number | null
+          id?: string
+          imported?: number | null
+          limit_count?: number | null
+          started_at?: string | null
+          status?: string | null
+          type?: string | null
+          updated?: number | null
         }
         Relationships: []
       }
