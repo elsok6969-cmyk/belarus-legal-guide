@@ -174,7 +174,6 @@ function parseMarkdownIntoSections(markdown: string): Section[] {
       sort_order: 0,
     });
   }
-  }
 
   return sections;
 }
