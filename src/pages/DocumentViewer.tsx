@@ -46,6 +46,18 @@ interface DocSection {
   sort_order: number;
 }
 
+/** Strip navigation breadcrumbs / social links from pravo.by markdown */
+function cleanBodyText(text: string): string {
+  const markers = ['Статья 1', 'РАЗДЕЛ I', 'ОБЩАЯ ЧАСТЬ', 'ГЛАВА 1', '## Статья'];
+  for (const marker of markers) {
+    const idx = text.indexOf(marker);
+    if (idx !== -1 && idx < text.length * 0.3) {
+      return text.slice(idx);
+    }
+  }
+  return text;
+}
+
 export default function DocumentViewer() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
