@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useState, useMemo, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
@@ -43,6 +44,18 @@ interface DocSection {
   content: string | null;
   level: number;
   sort_order: number;
+}
+
+/** Strip navigation breadcrumbs / social links from pravo.by markdown */
+function cleanBodyText(text: string): string {
+  const markers = ['Статья 1', 'РАЗДЕЛ I', 'ОБЩАЯ ЧАСТЬ', 'ГЛАВА 1', '## Статья'];
+  for (const marker of markers) {
+    const idx = text.indexOf(marker);
+    if (idx !== -1 && idx < text.length * 0.3) {
+      return text.slice(idx);
+    }
+  }
+  return text;
 }
 
 export default function DocumentViewer() {
@@ -385,8 +398,8 @@ export default function DocumentViewer() {
                       </h2>
                     )}
                     {section.content && (
-                      <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                        {section.content}
+                      <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
+                        <ReactMarkdown>{section.content}</ReactMarkdown>
                       </div>
                     )}
                   </div>
@@ -401,8 +414,8 @@ export default function DocumentViewer() {
             <CardTitle className="text-base">Текст документа</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-              {doc.body_text}
+            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
+              <ReactMarkdown>{cleanBodyText(doc.body_text)}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>
