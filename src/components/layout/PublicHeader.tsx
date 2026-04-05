@@ -18,21 +18,25 @@ export function PublicHeader() {
 
   return (
     <header role="banner" className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <Scale className="h-5 w-5 text-primary" />
-          Право&nbsp;БY
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5 font-extrabold text-xl tracking-tight">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
+            <Scale className="h-4.5 w-4.5 text-primary-foreground" />
+          </div>
+          <span>Право<span className="text-primary">&nbsp;БY</span></span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-0.5">
           {navLinks.map((l) => (
             <Link
               key={l.to}
               to={l.to}
               className={cn(
-                'px-3 py-2 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                location.pathname === l.to && 'bg-accent text-accent-foreground font-medium'
+                'px-3 py-2 rounded-md text-sm font-medium transition-colors hover:text-primary',
+                location.pathname === l.to
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
               )}
             >
               {l.label}
@@ -40,18 +44,18 @@ export function PublicHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
+        <div className="hidden lg:flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="font-medium">
             <Link to="/login">Войти</Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="font-medium">
             <Link to="/register">Регистрация</Link>
           </Button>
         </div>
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden p-2"
+          className="lg:hidden p-2"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Меню"
         >
@@ -61,7 +65,7 @@ export function PublicHeader() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t bg-card px-4 pb-4">
+        <div className="lg:hidden border-t bg-card px-4 pb-4">
           <nav className="flex flex-col gap-1 pt-2">
             {navLinks.map((l) => (
               <Link
@@ -69,8 +73,10 @@ export function PublicHeader() {
                 to={l.to}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'px-3 py-2 rounded-md text-sm transition-colors hover:bg-accent',
-                  location.pathname === l.to && 'bg-accent font-medium'
+                  'px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
+                  location.pathname === l.to
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {l.label}
