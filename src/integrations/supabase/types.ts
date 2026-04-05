@@ -383,6 +383,7 @@ export type Database = {
           date_effective: string | null
           doc_number: string | null
           doc_type: string
+          fts: unknown
           id: string
           is_free: boolean | null
           organ: string | null
@@ -403,6 +404,7 @@ export type Database = {
           date_effective?: string | null
           doc_number?: string | null
           doc_type?: string
+          fts?: unknown
           id?: string
           is_free?: boolean | null
           organ?: string | null
@@ -423,6 +425,7 @@ export type Database = {
           date_effective?: string | null
           doc_number?: string | null
           doc_type?: string
+          fts?: unknown
           id?: string
           is_free?: boolean | null
           organ?: string | null
