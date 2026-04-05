@@ -68,6 +68,7 @@ const App = () => (
           <Route path="/calendar" element={<PublicLayout><PublicCalendar /></PublicLayout>} />
           <Route path="/documents" element={<PublicLayout><PublicDocuments /></PublicLayout>} />
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
+          <Route path="/doc/:slug" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
 
           {/* App pages — auth temporarily disabled for review */}
           <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
