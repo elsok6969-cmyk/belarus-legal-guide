@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, FileText, Clock } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
