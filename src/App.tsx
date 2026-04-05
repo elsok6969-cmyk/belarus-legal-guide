@@ -60,17 +60,17 @@ const App = () => (
           <Route path="/experts" element={<PublicLayout><Experts /></PublicLayout>} />
           <Route path="/experts/:id" element={<PublicLayout><ExpertProfile /></PublicLayout>} />
 
-          {/* Authenticated app */}
-          <Route path="/app" element={<AuthGuard><AppLayout><Index /></AppLayout></AuthGuard>} />
-          <Route path="/app/search" element={<AuthGuard><AppLayout><AppSearch /></AppLayout></AuthGuard>} />
-          <Route path="/app/documents/:id" element={<AuthGuard><AppLayout><DocumentViewer /></AppLayout></AuthGuard>} />
-          <Route path="/app/bookmarks" element={<AuthGuard><AppLayout><Bookmarks /></AppLayout></AuthGuard>} />
-          <Route path="/app/topics" element={<AuthGuard><AppLayout><AppTopics /></AppLayout></AuthGuard>} />
-          <Route path="/app/assistant" element={<AuthGuard><AppLayout><AIChat /></AppLayout></AuthGuard>} />
-          <Route path="/app/updates" element={<AuthGuard><AppLayout><Updates /></AppLayout></AuthGuard>} />
-          <Route path="/app/settings" element={<AuthGuard><AppLayout><Settings /></AppLayout></AuthGuard>} />
-          <Route path="/app/services/rates" element={<AuthGuard><AppLayout><CurrencyRates /></AppLayout></AuthGuard>} />
-          <Route path="/app/services/calendar" element={<AuthGuard><AppLayout><DeadlineCalendar /></AppLayout></AuthGuard>} />
+          {/* App pages — auth temporarily disabled for review */}
+          <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/app/search" element={<AppLayout><AppSearch /></AppLayout>} />
+          <Route path="/app/documents/:id" element={<AppLayout><DocumentViewer /></AppLayout>} />
+          <Route path="/app/bookmarks" element={<AppLayout><Bookmarks /></AppLayout>} />
+          <Route path="/app/topics" element={<AppLayout><AppTopics /></AppLayout>} />
+          <Route path="/app/assistant" element={<AppLayout><AIChat /></AppLayout>} />
+          <Route path="/app/updates" element={<AppLayout><Updates /></AppLayout>} />
+          <Route path="/app/settings" element={<AppLayout><Settings /></AppLayout>} />
+          <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
+          <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
