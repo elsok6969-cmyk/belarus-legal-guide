@@ -17,8 +17,9 @@ export default function Experts() {
   return (
     <>
       <PageSEO
-        title="Эксперты — Право БY"
+        title="Эксперты"
         description="Наши эксперты: юристы, бухгалтеры и специалисты по законодательству Республики Беларусь."
+        path="/experts"
       />
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="flex items-center gap-3 mb-8">

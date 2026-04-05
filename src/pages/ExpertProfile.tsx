@@ -11,8 +11,9 @@ export default function ExpertProfile() {
   return (
     <>
       <PageSEO
-        title="Профиль эксперта — Право БY"
+        title="Профиль эксперта"
         description="Профиль эксперта и список публикаций на платформе Право БY."
+        path={`/experts/${id}`}
       />
       <section className="mx-auto max-w-3xl px-4 py-12">
         <Button asChild variant="ghost" size="sm" className="mb-6">

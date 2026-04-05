@@ -15,8 +15,9 @@ export default function News() {
   return (
     <>
       <PageSEO
-        title="Новости и аналитика — Право БY"
+        title="Новости и аналитика"
         description="Актуальные новости законодательства Республики Беларусь, экспертные обзоры и аналитические материалы."
+        path="/news"
       />
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="flex items-center gap-3 mb-8">

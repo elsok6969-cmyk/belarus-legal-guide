@@ -16,8 +16,9 @@ export default function Topics() {
   return (
     <>
       <PageSEO
-        title="Темы — Право БY"
+        title="Темы"
         description="Каталог правовых тем: налоги, трудовое право, договоры, бухучёт и другие отрасли законодательства РБ."
+        path="/topics"
       />
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="flex items-center gap-3 mb-8">

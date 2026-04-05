@@ -10,8 +10,9 @@ export default function TopicDetail() {
   return (
     <>
       <PageSEO
-        title={`Тема: ${slug} — Право БY`}
+        title={`Тема: ${slug}`}
         description={`Статьи и документы по теме «${slug}» в законодательстве Республики Беларусь.`}
+        path={`/topics/${slug}`}
       />
       <section className="mx-auto max-w-4xl px-4 py-12">
         <Button asChild variant="ghost" size="sm" className="mb-6">

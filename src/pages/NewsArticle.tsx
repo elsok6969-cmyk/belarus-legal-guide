@@ -10,8 +10,9 @@ export default function NewsArticle() {
   return (
     <>
       <PageSEO
-        title="Статья — Право БY"
+        title="Статья"
         description="Экспертная статья по законодательству Республики Беларусь."
+        path={`/news/${slug}`}
       />
       <article className="mx-auto max-w-3xl px-4 py-12">
         <Button asChild variant="ghost" size="sm" className="mb-6">
