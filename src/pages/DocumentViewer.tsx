@@ -414,8 +414,8 @@ export default function DocumentViewer() {
             <CardTitle className="text-base">Текст документа</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-              {doc.body_text}
+            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
+              <ReactMarkdown>{cleanBodyText(doc.body_text)}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>
