@@ -24,7 +24,7 @@ export function PublicFooter() {
           <div>
             <h4 className="text-sm font-semibold mb-3">О проекте</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Современный правовой портал Беларуси. Не является официальным источником права.
+              Бабиджон. Не является официальным источником права.
             </p>
           </div>
 

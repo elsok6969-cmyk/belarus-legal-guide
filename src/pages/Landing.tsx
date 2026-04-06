@@ -136,7 +136,7 @@ export default function Landing() {
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Правовой портал Беларуси',
+    name: 'Бабиджон',
     description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов бесплатно',
     inLanguage: 'ru',
   };
