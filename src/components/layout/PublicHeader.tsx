@@ -8,9 +8,9 @@ import { useTheme } from '@/hooks/useTheme';
 const navLinks = [
   { label: 'Документы', to: '/documents' },
   { label: 'Кодексы', to: '/documents?filter=codex' },
+  { label: 'Курсы валют', to: '/currencies' },
   { label: 'Календарь', to: '/calendar' },
   { label: 'Тарифы', to: '/pricing' },
-  { label: 'AI-помощник', to: '/app/assistant' },
 ];
 
 export function PublicHeader() {
@@ -24,11 +24,11 @@ export function PublicHeader() {
   };
 
   return (
-    <header role="banner" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header role="banner" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 font-extrabold text-lg tracking-tight text-foreground">
-          Портал
+          Бабиджон
         </Link>
 
         {/* Desktop nav — centered */}
