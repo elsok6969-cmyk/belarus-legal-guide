@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 
 const sections = [
   { label: 'Документы', to: '/documents' },
@@ -24,7 +24,7 @@ export function PublicFooter() {
           <div>
             <h4 className="text-sm font-semibold mb-3">О проекте</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Бабиджон. Не является официальным источником права.
+              Бабиджон — справочная правовая система. Не является официальным источником права.
             </p>
           </div>
 
@@ -64,14 +64,35 @@ export function PublicFooter() {
           {/* Contacts */}
           <div>
             <h4 className="text-sm font-semibold mb-3">Контакты</h4>
-            <p className="text-sm text-muted-foreground">—</p>
+            <ul className="space-y-2">
+              <li>
+                <a href="mailto:info@babijon.by" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5" />
+                  info@babijon.by
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/babijon_support" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <Send className="h-3.5 w-3.5" />
+                  @babijon_support
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="mt-10 border-t pt-6">
-          <p className="text-center text-xs text-muted-foreground">
+        <div className="mt-10 border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Информация носит справочный характер.
           </p>
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Условия использования
+            </Link>
+            <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Политика конфиденциальности
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -18,6 +18,8 @@ import Pricing from './pages/Pricing';
 import Legal from './pages/Legal';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Subscription from './pages/Subscription';
 import News from './pages/News';
 import NewsArticle from './pages/NewsArticle';
@@ -75,6 +77,8 @@ const App = () => (
           <Route path="/legal" element={<PublicLayout><Legal /></PublicLayout>} />
           <Route path="/auth" element={<PublicLayout><Auth /></PublicLayout>} />
           <Route path="/auth/reset-password" element={<PublicLayout><ResetPassword /></PublicLayout>} />
+          <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+          <Route path="/privacy" element={<PublicLayout><Privacy /></PublicLayout>} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/register" element={<Navigate to="/auth" replace />} />
           <Route path="/news" element={<PublicLayout><News /></PublicLayout>} />
