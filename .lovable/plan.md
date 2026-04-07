@@ -1,44 +1,79 @@
 
 
-# Plan: Admin Import Dashboard (`/admin/import`)
+# Plan: Full-Text Search with PostgreSQL Functions
 
 ## Overview
-Create an admin-only page at `/admin/import` with 4 sections: database status, codex import, single document import, and data cleanup tools.
+Replace the current `ilike`-based search with proper PostgreSQL full-text search using `ts_vector`/`ts_query`, add advanced filters, snippet highlighting, pagination, and URL sync. Two DB functions + rewritten `AppSearch.tsx`.
 
 ## Steps
 
-### 1. Create `AdminGuard` component
-New file `src/components/auth/AdminGuard.tsx`. Wraps children, checks auth + admin role via `user_roles` table (using `has_role` pattern). Shows spinner while loading, redirects to `/` if not admin.
+### 1. Database migration — two search functions
 
-### 2. Create `AdminImport` page
-New file `src/pages/AdminImport.tsx` with 4 sections:
+**`search_documents`**: Accepts query, filters (type slug, status, date range, issuing body, exact_match, title_only), limit/offset. Returns joined results with `ts_headline` snippets, `ts_rank_cd` ranking, and `total_count` via window function. Uses `websearch_to_tsquery('russian', ...)` by default, `phraseto_tsquery` for exact match. Falls back to `ilike` on title if query is empty (browse mode).
 
-**Section 1 — Database Status**: Query `document_types` joined with `documents`, compute counts (total, with content >500 chars, broken). Display in a table with conditional row colors (yellow if broken > 0, red if no content at all).
+**`search_within_document`**: Accepts document_id + query. Searches `document_sections.content_text` with snippets and ranking. For use inside the document viewer.
 
-**Section 2 — Import Codexes**: Button calls `import-codexes` edge function via fetch (SSE stream). Progress bar + readonly textarea log with auto-scroll. Supports batch parameter. Parses SSE `data:` lines for progress updates.
+### 2. Rewrite `AppSearch.tsx`
 
-**Section 3 — Single Document Import**: URL input + document type dropdown (fetched from `document_types`). "Parse" button calls `parse-pravo-document` edge function. Shows preview (title, char count, first 500 chars). "Save to DB" button inserts into `documents` + `document_sections`.
+Replace the entire page with a new implementation:
 
-**Section 4 — Data Cleanup**: Three buttons with confirmation dialogs:
-- Delete broken records (content_text < 500 chars) — calls delete via supabase client
-- Delete duplicates (same title + type, keep largest) — custom logic
-- Reindex — calls a small edge function or raw SQL
+- **URL sync**: Read/write `q`, `type`, `status`, `exact`, `title_only`, `date_from`, `date_to`, `body`, `page` from `useSearchParams`. On mount, if `q` exists, auto-search.
+- **Search bar**: Large input with Search icon, submit on Enter/button click. Below it, collapsible "Расширенный поиск" panel.
+- **Advanced filters panel** (hidden by default, toggled by link):
+  - Checkboxes: "Точное совпадение", "Искать только в названии"
+  - Select: document type (from `document_types` table)
+  - Input: issuing body name
+  - Date range: two date inputs (от — до)
+  - Select: status
+- **Results**: Count header, cards with type badge + status badge, title as link to `/app/documents/:id`, metadata row (number, date, issuing body), snippet with `<mark>` rendered via `dangerouslySetInnerHTML`.
+- **Pagination**: Page buttons at bottom, 50 results per page.
+- **Loading**: Skeleton cards. **Empty**: contextual message.
 
-Each dangerous action shows an `AlertDialog` with count of affected records before proceeding.
+### 3. Update route (no change needed)
 
-### 3. Add route to `App.tsx`
-Add `/admin/import` route wrapped in `AdminGuard` + `AppLayout`.
+Route `/app/search` already points to `AppSearch` in `App.tsx`. No routing changes needed.
 
-### Technical Details
+## Technical Details
 
-- **Role check**: Query `user_roles` table where `user_id = auth.uid()` and `role = 'admin'`. This uses the existing `user_roles` table and `has_role` function.
-- **SSE parsing**: Use `fetch` + `ReadableStream` reader to parse `text/event-stream` from `import-codexes`.
-- **Cleanup operations**: Since the client has RLS restricting deletes to admin role, the delete/update operations need to go through edge functions (service_role). Will create a small `admin-cleanup` edge function for delete/reindex operations.
-- **Edge function for cleanup**: New `supabase/functions/admin-cleanup/index.ts` that accepts action type (`delete_broken`, `delete_duplicates`, `reindex`) and performs the operation with service_role privileges. Validates admin role from JWT before executing.
+### SQL function signature
+```sql
+CREATE OR REPLACE FUNCTION search_documents(
+  search_query text,
+  filter_type text DEFAULT NULL,
+  filter_status text DEFAULT NULL,
+  filter_date_from date DEFAULT NULL,
+  filter_date_to date DEFAULT NULL,
+  filter_body text DEFAULT NULL,
+  exact_match boolean DEFAULT false,
+  title_only boolean DEFAULT false,
+  result_limit integer DEFAULT 50,
+  result_offset integer DEFAULT 0
+) RETURNS TABLE (
+  id uuid, title text, short_title text, doc_number text,
+  doc_date date, status text, document_type_name text,
+  document_type_slug text, issuing_body_name text,
+  snippet text, rank real, total_count bigint
+)
+```
 
-### Files to create/modify
-- **Create**: `src/components/auth/AdminGuard.tsx`
-- **Create**: `src/pages/AdminImport.tsx`
-- **Create**: `supabase/functions/admin-cleanup/index.ts`
-- **Modify**: `src/App.tsx` — add admin route
+- When `search_query` is empty/null: skip FTS, return all docs matching filters ordered by `doc_date DESC`
+- Snippet uses `ts_headline('russian', ...)` with `MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>`
+- Filters applied via `WHERE` clauses with `COALESCE` for optional params
+
+### Frontend RPC call
+```typescript
+const { data } = await supabase.rpc('search_documents', {
+  search_query: q,
+  filter_type: type || null,
+  filter_status: status || null,
+  exact_match: exactMatch,
+  title_only: titleOnly,
+  result_limit: 50,
+  result_offset: (page - 1) * 50,
+});
+```
+
+### Files
+- **Migration**: New SQL migration with both functions
+- **Rewrite**: `src/pages/AppSearch.tsx` — complete rewrite with URL params, advanced filters, pagination
 
