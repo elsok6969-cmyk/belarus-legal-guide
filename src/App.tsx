@@ -46,6 +46,7 @@ import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
 import Subscribe from './pages/Subscribe';
+import Guide from './pages/Guide';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
 
