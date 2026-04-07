@@ -44,6 +44,7 @@ import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import AdminHealth from './pages/AdminHealth';
+import NewDocuments from './pages/NewDocuments';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
@@ -131,6 +132,7 @@ const App = () => (
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
           <Route path="/app/guide" element={<AppLayout><Guide /></AppLayout>} />
           <Route path="/app/forms" element={<AppLayout><Forms /></AppLayout>} />
+          <Route path="/app/new-documents" element={<AppLayout><NewDocuments /></AppLayout>} />
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
