@@ -128,6 +128,7 @@ export default function DocumentViewer() {
       return dbSections.filter(s => s.level <= 3).map(s => ({
         id: s.id,
         title: s.number ? `${s.number} ${s.title || ''}` : s.title,
+        number: s.number,
         level: s.level,
         sort_order: s.sort_order,
         section_type: s.section_type,
@@ -138,6 +139,7 @@ export default function DocumentViewer() {
       return getTocSections(virtualSections).map(s => ({
         id: s.id,
         title: s.title,
+        number: null as string | null,
         level: s.level,
         sort_order: s.sort_order,
         section_type: 'virtual',
