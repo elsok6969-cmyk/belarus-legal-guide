@@ -9,6 +9,7 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AdminGuard } from '@/components/auth/AdminGuard';
+import AccountLayout from '@/components/layout/AccountLayout';
 
 import Landing from './pages/Landing';
 import About from './pages/About';
@@ -17,7 +18,6 @@ import Pricing from './pages/Pricing';
 import Legal from './pages/Legal';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
-import Profile from './pages/Profile';
 import Subscription from './pages/Subscription';
 import News from './pages/News';
 import NewsArticle from './pages/NewsArticle';
@@ -37,7 +37,6 @@ import Bookmarks from './pages/Bookmarks';
 import AppTopics from './pages/AppTopics';
 import AIChat from './pages/AIChat';
 import Updates from './pages/Updates';
-import Settings from './pages/Settings';
 import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
@@ -50,6 +49,13 @@ import Guide from './pages/Guide';
 import Forms from './pages/Forms';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
+
+import ProfilePage from './pages/account/ProfilePage';
+import SettingsPage from './pages/account/SettingsPage';
+import FavoritesPage from './pages/account/FavoritesPage';
+import NotificationsPage from './pages/account/NotificationsPage';
+import HistoryPage from './pages/account/HistoryPage';
+import SubscriptionPage from './pages/account/SubscriptionPage';
 
 const queryClient = new QueryClient();
 
@@ -85,21 +91,33 @@ const App = () => (
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
           <Route path="/doc/:slug" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
 
-          {/* Authenticated pages */}
-          <Route path="/profile" element={<PublicLayout><AuthGuard><Profile /></AuthGuard></PublicLayout>} />
+          {/* Public subscription pages */}
           <Route path="/subscription" element={<PublicLayout><Subscription /></PublicLayout>} />
           <Route path="/subscribe/:plan" element={<PublicLayout><Subscribe /></PublicLayout>} />
           <Route path="/ai-assistant" element={<AppLayout><AIChat /></AppLayout>} />
+
+          {/* Account pages (inside AppLayout with nested AccountLayout) */}
+          <Route path="/app/account" element={<AppLayout><AccountLayout /></AppLayout>}>
+            <Route index element={<Navigate to="profile" replace />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="favorites" element={<FavoritesPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="history" element={<HistoryPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
+          </Route>
+          {/* Redirect old routes */}
+          <Route path="/profile" element={<Navigate to="/app/account/profile" replace />} />
+          <Route path="/app/settings" element={<Navigate to="/app/account/settings" replace />} />
+          <Route path="/app/bookmarks" element={<Navigate to="/app/account/favorites" replace />} />
+          <Route path="/app/updates" element={<Navigate to="/app/account/notifications" replace />} />
 
           {/* App pages */}
           <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
           <Route path="/app/search" element={<AppLayout><AppSearch /></AppLayout>} />
           <Route path="/app/documents/:id" element={<AppLayout><DocumentViewer /></AppLayout>} />
-          <Route path="/app/bookmarks" element={<AppLayout><Bookmarks /></AppLayout>} />
           <Route path="/app/topics" element={<AppLayout><AppTopics /></AppLayout>} />
           <Route path="/app/assistant" element={<AppLayout><AIChat /></AppLayout>} />
-          <Route path="/app/updates" element={<AppLayout><Updates /></AppLayout>} />
-          <Route path="/app/settings" element={<AppLayout><Settings /></AppLayout>} />
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
           <Route path="/app/codex" element={<AppLayout><Codexes /></AppLayout>} />
