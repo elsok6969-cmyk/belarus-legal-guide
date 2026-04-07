@@ -51,7 +51,7 @@ export default function WorkExperienceCalc() {
 
   return (
     <>
-      <PageSEO title="Трудовой стаж — Калькулятор" description="Подсчёт общего трудового стажа" />
+      <PageSEO title="Трудовой стаж — Калькулятор" description="Подсчёт общего трудового стажа" path="/app/calculator/work-experience" />
       <div className="space-y-4">
         <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы

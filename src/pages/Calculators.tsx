@@ -68,7 +68,7 @@ export default function Calculators() {
 
   return (
     <>
-      <PageSEO title="Калькуляторы — Бабиджон" description="Профессиональные калькуляторы для бухгалтеров и юристов" />
+      <PageSEO title="Калькуляторы — Бабиджон" description="Профессиональные калькуляторы для бухгалтеров и юристов" path="/app/calculator" />
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Калькуляторы</h1>

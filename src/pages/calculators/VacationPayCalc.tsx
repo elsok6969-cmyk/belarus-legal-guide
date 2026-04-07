@@ -32,7 +32,7 @@ export default function VacationPayCalc() {
 
   return (
     <>
-      <PageSEO title="Расчёт отпускных — Калькулятор" description="Расчёт суммы отпускных в РБ" />
+      <PageSEO title="Расчёт отпускных — Калькулятор" description="Расчёт суммы отпускных в РБ" path="/app/calculator/vacation-pay" />
       <div className="space-y-4">
         <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы

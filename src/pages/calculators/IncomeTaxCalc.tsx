@@ -49,7 +49,7 @@ export default function IncomeTaxCalc() {
 
   return (
     <>
-      <PageSEO title="Подоходный налог — Калькулятор" description="Расчёт подоходного налога РБ" />
+      <PageSEO title="Подоходный налог — Калькулятор" description="Расчёт подоходного налога РБ" path="/app/calculator/income-tax" />
       <div className="space-y-4">
         <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы

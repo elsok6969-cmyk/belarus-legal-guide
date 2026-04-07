@@ -37,7 +37,7 @@ export default function VatCalc() {
 
   return (
     <>
-      <PageSEO title="Калькулятор НДС — Бабиджон" description="Выделить или начислить НДС" />
+      <PageSEO title="Калькулятор НДС — Бабиджон" description="Выделить или начислить НДС" path="/app/calculator/vat" />
       <div className="space-y-4">
         <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
