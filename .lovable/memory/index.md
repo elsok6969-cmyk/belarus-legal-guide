@@ -1,16 +1,16 @@
 # Project Memory
 
 ## Core
-Belarus Law Portal — legal document search + AI assistant. Name/domain TBD.
-All UI in Russian. Lovable Cloud backend. Inter font.
-Primary blue #2563EB (HSL 215 80% 42%), dark sidebar. 
+Belarus Law Platform — legal document search + AI assistant (pravo.by alternative).
+All UI in Russian. Lovable Cloud backend. SF Pro / system font stack.
+Primary amber #F0B429, navy text. Apple-minimal aesthetic.
 NOT legal advice — AI must ALWAYS show disclaimer + source citations.
 No extra modules (CRM, billing, admin) unless explicitly requested.
 Landing content is STATIC only — never AI-generated. AI assistant only behind login.
 Not affiliated with government — always state independence clearly.
 
 ## Memories
-- [Design tokens](mem://design/tokens) — Color palette, warning tokens, sidebar dark theme
+- [Design tokens](mem://design/tokens) — Apple-minimal palette: amber accent, navy text, pill buttons, frosted header
 - [SEO & accessibility](mem://design/seo-accessibility) — Meta tags, headings, ARIA, JSON-LD, trust rules
 - [Auth flow](mem://features/auth) — Email+password, profiles table, auto-create on signup
 - [Audit logging](mem://features/audit-logs) — audit_logs table structure and RLS
