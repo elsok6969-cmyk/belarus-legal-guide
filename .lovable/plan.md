@@ -1,50 +1,54 @@
 
 
-# Plan: Professional Dashboard for `/app` (Index page)
+# Plan: Calculator Catalog + 5 Calculators
 
 ## Overview
-Complete rewrite of `Index.tsx` into a professional dashboard with enhanced TopBar (search + economic indicators + notifications), horizontal quick-nav carousel, and two-column content layout with recommendations, new documents, articles, favorites, history, and mini calendar.
+Create a calculator catalog page at `/app/calculator` and 5 individual calculator pages, each with live-updating results, copy/print, and responsive two-column layout.
 
 ## Steps
 
-### 1. Enhance `TopBar.tsx`
-- Add functional search input that navigates to `/app/search?q=...` on Enter
-- Add economic indicators strip from `economic_indicators` table (with tooltips showing `effective_date`)
-- Add notification bell with unread count badge from `user_notifications`
-- Keep profile dropdown
+### 1. Create calculator catalog page — `src/pages/Calculators.tsx`
+- Grid of cards grouped by category (Зарплата, Налоги, Аренда, Трудовые отношения, Прочие)
+- Each card: Lucide icon + title + short description, links to `/app/calculator/:slug`
+- Search/filter input at top
 
-### 2. Rewrite `Index.tsx` — full dashboard
+### 2. Create 5 calculator components in `src/pages/calculators/`
 
-**Horizontal nav bar** (below TopBar, inside page):
-- Icon buttons for: Кодексы, Новые документы, Проводник, Калькуляторы, Формы, Классификаторы, Календарь, Справочная, AI-помощник
-- Links to corresponding `/app/*` routes (or opens chat for AI)
-- Horizontal scroll on mobile with overflow-x-auto
+Each calculator shares a common layout pattern:
+- Left: form inputs, Right: result card (stacked on mobile)
+- Results update live on input change (no submit button)
+- Reset button, Copy result, Print button
+- Footer with legal reference and date
 
-**Two-column layout** (70/30 on desktop, stacked on mobile):
+**Files:**
+- `src/pages/calculators/IncomeTaxCalc.tsx` — Income tax with year selection, standard/child/dependent deductions, 13% rate
+- `src/pages/calculators/VacationPayCalc.tsx` — Vacation pay from average daily wage or 12-month salaries, minus income tax
+- `src/pages/calculators/TaxPenaltyCalc.tsx` — Penalty calculation using refinancing rate from `economic_indicators` table, days × rate/360
+- `src/pages/calculators/VatCalc.tsx` — VAT extract/add with 20/10/25/0% rates
+- `src/pages/calculators/WorkExperienceCalc.tsx` — Dynamic table of work periods, summed into years/months/days
 
-Left column:
-- **"Рекомендации для вас"** — if user has `profession` in `user_profiles`, fetch recent documents matching profession tags. Show 5 items with type badge + title + date.
-- **"Новые документы"** — Tabs (Все | by document_type slugs). List of 10 latest documents with type badge, title, date, issuing body. Link to "Все новые документы →"
-- **"Статьи и обзоры"** — 4 latest published articles from `articles` table, horizontal cards with title + excerpt + date
+### 3. Add routes to `App.tsx`
+- `/app/calculator` → Calculators catalog
+- `/app/calculator/:slug` → Router component that maps slug to calculator
 
-Right column:
-- **"Важнейшие НПА"** — hardcoded list of key documents (ГК, НК, ТК, etc.) linking to search/documents
-- **"Мои избранные"** — from `user_favorites` joined with `documents`, last 5
-- **"Последние просмотренные"** — from `user_document_history` joined with `documents`, last 5
-- **"Календарь дедлайнов"** — mini Calendar component from shadcn showing current month, days with deadlines marked, click to see deadlines list
-
-All blocks have skeleton loaders while loading.
-
-### 3. Files to modify
-- **Rewrite**: `src/pages/Index.tsx` — complete new dashboard
-- **Modify**: `src/components/layout/TopBar.tsx` — add search navigation, indicators, notification bell
+### 4. Update sidebar link
+- Point "Калькуляторы" in `AppSidebar.tsx` to `/app/calculator`
 
 ## Technical Details
 
-- Economic indicators query: `supabase.from('economic_indicators').select('*')` — display 3-4 key ones (by slug: refinancing-rate, min-salary, base-value)
-- Notifications: `supabase.from('user_notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false)` for badge count
-- Recommendations: query `documents` ordered by `created_at` desc, optionally filtered by document_type matching profession (simple mapping object in code)
-- New documents tabs: fetch `document_types` for tab labels, filter documents by type on tab change
-- Mini calendar: use shadcn `Calendar` component, query `deadline_calendar` for current month, highlight days with deadlines using `modifiers`
-- Search in TopBar: `useNavigate` to `/app/search?q=${encodeURIComponent(value)}` on Enter key
+- Tax penalty fetches refinancing rate: `supabase.from('economic_indicators').select('current_value').eq('slug', 'refinancing-rate').single()`
+- Income tax deduction values for 2024/2025/2026 stored as constants in component
+- Work experience uses date-fns `differenceInDays` for period calculation
+- Copy uses `navigator.clipboard.writeText`, print uses `window.print()` with print-specific CSS
+- All formatters use `Intl.NumberFormat('ru-RU')` for BYN formatting
+
+### Files to create/modify
+- **Create**: `src/pages/Calculators.tsx` (catalog)
+- **Create**: `src/pages/calculators/IncomeTaxCalc.tsx`
+- **Create**: `src/pages/calculators/VacationPayCalc.tsx`
+- **Create**: `src/pages/calculators/TaxPenaltyCalc.tsx`
+- **Create**: `src/pages/calculators/VatCalc.tsx`
+- **Create**: `src/pages/calculators/WorkExperienceCalc.tsx`
+- **Modify**: `src/App.tsx` (add routes)
+- **Modify**: `src/components/layout/AppSidebar.tsx` (update link)
 
