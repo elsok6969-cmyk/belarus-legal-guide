@@ -530,7 +530,7 @@ export default function PublicDocumentView() {
                 <SheetTitle>Содержание</SheetTitle>
               </SheetHeader>
               <div className="overflow-y-auto mt-4 pb-8">
-                <TableOfContents items={tocItems} activeId={activeId} onClickItem={() => {}} />
+                <TableOfContents items={tocItems} activeId={activeId} onClickItem={() => {}} onFocusItem={handleFocusSection} />
               </div>
             </SheetContent>
           </Sheet>
