@@ -185,19 +185,19 @@ export type Database = {
       }
       bookmarks: {
         Row: {
-          created_at: string
+          created_at: string | null
           document_id: string
           id: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           document_id: string
           id?: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           document_id?: string
           id?: string
           user_id?: string
@@ -296,33 +296,90 @@ export type Database = {
         }
         Relationships: []
       }
-      document_sections: {
+      document_relations: {
         Row: {
-          content: string | null
-          created_at: string
-          document_id: string
-          heading: string | null
+          created_at: string | null
+          description: string | null
           id: string
-          level: number
-          sort_order: number
+          relation_type: string
+          source_document_id: string
+          target_document_id: string
         }
         Insert: {
-          content?: string | null
-          created_at?: string
-          document_id: string
-          heading?: string | null
+          created_at?: string | null
+          description?: string | null
           id?: string
-          level?: number
-          sort_order?: number
+          relation_type: string
+          source_document_id: string
+          target_document_id: string
         }
         Update: {
-          content?: string | null
-          created_at?: string
-          document_id?: string
-          heading?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          relation_type?: string
+          source_document_id?: string
+          target_document_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_relations_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_relations_target_document_id_fkey"
+            columns: ["target_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_sections: {
+        Row: {
+          content_markdown: string | null
+          content_text: string | null
+          created_at: string | null
+          document_id: string
+          id: string
+          level: number
+          number: string | null
+          parent_id: string | null
+          path: string | null
+          section_type: string
+          sort_order: number
+          title: string | null
+        }
+        Insert: {
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
+          document_id: string
           id?: string
           level?: number
+          number?: string | null
+          parent_id?: string | null
+          path?: string | null
+          section_type: string
+          sort_order: number
+          title?: string | null
+        }
+        Update: {
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          level?: number
+          number?: string | null
+          parent_id?: string | null
+          path?: string | null
+          section_type?: string
           sort_order?: number
+          title?: string | null
         }
         Relationships: [
           {
@@ -332,61 +389,71 @@ export type Database = {
             referencedRelation: "documents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "document_sections_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "document_sections"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      document_topics: {
+      document_types: {
         Row: {
-          document_id: string
-          topic_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name_ru: string
+          slug: string
+          sort_order: number | null
         }
         Insert: {
-          document_id: string
-          topic_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name_ru: string
+          slug: string
+          sort_order?: number | null
         }
         Update: {
-          document_id?: string
-          topic_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name_ru?: string
+          slug?: string
+          sort_order?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "document_topics_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "document_topics_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       document_versions: {
         Row: {
-          change_type: Database["public"]["Enums"]["change_type"]
-          detected_at: string
+          change_description: string | null
+          content_markdown: string | null
+          content_text: string | null
+          created_at: string | null
           document_id: string
+          effective_date: string | null
           id: string
-          summary: string | null
           version_number: number
         }
         Insert: {
-          change_type: Database["public"]["Enums"]["change_type"]
-          detected_at?: string
+          change_description?: string | null
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
           document_id: string
+          effective_date?: string | null
           id?: string
-          summary?: string | null
-          version_number?: number
+          version_number: number
         }
         Update: {
-          change_type?: Database["public"]["Enums"]["change_type"]
-          detected_at?: string
+          change_description?: string | null
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
           document_id?: string
+          effective_date?: string | null
           id?: string
-          summary?: string | null
           version_number?: number
         }
         Relationships: [
@@ -401,72 +468,81 @@ export type Database = {
       }
       documents: {
         Row: {
-          body_text: string | null
-          content_hash: string | null
-          created_at: string
-          date_adopted: string | null
-          date_effective: string | null
+          content_markdown: string | null
+          content_text: string | null
+          created_at: string | null
+          doc_date: string | null
           doc_number: string | null
-          doc_type: string
-          fts: unknown
+          document_type_id: string
+          effective_date: string | null
+          expiry_date: string | null
           id: string
-          is_free: boolean | null
-          organ: string | null
-          reg_date: string | null
-          reg_number: string | null
-          slug: string | null
+          issuing_body_id: string | null
+          last_updated: string | null
+          metadata: Json | null
+          raw_html: string | null
+          short_title: string | null
           source_url: string | null
-          status: Database["public"]["Enums"]["document_status"]
-          summary: string | null
+          status: string
           title: string
-          updated_at: string
-          view_count: number | null
+          version: number | null
         }
         Insert: {
-          body_text?: string | null
-          content_hash?: string | null
-          created_at?: string
-          date_adopted?: string | null
-          date_effective?: string | null
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
+          doc_date?: string | null
           doc_number?: string | null
-          doc_type?: string
-          fts?: unknown
+          document_type_id: string
+          effective_date?: string | null
+          expiry_date?: string | null
           id?: string
-          is_free?: boolean | null
-          organ?: string | null
-          reg_date?: string | null
-          reg_number?: string | null
-          slug?: string | null
+          issuing_body_id?: string | null
+          last_updated?: string | null
+          metadata?: Json | null
+          raw_html?: string | null
+          short_title?: string | null
           source_url?: string | null
-          status?: Database["public"]["Enums"]["document_status"]
-          summary?: string | null
+          status?: string
           title: string
-          updated_at?: string
-          view_count?: number | null
+          version?: number | null
         }
         Update: {
-          body_text?: string | null
-          content_hash?: string | null
-          created_at?: string
-          date_adopted?: string | null
-          date_effective?: string | null
+          content_markdown?: string | null
+          content_text?: string | null
+          created_at?: string | null
+          doc_date?: string | null
           doc_number?: string | null
-          doc_type?: string
-          fts?: unknown
+          document_type_id?: string
+          effective_date?: string | null
+          expiry_date?: string | null
           id?: string
-          is_free?: boolean | null
-          organ?: string | null
-          reg_date?: string | null
-          reg_number?: string | null
-          slug?: string | null
+          issuing_body_id?: string | null
+          last_updated?: string | null
+          metadata?: Json | null
+          raw_html?: string | null
+          short_title?: string | null
           source_url?: string | null
-          status?: Database["public"]["Enums"]["document_status"]
-          summary?: string | null
+          status?: string
           title?: string
-          updated_at?: string
-          view_count?: number | null
+          version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_issuing_body_id_fkey"
+            columns: ["issuing_body_id"]
+            isOneToOne: false
+            referencedRelation: "issuing_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       experts: {
         Row: {
@@ -537,6 +613,27 @@ export type Database = {
           status?: string | null
           type?: string | null
           updated?: number | null
+        }
+        Relationships: []
+      }
+      issuing_bodies: {
+        Row: {
+          created_at: string | null
+          id: string
+          name_ru: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name_ru: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name_ru?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -620,19 +717,19 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          created_at: string
+          created_at: string | null
           document_id: string
           id: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           document_id: string
           id?: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           document_id?: string
           id?: string
           user_id?: string
@@ -716,21 +813,21 @@ export type Database = {
       user_activity: {
         Row: {
           action: string
-          created_at: string
+          created_at: string | null
           document_id: string | null
           id: string
           user_id: string
         }
         Insert: {
           action: string
-          created_at?: string
+          created_at?: string | null
           document_id?: string | null
           id?: string
           user_id: string
         }
         Update: {
           action?: string
-          created_at?: string
+          created_at?: string | null
           document_id?: string | null
           id?: string
           user_id?: string
@@ -843,7 +940,6 @@ export type Database = {
       app_role: "user" | "admin"
       audience_type: "accountant" | "lawyer" | "general"
       change_type: "amended" | "new_version" | "repealed"
-      document_status: "active" | "amended" | "repealed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -974,7 +1070,6 @@ export const Constants = {
       app_role: ["user", "admin"],
       audience_type: ["accountant", "lawyer", "general"],
       change_type: ["amended", "new_version", "repealed"],
-      document_status: ["active", "amended", "repealed"],
     },
   },
 } as const
