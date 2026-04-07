@@ -77,7 +77,7 @@ function formatBodyText(text: string): FormattedSection[] {
 
 /* ── TOC component ──────────────────────────────────── */
 
-function TableOfContents({ items, activeId, onClickItem }: { items: TocItem[]; activeId: string; onClickItem?: () => void }) {
+function TableOfContents({ items, activeId, onClickItem, onFocusItem }: { items: TocItem[]; activeId: string; onClickItem?: () => void; onFocusItem?: (id: string) => void }) {
   return (
     <nav className="space-y-0.5 text-sm">
       {items.map((item) => (
@@ -86,8 +86,8 @@ function TableOfContents({ items, activeId, onClickItem }: { items: TocItem[]; a
           href={`#${item.id}`}
           onClick={(e) => {
             e.preventDefault();
-            document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             window.history.replaceState(null, '', `#${item.id}`);
+            onFocusItem?.(item.id);
             onClickItem?.();
           }}
           className={`block truncate py-1 transition-colors hover:text-primary ${
@@ -107,6 +107,7 @@ export default function PublicDocumentView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [activeId, setActiveId] = useState('');
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const { data: doc, isLoading } = useQuery({
@@ -195,25 +196,45 @@ export default function PublicDocumentView() {
   const tocItems = useMemo(() => bodyText ? parseToc(bodyText) : [], [bodyText]);
   const formattedBody = useMemo(() => bodyText ? formatBodyText(bodyText) : [], [bodyText]);
 
-  // Intersection Observer for active TOC item
+  // Initialize focusedId from URL hash
+  const location = useLocation();
   useEffect(() => {
-    if (!tocItems.length) return;
-    observerRef.current?.disconnect();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) { setActiveId(e.target.id); break; }
-        }
-      },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 }
-    );
-    observerRef.current = obs;
-    for (const item of tocItems) {
-      const el = document.getElementById(item.id);
-      if (el) obs.observe(el);
+    const hash = location.hash?.replace('#', '');
+    if (hash && tocItems.some(t => t.id === hash)) {
+      setFocusedId(hash);
+      setActiveId(hash);
     }
-    return () => obs.disconnect();
-  }, [tocItems, formattedBody]);
+  }, [tocItems, location.hash]);
+
+  // Compute focused (filtered) sections — show only the clicked section and its content
+  const focusedSections = useMemo(() => {
+    if (!focusedId) return null;
+    const startIdx = formattedBody.findIndex(s => s.id === focusedId);
+    if (startIdx === -1) return null;
+    const startSection = formattedBody[startIdx];
+    // Determine section level priority: section > chapter > article
+    const levelPriority = { section: 0, chapter: 1, article: 2, paragraph: 3 };
+    const startLevel = levelPriority[startSection.type] ?? 3;
+    // Collect everything from startIdx until the next heading of same or higher level
+    const result = [formattedBody[startIdx]];
+    for (let i = startIdx + 1; i < formattedBody.length; i++) {
+      const s = formattedBody[i];
+      const sLevel = levelPriority[s.type] ?? 3;
+      if (sLevel <= startLevel && s.type !== 'paragraph') break;
+      result.push(s);
+    }
+    return result;
+  }, [focusedId, formattedBody]);
+
+  const handleFocusSection = useCallback((id: string) => {
+    setFocusedId(id);
+    setActiveId(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleShowAll = useCallback(() => {
+    setFocusedId(null);
+  }, []);
 
   // Access level
   const hasFullAccess = !!user;
@@ -382,7 +403,7 @@ export default function PublicDocumentView() {
                 <ListTree className="h-4 w-4" />Содержание
               </h3>
               <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-                <TableOfContents items={tocItems} activeId={activeId} />
+                <TableOfContents items={tocItems} activeId={activeId} onFocusItem={handleFocusSection} />
               </div>
             </div>
           </aside>
@@ -393,9 +414,25 @@ export default function PublicDocumentView() {
           {bodyText ? (
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 relative">
-                <h2 className="text-sm font-semibold mb-4">Текст документа</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-semibold">
+                    {focusedId ? (
+                      <span className="flex items-center gap-2">
+                        Текст документа
+                        <Badge variant="secondary" className="font-normal text-xs">
+                          {focusedSections?.[0]?.text?.slice(0, 50) || ''}
+                        </Badge>
+                      </span>
+                    ) : 'Текст документа'}
+                  </h2>
+                  {focusedId && (
+                    <Button variant="outline" size="sm" onClick={handleShowAll} className="text-xs">
+                      ← Показать весь текст
+                    </Button>
+                  )}
+                </div>
                 <div className="space-y-0">
-                  {formattedBody.slice(0, hasFullAccess ? undefined : thirdArticleIndex).map((s) => {
+                  {(focusedSections || formattedBody.slice(0, hasFullAccess ? undefined : thirdArticleIndex)).map((s) => {
                     switch (s.type) {
                       case 'section':
                         return <h3 key={s.id} id={s.id} className="text-lg font-semibold mt-8 mb-4 scroll-mt-24">{s.text}</h3>;
@@ -409,8 +446,8 @@ export default function PublicDocumentView() {
                   })}
                 </div>
 
-                {/* Freemium gate overlay */}
-                {!hasFullAccess && formattedBody.length > thirdArticleIndex && (
+                {/* Freemium gate overlay — only when showing all */}
+                {!focusedId && !hasFullAccess && formattedBody.length > thirdArticleIndex && (
                   <div className="relative mt-0">
                     <div className="blur-sm select-none pointer-events-none" style={{ minHeight: 300 }}>
                       {formattedBody.slice(thirdArticleIndex, thirdArticleIndex + 15).map((s) => (
@@ -493,7 +530,7 @@ export default function PublicDocumentView() {
                 <SheetTitle>Содержание</SheetTitle>
               </SheetHeader>
               <div className="overflow-y-auto mt-4 pb-8">
-                <TableOfContents items={tocItems} activeId={activeId} onClickItem={() => {}} />
+                <TableOfContents items={tocItems} activeId={activeId} onClickItem={() => {}} onFocusItem={handleFocusSection} />
               </div>
             </SheetContent>
           </Sheet>
