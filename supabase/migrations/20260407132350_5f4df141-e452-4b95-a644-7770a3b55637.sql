@@ -1,0 +1,1 @@
+UPDATE documents SET content_markdown = NULL, content_text = NULL, raw_html = NULL WHERE document_type_id = (SELECT id FROM document_types WHERE slug = 'codex');
