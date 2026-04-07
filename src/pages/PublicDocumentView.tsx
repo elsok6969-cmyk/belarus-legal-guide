@@ -77,7 +77,7 @@ function formatBodyText(text: string): FormattedSection[] {
 
 /* ── TOC component ──────────────────────────────────── */
 
-function TableOfContents({ items, activeId, onClickItem }: { items: TocItem[]; activeId: string; onClickItem?: () => void }) {
+function TableOfContents({ items, activeId, onClickItem, onFocusItem }: { items: TocItem[]; activeId: string; onClickItem?: () => void; onFocusItem?: (id: string) => void }) {
   return (
     <nav className="space-y-0.5 text-sm">
       {items.map((item) => (
@@ -86,8 +86,8 @@ function TableOfContents({ items, activeId, onClickItem }: { items: TocItem[]; a
           href={`#${item.id}`}
           onClick={(e) => {
             e.preventDefault();
-            document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             window.history.replaceState(null, '', `#${item.id}`);
+            onFocusItem?.(item.id);
             onClickItem?.();
           }}
           className={`block truncate py-1 transition-colors hover:text-primary ${
