@@ -403,7 +403,7 @@ export default function PublicDocumentView() {
                 <ListTree className="h-4 w-4" />Содержание
               </h3>
               <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-                <TableOfContents items={tocItems} activeId={activeId} />
+                <TableOfContents items={tocItems} activeId={activeId} onFocusItem={handleFocusSection} />
               </div>
             </div>
           </aside>
