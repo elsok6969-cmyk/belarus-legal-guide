@@ -17,6 +17,7 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { DocumentTOC } from '@/components/document/DocumentTOC';
 import { DocumentSearchBar } from '@/components/document/DocumentSearchBar';
 import { DocumentSidebar } from '@/components/document/DocumentSidebar';
+import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -95,7 +96,7 @@ export default function DocumentViewer() {
     staleTime: 3600000,
   });
 
-  const { data: sections } = useQuery({
+  const { data: dbSections } = useQuery({
     queryKey: ['document-sections', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -109,6 +110,42 @@ export default function DocumentViewer() {
     enabled: !!id,
     staleTime: 3600000,
   });
+
+  // Parse virtual sections from markdown when DB sections are empty
+  const virtualSections = useMemo(() => {
+    if (dbSections && dbSections.length > 0) return null;
+    if (!doc?.content_markdown) return null;
+    return parseMarkdownIntoSections(doc.content_markdown);
+  }, [dbSections, doc?.content_markdown]);
+
+  const hasDbSections = dbSections && dbSections.length > 0;
+  const hasVirtualSections = virtualSections && virtualSections.length > 0;
+  const hasSections = hasDbSections || hasVirtualSections;
+
+  // Unified TOC sections for the sidebar
+  const tocSections = useMemo(() => {
+    if (hasDbSections) {
+      return dbSections.filter(s => s.level <= 3).map(s => ({
+        id: s.id,
+        title: s.number ? `${s.number} ${s.title || ''}` : s.title,
+        level: s.level,
+        sort_order: s.sort_order,
+        section_type: s.section_type,
+        parent_id: s.parent_id,
+      }));
+    }
+    if (hasVirtualSections) {
+      return getTocSections(virtualSections).map(s => ({
+        id: s.id,
+        title: s.title,
+        level: s.level,
+        sort_order: s.sort_order,
+        section_type: 'virtual',
+        parent_id: null as string | null,
+      }));
+    }
+    return [];
+  }, [hasDbSections, dbSections, hasVirtualSections, virtualSections]);
 
   const { data: bookmark } = useQuery({
     queryKey: ['bookmark', id, user?.id],
@@ -150,7 +187,7 @@ export default function DocumentViewer() {
 
   // Intersection Observer for active section tracking
   useEffect(() => {
-    if (!sections?.length) return;
+    if (!hasSections) return;
     observerRef.current?.disconnect();
 
     observerRef.current = new IntersectionObserver(
@@ -164,12 +201,44 @@ export default function DocumentViewer() {
       { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
     );
 
-    Object.values(sectionRefs.current).forEach(el => {
-      if (el) observerRef.current!.observe(el);
-    });
+    // Delay to wait for refs to be populated
+    setTimeout(() => {
+      Object.values(sectionRefs.current).forEach(el => {
+        if (el) observerRef.current!.observe(el);
+      });
+    }, 100);
 
     return () => observerRef.current?.disconnect();
-  }, [sections]);
+  }, [hasSections, dbSections, virtualSections]);
+
+  // Handle hash navigation on load
+  useEffect(() => {
+    if (!hasSections) return;
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+
+    // Try to find matching section by hash
+    setTimeout(() => {
+      // First try exact ID match
+      const el = document.getElementById(`section-${hash}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      // Try matching by chapter number from hash like "chapter-6"
+      const chapterMatch = hash.match(/chapter-(\d+)/);
+      if (chapterMatch && hasVirtualSections) {
+        const chNum = chapterMatch[1];
+        const target = virtualSections.find(s =>
+          s.title.match(new RegExp(`ГЛАВА\\s+${chNum}\\b`, 'i'))
+        );
+        if (target) {
+          const targetEl = document.getElementById(`section-${target.id}`);
+          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }, 300);
+  }, [hasSections, hasVirtualSections, virtualSections]);
 
   const toggleBookmark = useMutation({
     mutationFn: async () => {
@@ -200,7 +269,7 @@ export default function DocumentViewer() {
   });
 
   const scrollToSection = useCallback((sectionId: string) => {
-    const el = sectionRefs.current[sectionId];
+    const el = sectionRefs.current[sectionId] || document.getElementById(`section-${sectionId}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setActiveSection(sectionId);
@@ -210,6 +279,27 @@ export default function DocumentViewer() {
   const handleSearch = useCallback(async (query: string) => {
     if (!id) return;
     setSearchLoading(true);
+
+    // If we have virtual sections, do client-side search
+    if (hasVirtualSections && virtualSections) {
+      const q = query.toLowerCase();
+      const results = virtualSections
+        .filter(s => s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q))
+        .map(s => {
+          const idx = s.content.toLowerCase().indexOf(q);
+          const snippet = idx >= 0
+            ? '...' + s.content.substring(Math.max(0, idx - 40), idx + query.length + 40) + '...'
+            : s.title;
+          return { section_id: s.id, title: s.title, snippet };
+        });
+      setSearchResults(results);
+      setSearchIndex(0);
+      setSearchLoading(false);
+      if (results.length) scrollToSection(results[0].section_id);
+      return;
+    }
+
+    // DB sections: use RPC
     const { data } = await supabase.rpc('search_within_document', {
       p_document_id: id,
       search_query: query,
@@ -218,7 +308,7 @@ export default function DocumentViewer() {
     setSearchIndex(0);
     setSearchLoading(false);
     if (data?.length) scrollToSection(data[0].section_id);
-  }, [id, scrollToSection]);
+  }, [id, scrollToSection, hasVirtualSections, virtualSections]);
 
   const handleSearchNavigate = useCallback((dir: 'prev' | 'next') => {
     if (!searchResults.length) return;
@@ -234,13 +324,10 @@ export default function DocumentViewer() {
     toast({ title: 'Ссылка скопирована' });
   }, []);
 
-  const copySectionText = useCallback((section: DocSection) => {
-    const text = section.content_text || section.content_markdown || '';
+  const copySectionText = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Текст скопирован' });
   }, []);
-
-  const tocSections = useMemo(() => sections?.filter(s => s.level <= 3) || [], [sections]);
 
   if (isLoading) {
     return (
@@ -265,12 +352,40 @@ export default function DocumentViewer() {
 
   const dt = doc.document_types as any;
   const ib = doc.issuing_bodies as any;
-  const hasSections = sections && sections.length > 0;
   const typeSlug = dt?.slug || '';
 
-  const tocContent = hasSections && tocSections.length > 1 ? (
+  const tocContent = tocSections.length > 1 ? (
     <DocumentTOC sections={tocSections} activeSection={activeSection} onScrollTo={scrollToSection} />
   ) : null;
+
+  const renderSectionHeading = (title: string, level: number) => {
+    if (level <= 0) {
+      return (
+        <h2 className="text-lg font-bold text-primary border-b border-border pb-2 mt-8 first:mt-0 uppercase tracking-wide">
+          {title}
+        </h2>
+      );
+    }
+    if (level === 1) {
+      return (
+        <h3 className="text-base font-bold text-foreground mt-8 mb-2 uppercase">
+          {title}
+        </h3>
+      );
+    }
+    if (level === 2) {
+      return (
+        <h4 className="text-base font-semibold text-foreground mt-6 mb-2">
+          {title}
+        </h4>
+      );
+    }
+    return (
+      <h5 className="text-sm font-semibold text-foreground mt-4 mb-1">
+        {title}
+      </h5>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -389,11 +504,49 @@ export default function DocumentViewer() {
 
         {/* Center: Document content */}
         <div className="flex-1 min-w-0">
-          {hasSections ? (
+          {/* Virtual sections (parsed from markdown) */}
+          {hasVirtualSections ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="max-w-[800px] mx-auto">
+                  {virtualSections.map(section => (
+                    <section
+                      key={section.id}
+                      ref={el => { sectionRefs.current[section.id] = el; }}
+                      id={`section-${section.id}`}
+                      className="scroll-mt-24 relative group"
+                      onMouseEnter={() => setHoveredSection(section.id)}
+                      onMouseLeave={() => setHoveredSection(null)}
+                    >
+                      {renderSectionHeading(section.title, section.level)}
+                      {section.content && (
+                        <div className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+                          {section.content}
+                        </div>
+                      )}
+                      {section.level === 3 && (
+                        <div className="border-b border-border/30 mt-4 mb-2" />
+                      )}
+                      {hoveredSection === section.id && section.content && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-0 right-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => copySectionText(section.content)}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </section>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : hasDbSections ? (
             <Card>
               <CardContent className="p-6">
                 <div className="max-w-[800px] mx-auto space-y-4">
-                  {sections.map(section => (
+                  {dbSections!.map(section => (
                     <section
                       key={section.id}
                       ref={el => { sectionRefs.current[section.id] = el; }}
@@ -415,20 +568,19 @@ export default function DocumentViewer() {
                         </h2>
                       )}
                       {section.content_markdown && (
-                        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-base leading-[1.7] prose-p:text-muted-foreground">
+                        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-sm leading-relaxed">
                           <ReactMarkdown>{section.content_markdown}</ReactMarkdown>
                         </div>
                       )}
                       {section.section_type === 'article' && (
                         <div className="border-b border-border/50 mt-4" />
                       )}
-                      {/* Copy button on hover */}
                       {hoveredSection === section.id && section.content_markdown && (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="absolute top-0 right-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => copySectionText(section)}
+                          onClick={() => copySectionText(section.content_text || section.content_markdown || '')}
                         >
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
@@ -441,7 +593,7 @@ export default function DocumentViewer() {
           ) : doc.content_markdown ? (
             <Card>
               <CardContent className="p-6">
-                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-base leading-[1.7] prose-p:text-muted-foreground max-w-[800px] mx-auto">
+                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-sm leading-relaxed max-w-[800px] mx-auto">
                   <ReactMarkdown>{doc.content_markdown}</ReactMarkdown>
                 </div>
               </CardContent>
