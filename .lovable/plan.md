@@ -1,64 +1,50 @@
 
 
-# Plan: Document Viewer Page `/app/documents/:id`
+# Plan: Professional Dashboard for `/app` (Index page)
 
 ## Overview
-Complete rewrite of `DocumentViewer.tsx` into a three-column layout with sticky TOC, in-document search via `search_within_document` RPC, related documents sidebar, view history tracking, and mobile responsiveness via a sheet-based TOC.
+Complete rewrite of `Index.tsx` into a professional dashboard with enhanced TopBar (search + economic indicators + notifications), horizontal quick-nav carousel, and two-column content layout with recommendations, new documents, articles, favorites, history, and mini calendar.
 
 ## Steps
 
-### 1. Rewrite `src/pages/DocumentViewer.tsx`
+### 1. Enhance `TopBar.tsx`
+- Add functional search input that navigates to `/app/search?q=...` on Enter
+- Add economic indicators strip from `economic_indicators` table (with tooltips showing `effective_date`)
+- Add notification bell with unread count badge from `user_notifications`
+- Keep profile dropdown
 
-**Three-column layout** (desktop: 250px left | flex center | 250px right):
+### 2. Rewrite `Index.tsx` — full dashboard
 
-**Left column — TOC (sticky, hidden on mobile)**:
-- Tree from `document_sections` with indentation (`level * 16px`)
-- Collapsible top-level sections (РАЗДЕЛ/ГЛАВА) using local state
-- Active section tracking via Intersection Observer on each `<section>` element
-- Active item highlighted with `bg-primary/10 text-primary`
-- Mobile: accessible via Sheet triggered by "☰ Оглавление" button
+**Horizontal nav bar** (below TopBar, inside page):
+- Icon buttons for: Кодексы, Новые документы, Проводник, Калькуляторы, Формы, Классификаторы, Календарь, Справочная, AI-помощник
+- Links to corresponding `/app/*` routes (or opens chat for AI)
+- Horizontal scroll on mobile with overflow-x-auto
 
-**Center column — Document body**:
-- **Header**: Type badge (colored by slug: codex=blue, law=green, etc.), status badge, `<h1>` title, metadata row (number, date, issuing body, effective date), action buttons (bookmark, subscribe/watch, copy link, share)
-- **Body**: Each section wrapped in `<section id="section-{id}">`, separated by thin borders for articles. Section numbers bold, titles semibold. Typography: `text-base leading-[1.7]`, max-width 800px centered. Hover on section shows copy button.
-- **In-document search**: Fixed mini-bar at top (toggled by search button or Ctrl+F override). Calls `search_within_document` RPC. Shows "Найдено в N статьях" with prev/next navigation arrows that scroll between matching sections. Results highlighted.
+**Two-column layout** (70/30 on desktop, stacked on mobile):
 
-**Right column (hidden on mobile)**:
-- "Связанные документы" — query `document_relations` joined with `documents` for this document ID
-- "Изменения и редакции" — query `document_versions` for this document
-- "Похожие документы" — placeholder card with "В разработке"
-- Mobile: these become a collapsible section below the document body
+Left column:
+- **"Рекомендации для вас"** — if user has `profession` in `user_profiles`, fetch recent documents matching profession tags. Show 5 items with type badge + title + date.
+- **"Новые документы"** — Tabs (Все | by document_type slugs). List of 10 latest documents with type badge, title, date, issuing body. Link to "Все новые документы →"
+- **"Статьи и обзоры"** — 4 latest published articles from `articles` table, horizontal cards with title + excerpt + date
 
-### 2. View history tracking
-- On mount, if user is authenticated, check `user_document_history` for last entry with same `document_id` and `user_id`
-- If last `viewed_at` was more than 5 minutes ago (or no entry), insert new record
-- Use a `useEffect` with the document ID and user ID as dependencies
+Right column:
+- **"Важнейшие НПА"** — hardcoded list of key documents (ГК, НК, ТК, etc.) linking to search/documents
+- **"Мои избранные"** — from `user_favorites` joined with `documents`, last 5
+- **"Последние просмотренные"** — from `user_document_history` joined with `documents`, last 5
+- **"Календарь дедлайнов"** — mini Calendar component from shadcn showing current month, days with deadlines marked, click to see deadlines list
 
-### 3. Breadcrumbs
-- Add breadcrumbs: Главная > {document_type.name_ru} > {doc.short_title || doc.title}
-- Use the existing `Breadcrumbs` component or simple inline breadcrumb links
+All blocks have skeleton loaders while loading.
 
-### 4. Performance for large documents
-- Use Intersection Observer to lazily render section content — initially render only sections near viewport
-- Sections outside viewport render as placeholder divs with estimated height
-- Cache document data via react-query `staleTime: 3600000` (1 hour)
+### 3. Files to modify
+- **Rewrite**: `src/pages/Index.tsx` — complete new dashboard
+- **Modify**: `src/components/layout/TopBar.tsx` — add search navigation, indicators, notification bell
 
 ## Technical Details
 
-- **Intersection Observer for TOC**: One observer watches all `<section>` elements. The topmost visible section sets `activeSection` state, which highlights the TOC item.
-- **Collapsible TOC sections**: State `collapsedSections: Set<string>`. Clicking a level-0 item toggles its children's visibility.
-- **Copy article text**: On hover, show a small clipboard button. On click, copy `section.content_text || section.content_markdown` to clipboard via `navigator.clipboard.writeText`.
-- **In-document search RPC call**:
-```typescript
-const { data } = await supabase.rpc('search_within_document', {
-  p_document_id: id,
-  search_query: query,
-});
-```
-Results return `section_id` — scroll to matching section and highlight snippet.
-- **Related documents query**: `document_relations` where `source_document_id = id OR target_document_id = id`, joined with `documents` for title/short_title.
-- **Mobile layout**: Use `useIsMobile()` hook. On mobile, hide left/right columns. TOC opens in a `Sheet` from left. Right column content moves below the document body.
-
-### Files
-- **Rewrite**: `src/pages/DocumentViewer.tsx` — complete rewrite with three-column layout
+- Economic indicators query: `supabase.from('economic_indicators').select('*')` — display 3-4 key ones (by slug: refinancing-rate, min-salary, base-value)
+- Notifications: `supabase.from('user_notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false)` for badge count
+- Recommendations: query `documents` ordered by `created_at` desc, optionally filtered by document_type matching profession (simple mapping object in code)
+- New documents tabs: fetch `document_types` for tab labels, filter documents by type on tab change
+- Mini calendar: use shadcn `Calendar` component, query `deadline_calendar` for current month, highlight days with deadlines using `modifiers`
+- Search in TopBar: `useNavigate` to `/app/search?q=${encodeURIComponent(value)}` on Enter key
 
