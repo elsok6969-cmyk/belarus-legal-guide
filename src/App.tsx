@@ -43,6 +43,7 @@ import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
+import AdminHealth from './pages/AdminHealth';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
