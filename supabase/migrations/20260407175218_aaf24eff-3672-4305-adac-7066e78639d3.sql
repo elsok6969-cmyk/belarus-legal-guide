@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_documents_fts ON documents USING GIN (to_tsvector('russian', coalesce(title, '') || ' ' || coalesce(content_text, '')));
