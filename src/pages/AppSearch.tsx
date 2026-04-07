@@ -10,46 +10,55 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 
-const DOC_TYPE_LABELS: Record<string, string> = {
-  law: 'Закон',
-  codex: 'Кодекс',
-  decree: 'Декрет / Указ',
-  resolution: 'Постановление',
-};
-
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
-  amended: 'Изменён',
-  repealed: 'Утратил силу',
+  not_effective_yet: 'Не вступил в силу',
+  expired: 'Истёк',
+  cancelled: 'Отменён',
 };
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  amended: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  repealed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  expired: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  not_effective_yet: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
 export default function AppSearch() {
   const [query, setQuery] = useState('');
-  const [docType, setDocType] = useState<string>('all');
+  const [docTypeSlug, setDocTypeSlug] = useState<string>('all');
   const [status, setStatus] = useState<string>('all');
   const [submitted, setSubmitted] = useState('');
 
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['documents-search', submitted, docType, status],
+  const { data: docTypes } = useQuery({
+    queryKey: ['document-types'],
     queryFn: async () => {
-      let q = supabase.from('documents').select('*').order('date_adopted', { ascending: false });
+      const { data } = await supabase.from('document_types').select('id, slug, name_ru').order('sort_order');
+      return data || [];
+    },
+  });
+
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['documents-search', submitted, docTypeSlug, status],
+    queryFn: async () => {
+      let q = supabase.from('documents')
+        .select('*, document_types(slug, name_ru)')
+        .order('doc_date', { ascending: false, nullsFirst: false });
 
       if (submitted) {
-        q = q.or(`title.ilike.%${submitted}%,doc_number.ilike.%${submitted}%,summary.ilike.%${submitted}%`);
+        q = q.or(`title.ilike.%${submitted}%,doc_number.ilike.%${submitted}%`);
       }
-      if (docType !== 'all') q = q.eq('doc_type', docType);
-      if (status !== 'all') q = q.eq('status', status as any);
+      if (docTypeSlug !== 'all') {
+        const dt = docTypes?.find(t => t.slug === docTypeSlug);
+        if (dt) q = q.eq('document_type_id', dt.id);
+      }
+      if (status !== 'all') q = q.eq('status', status);
 
       const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: docTypeSlug === 'all' || !!docTypes,
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -84,17 +93,16 @@ export default function AppSearch() {
         </div>
 
         <div className="flex gap-3 flex-wrap">
-          <Select value={docType} onValueChange={setDocType}>
+          <Select value={docTypeSlug} onValueChange={setDocTypeSlug}>
             <SelectTrigger className="w-[180px]">
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Тип документа" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все типы</SelectItem>
-              <SelectItem value="law">Закон</SelectItem>
-              <SelectItem value="codex">Кодекс</SelectItem>
-              <SelectItem value="decree">Декрет / Указ</SelectItem>
-              <SelectItem value="resolution">Постановление</SelectItem>
+              {docTypes?.map(dt => (
+                <SelectItem key={dt.slug} value={dt.slug}>{dt.name_ru}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -106,8 +114,9 @@ export default function AppSearch() {
             <SelectContent>
               <SelectItem value="all">Все статусы</SelectItem>
               <SelectItem value="active">Действующий</SelectItem>
-              <SelectItem value="amended">Изменён</SelectItem>
-              <SelectItem value="repealed">Утратил силу</SelectItem>
+              <SelectItem value="not_effective_yet">Не вступил в силу</SelectItem>
+              <SelectItem value="expired">Истёк</SelectItem>
+              <SelectItem value="cancelled">Отменён</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -130,41 +139,41 @@ export default function AppSearch() {
           <p className="text-sm text-muted-foreground">
             Найдено документов: <span className="font-medium text-foreground">{documents.length}</span>
           </p>
-          {documents.map((doc) => (
-            <Link key={doc.id} to={`/app/documents/${doc.id}`}>
-              <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <FileText className="h-4 w-4 text-primary shrink-0" />
-                        <span className="font-medium text-sm leading-tight">{doc.title}</span>
+          {documents.map((doc) => {
+            const dt = doc.document_types as any;
+            return (
+              <Link key={doc.id} to={`/app/documents/${doc.id}`}>
+                <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <FileText className="h-4 w-4 text-primary shrink-0" />
+                          <span className="font-medium text-sm leading-tight">{doc.title}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          {dt && <span>{dt.name_ru}</span>}
+                          {doc.doc_number && <span>№ {doc.doc_number}</span>}
+                          {doc.doc_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(doc.doc_date).toLocaleDateString('ru-RU')}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>{DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type}</span>
-                        {doc.doc_number && <span>№ {doc.doc_number}</span>}
-                        {doc.date_adopted && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(doc.date_adopted).toLocaleDateString('ru-RU')}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="secondary" className={STATUS_COLORS[doc.status] || ''}>
+                          {STATUS_LABELS[doc.status] || doc.status}
+                        </Badge>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      {doc.summary && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">{doc.summary}</p>
-                      )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary" className={STATUS_COLORS[doc.status] || ''}>
-                        {STATUS_LABELS[doc.status] || doc.status}
-                      </Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <Card>

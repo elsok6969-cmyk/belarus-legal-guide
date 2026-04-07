@@ -16,77 +16,26 @@ import ReactMarkdown from 'react-markdown';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
-  amended: 'Изменён',
-  repealed: 'Утратил силу',
+  not_effective_yet: 'Не вступил в силу',
+  expired: 'Истёк',
+  cancelled: 'Отменён',
 };
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  amended: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  repealed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-};
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  law: 'Закон',
-  codex: 'Кодекс',
-  decree: 'Декрет / Указ',
-  resolution: 'Постановление',
-  constitution: 'Конституция',
-  decision: 'Решение',
-  order: 'Приказ',
-  instruction: 'Инструкция',
-  regulation: 'Положение',
+  expired: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  not_effective_yet: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
 interface DocSection {
   id: string;
-  heading: string | null;
-  content: string | null;
+  title: string | null;
+  number: string | null;
+  content_markdown: string | null;
   level: number;
   sort_order: number;
-}
-
-/** Strip navigation breadcrumbs, social links, and pravo.by junk from markdown */
-function cleanBodyText(text: string): string {
-  // Remove lines that are pravo.by navigation / social sharing junk
-  const lines = text.split('\n');
-  const cleanedLines: string[] = [];
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    // Skip breadcrumb links
-    if (/^\[(?:Главная|Правовая информация|Печатные издания|Нормативные правовые акты|Версия для печати)\]/.test(trimmed)) continue;
-    // Skip social sharing links
-    if (/^\[(?:ВКонтакте|Одноклассники|Facebook|Twitter|Telegram)\]/.test(trimmed)) continue;
-    // Skip lines that are just "/" separators between breadcrumbs
-    if (trimmed === '/' || trimmed === '/ **' || /^\/\s*$/.test(trimmed)) continue;
-    // Skip lines with only pravo.by URLs
-    if (/^https?:\/\/(www\.)?pravo\.by/.test(trimmed) && trimmed.length < 200) continue;
-    // Skip "Версия для печати" standalone
-    if (/^Версия для печати$/i.test(trimmed)) continue;
-    // Skip bold breadcrumb fragments
-    if (/^\/ \*\*/.test(trimmed) && trimmed.length < 100) continue;
-    // Skip share URL lines (very long encoded URLs)
-    if (trimmed.includes('vk.com/share') || trimmed.includes('connect.ok.ru') || trimmed.includes('facebook.com/sharer')) continue;
-    
-    cleanedLines.push(line);
-  }
-  
-  let cleaned = cleanedLines.join('\n').trim();
-  
-  // Also try to find real content start markers
-  const markers = ['Статья 1', 'РАЗДЕЛ I', 'ОБЩАЯ ЧАСТЬ', 'ГЛАВА 1', '## Статья', '# ОБЩАЯ ЧАСТЬ', '# Статья'];
-  for (const marker of markers) {
-    const idx = cleaned.indexOf(marker);
-    if (idx !== -1 && idx < cleaned.length * 0.3) {
-      return cleaned.slice(idx);
-    }
-  }
-  
-  // Remove leading # heading if it duplicates the document title (first line)
-  cleaned = cleaned.replace(/^#\s+.+\n+/, '');
-  
-  return cleaned;
+  section_type: string;
 }
 
 export default function DocumentViewer() {
@@ -103,12 +52,10 @@ export default function DocumentViewer() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select('*, document_types(slug, name_ru), issuing_bodies(name_ru)')
         .eq('id', id!)
         .single();
       if (error) throw error;
-      // Increment view count
-      supabase.rpc('increment_view_count', { doc_id: id! });
       return data;
     },
     enabled: !!id,
@@ -184,19 +131,18 @@ export default function DocumentViewer() {
     },
   });
 
-  // Filter sections by search
   const filteredSections = useMemo(() => {
     if (!sections) return [];
     if (!searchTerm.trim()) return sections;
     const term = searchTerm.toLowerCase();
     return sections.filter(
       (s) =>
-        s.heading?.toLowerCase().includes(term) ||
-        s.content?.toLowerCase().includes(term)
+        s.title?.toLowerCase().includes(term) ||
+        s.number?.toLowerCase().includes(term) ||
+        s.content_markdown?.toLowerCase().includes(term)
     );
   }, [sections, searchTerm]);
 
-  // TOC items — only level 1 and 2
   const tocItems = useMemo(() => {
     if (!sections) return [];
     return sections.filter((s) => s.level <= 2);
@@ -208,12 +154,6 @@ export default function DocumentViewer() {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setActiveSection(sectionId);
     }
-  }, []);
-
-  const highlightText = useCallback((text: string, term: string) => {
-    if (!term.trim()) return text;
-    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '**$1**');
   }, []);
 
   if (isLoading) {
@@ -236,11 +176,12 @@ export default function DocumentViewer() {
     );
   }
 
+  const dt = doc.document_types as any;
+  const ib = doc.issuing_bodies as any;
   const hasSections = sections && sections.length > 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm">
           <Link to="/app/search">
@@ -253,14 +194,11 @@ export default function DocumentViewer() {
         <div className="space-y-2">
           <h1 className="text-xl font-bold tracking-tight leading-tight">{doc.title}</h1>
           <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground">
-            <Badge variant="outline">{DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type}</Badge>
+            {dt && <Badge variant="outline">{dt.name_ru}</Badge>}
             {doc.doc_number && <span>№ {doc.doc_number}</span>}
             <Badge className={STATUS_COLORS[doc.status] || ''} variant="secondary">
               {STATUS_LABELS[doc.status] || doc.status}
             </Badge>
-            {doc.view_count !== null && (
-              <span className="text-xs">{doc.view_count} просмотров</span>
-            )}
           </div>
         </div>
 
@@ -295,11 +233,7 @@ export default function DocumentViewer() {
             </Button>
           )}
           {hasSections && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowTOC(!showTOC)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowTOC(!showTOC)}>
               <List className="mr-2 h-4 w-4" />
               {showTOC ? 'Скрыть оглавление' : 'Оглавление'}
             </Button>
@@ -307,55 +241,42 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      {/* Meta cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {doc.date_adopted && (
+        {doc.doc_date && (
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <Calendar className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Дата принятия</p>
-                <p className="text-sm font-medium">{new Date(doc.date_adopted).toLocaleDateString('ru-RU')}</p>
+                <p className="text-sm font-medium">{new Date(doc.doc_date).toLocaleDateString('ru-RU')}</p>
               </div>
             </CardContent>
           </Card>
         )}
-        {doc.date_effective && (
+        {doc.effective_date && (
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <Scale className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Дата вступления в силу</p>
-                <p className="text-sm font-medium">{new Date(doc.date_effective).toLocaleDateString('ru-RU')}</p>
+                <p className="text-sm font-medium">{new Date(doc.effective_date).toLocaleDateString('ru-RU')}</p>
               </div>
             </CardContent>
           </Card>
         )}
-        {doc.organ && (
+        {ib && (
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <FileText className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Орган</p>
-                <p className="text-sm font-medium">{doc.organ}</p>
+                <p className="text-sm font-medium">{ib.name_ru}</p>
               </div>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {doc.summary && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Краткое описание</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground leading-relaxed">{doc.summary}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Search within document */}
       {hasSections && (
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -373,10 +294,8 @@ export default function DocumentViewer() {
         </div>
       )}
 
-      {/* Document content with TOC sidebar */}
       {hasSections ? (
         <div className="flex gap-6">
-          {/* TOC Sidebar */}
           {showTOC && tocItems.length > 1 && (
             <aside className="hidden lg:block w-72 shrink-0">
               <Card className="sticky top-4">
@@ -391,10 +310,10 @@ export default function DocumentViewer() {
                           key={item.id}
                           onClick={() => scrollToSection(item.id)}
                           className={`block w-full text-left text-xs py-1.5 px-2 rounded transition-colors hover:bg-accent ${
-                            item.level === 1 ? 'font-semibold text-foreground' : 'text-muted-foreground pl-4'
+                            item.level <= 1 ? 'font-semibold text-foreground' : 'text-muted-foreground pl-4'
                           } ${activeSection === item.id ? 'bg-primary/10 text-primary' : ''}`}
                         >
-                          {item.heading}
+                          {item.number ? `${item.number} ${item.title || ''}` : item.title}
                         </button>
                       ))}
                     </nav>
@@ -404,7 +323,6 @@ export default function DocumentViewer() {
             </aside>
           )}
 
-          {/* Main content */}
           <div className="flex-1 min-w-0">
             <Card>
               <CardContent className="p-6 space-y-6">
@@ -415,22 +333,23 @@ export default function DocumentViewer() {
                     id={`section-${section.id}`}
                     className="scroll-mt-4"
                   >
-                    {section.heading && (
+                    {(section.number || section.title) && (
                       <h2
                         className={`font-bold mb-3 ${
-                          section.level === 1
+                          section.level <= 1
                             ? 'text-lg text-primary border-b border-border pb-2 mt-6 first:mt-0'
                             : section.level === 2
                             ? 'text-base text-foreground mt-4'
                             : 'text-sm text-foreground mt-3'
                         }`}
                       >
-                        {section.heading}
+                        {section.number && <span>{section.number} </span>}
+                        {section.title}
                       </h2>
                     )}
-                    {section.content && (
+                    {section.content_markdown && (
                       <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
-                        <ReactMarkdown>{section.content}</ReactMarkdown>
+                        <ReactMarkdown>{section.content_markdown}</ReactMarkdown>
                       </div>
                     )}
                   </div>
@@ -439,14 +358,14 @@ export default function DocumentViewer() {
             </Card>
           </div>
         </div>
-      ) : doc.body_text ? (
+      ) : doc.content_markdown ? (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Текст документа</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary prose-p:leading-[1.8] prose-p:text-muted-foreground">
-              <ReactMarkdown>{cleanBodyText(doc.body_text)}</ReactMarkdown>
+              <ReactMarkdown>{doc.content_markdown}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>

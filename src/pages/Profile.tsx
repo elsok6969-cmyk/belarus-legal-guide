@@ -30,8 +30,6 @@ interface ProfileData {
 interface DocItem {
   id: string;
   title: string;
-  doc_type: string;
-  slug: string | null;
   created_at?: string;
   viewed_at?: string;
 }
@@ -59,9 +57,9 @@ export default function Profile() {
 
     const [profileRes, bookmarksRes, historyRes, subsRes] = await Promise.all([
       supabase.from('profiles').select('plan, plan_expires_at, ai_requests_today, full_name, email, display_name').eq('user_id', user.id).single(),
-      supabase.from('bookmarks').select('id, created_at, document_id, documents(id, title, doc_type, slug)').eq('user_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('view_history').select('id, viewed_at, document_id, documents(id, title, doc_type, slug)').eq('user_id', user.id).order('viewed_at', { ascending: false }).limit(20),
-      supabase.from('subscriptions').select('id, created_at, document_id, documents(id, title, doc_type, slug)').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('bookmarks').select('id, created_at, document_id, documents(id, title)').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('view_history').select('id, viewed_at, document_id, documents(id, title)').eq('user_id', user.id).order('viewed_at', { ascending: false }).limit(20),
+      supabase.from('subscriptions').select('id, created_at, document_id, documents(id, title)').eq('user_id', user.id).order('created_at', { ascending: false }),
     ]);
 
     if (profileRes.data) {
@@ -73,8 +71,6 @@ export default function Profile() {
       (items || []).map((item: any) => ({
         id: item.id,
         title: item.documents?.title || 'Без названия',
-        doc_type: item.documents?.doc_type || '',
-        slug: item.documents?.slug || null,
         created_at: item.created_at,
         viewed_at: item.viewed_at,
       }));
@@ -148,13 +144,12 @@ export default function Profile() {
           <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary" className="text-xs shrink-0">{item.doc_type}</Badge>
                 <span className="text-xs text-muted-foreground">
                   {item.viewed_at ? new Date(item.viewed_at).toLocaleDateString('ru-RU') : item.created_at ? new Date(item.created_at).toLocaleDateString('ru-RU') : ''}
                 </span>
               </div>
               <Link
-                to={item.slug ? `/doc/${item.slug}` : '#'}
+                to={`/documents/${item.id}`}
                 className="text-sm font-medium hover:text-primary transition-colors line-clamp-1"
               >
                 {item.title}
@@ -177,7 +172,6 @@ export default function Profile() {
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
         <h1 className="text-2xl font-bold">Профиль</h1>
 
-        {/* Plan card */}
         <Card className="bg-accent/30 border-primary/20">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -208,7 +202,6 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Tabs */}
         <Tabs defaultValue="bookmarks">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="bookmarks" className="gap-1.5"><Bookmark className="h-3.5 w-3.5 hidden sm:block" />Закладки</TabsTrigger>

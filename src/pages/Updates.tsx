@@ -8,25 +8,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-const CHANGE_LABELS: Record<string, string> = {
-  amended: 'Изменён',
-  new_version: 'Новая редакция',
-  repealed: 'Утратил силу',
-};
-
-const CHANGE_COLORS: Record<string, string> = {
-  amended: 'bg-amber-100 text-amber-800',
-  new_version: 'bg-blue-100 text-blue-800',
-  repealed: 'bg-red-100 text-red-800',
-};
-
 export default function Updates() {
   const { user } = useAuth();
 
   const { data: updates, isLoading } = useQuery({
     queryKey: ['updates', user?.id],
     queryFn: async () => {
-      // Get user subscriptions
       const { data: subs, error: subErr } = await supabase
         .from('subscriptions')
         .select('document_id')
@@ -37,12 +24,11 @@ export default function Updates() {
 
       const docIds = subs.map((s) => s.document_id);
 
-      // Get versions for subscribed documents
       const { data, error } = await supabase
         .from('document_versions')
         .select('*, documents(id, title, doc_number)')
         .in('document_id', docIds)
-        .order('detected_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
       return data;
@@ -50,14 +36,13 @@ export default function Updates() {
     enabled: !!user,
   });
 
-  // Also show latest changes across all docs
   const { data: recentChanges } = useQuery({
     queryKey: ['recent-changes'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('document_versions')
         .select('*, documents(id, title, doc_number)')
-        .order('detected_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
       if (error) throw error;
       return data;
@@ -96,15 +81,15 @@ export default function Updates() {
                       >
                         {doc?.title || 'Документ'}
                       </Link>
-                      {u.summary && (
-                        <p className="text-xs text-muted-foreground">{u.summary}</p>
+                      {u.change_description && (
+                        <p className="text-xs text-muted-foreground">{u.change_description}</p>
                       )}
                       <div className="flex items-center gap-2">
-                        <Badge className={CHANGE_COLORS[u.change_type] || ''} variant="secondary">
-                          {CHANGE_LABELS[u.change_type] || u.change_type}
+                        <Badge variant="secondary">
+                          Версия {u.version_number}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(u.detected_at).toLocaleDateString('ru-RU')}
+                          {new Date(u.created_at).toLocaleDateString('ru-RU')}
                         </span>
                       </div>
                     </div>
@@ -138,8 +123,8 @@ export default function Updates() {
                 return (
                   <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Badge className={CHANGE_COLORS[u.change_type] || ''} variant="secondary">
-                        {CHANGE_LABELS[u.change_type] || u.change_type}
+                      <Badge variant="secondary">
+                        Версия {u.version_number}
                       </Badge>
                       <Link
                         to={`/app/documents/${doc?.id}`}
@@ -149,7 +134,7 @@ export default function Updates() {
                       </Link>
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                      {new Date(u.detected_at).toLocaleDateString('ru-RU')}
+                      {new Date(u.created_at).toLocaleDateString('ru-RU')}
                     </span>
                   </div>
                 );

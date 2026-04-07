@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -22,15 +22,10 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
 /* ── helpers ────────────────────────────────────────── */
 
-const docTypeLabel: Record<string, string> = {
-  law: 'Закон', codex: 'Кодекс', decree: 'Указ', decret: 'Декрет',
-  resolution: 'Постановление', order: 'Приказ',
-};
 const docTypeBadgeClass: Record<string, string> = {
   codex: 'bg-primary/15 text-primary',
   law: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   decree: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
-  decret: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
   resolution: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
 };
 
@@ -42,8 +37,8 @@ function parseToc(text: string): TocItem[] {
   let articleIdx = 0;
   for (const line of lines) {
     const trimmed = line.trim();
-    const chapterMatch = trimmed.match(/^(Глава\s+\d+)/i);
     const sectionMatch = trimmed.match(/^(Раздел\s+[IVXLC]+)/i);
+    const chapterMatch = trimmed.match(/^(Глава\s+\d+)/i);
     const articleMatch = trimmed.match(/^(Статья\s+\d+)/i);
     if (sectionMatch) {
       items.push({ id: `section-${items.length}`, label: trimmed.slice(0, 80), level: 0 });
@@ -109,31 +104,22 @@ function TableOfContents({ items, activeId, onClickItem }: { items: TocItem[]; a
 /* ── Main page ──────────────────────────────────────── */
 
 export default function PublicDocumentView() {
-  const { slug, id } = useParams<{ slug?: string; id?: string }>();
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const location = useLocation();
   const [activeId, setActiveId] = useState('');
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Determine query mode
-  const isSlugRoute = location.pathname.startsWith('/doc/');
-
   const { data: doc, isLoading } = useQuery({
-    queryKey: ['public-doc', slug || id],
+    queryKey: ['public-doc', id],
     queryFn: async () => {
-      const col = (isSlugRoute && slug) ? 'slug' : 'id';
-      const val = (isSlugRoute && slug) ? slug : id!;
-      const { data } = await (supabase.from('documents').select('*') as any).eq(col, val).single();
+      const { data } = await supabase.from('documents')
+        .select('*, document_types(slug, name_ru), issuing_bodies(name_ru)')
+        .eq('id', id!)
+        .single();
       return data;
     },
-    enabled: !!(slug || id),
+    enabled: !!id,
   });
-
-  // Increment view count
-  useEffect(() => {
-    if (!doc?.id) return;
-    supabase.rpc('increment_view_count', { doc_id: doc.id } as any).then();
-  }, [doc?.id]);
 
   // Bookmark & subscription state
   const { data: isBookmarked } = useQuery({
@@ -178,15 +164,15 @@ export default function PublicDocumentView() {
 
   // Related documents
   const { data: relatedDocs } = useQuery({
-    queryKey: ['related-docs', doc?.doc_type, doc?.id],
+    queryKey: ['related-docs', doc?.document_type_id, doc?.id],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
-        .select('id, title, doc_type, date_adopted, slug' as any)
-        .eq('doc_type', doc!.doc_type)
+        .select('id, title, doc_date, document_types(slug, name_ru)')
+        .eq('document_type_id', doc!.document_type_id)
         .neq('id', doc!.id)
-        .order('view_count' as any, { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(5);
-      return data as any[] || [];
+      return data || [];
     },
     enabled: !!doc,
   });
@@ -198,15 +184,16 @@ export default function PublicDocumentView() {
       const { data } = await supabase.from('document_versions')
         .select('*')
         .eq('document_id', doc!.id)
-        .order('detected_at', { ascending: false });
+        .order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!doc,
   });
 
-  // Parse TOC & body
-  const tocItems = useMemo(() => doc?.body_text ? parseToc(doc.body_text) : [], [doc?.body_text]);
-  const formattedBody = useMemo(() => doc?.body_text ? formatBodyText(doc.body_text) : [], [doc?.body_text]);
+  // Parse TOC & body from content_markdown
+  const bodyText = doc?.content_markdown || '';
+  const tocItems = useMemo(() => bodyText ? parseToc(bodyText) : [], [bodyText]);
+  const formattedBody = useMemo(() => bodyText ? formatBodyText(bodyText) : [], [bodyText]);
 
   // Intersection Observer for active TOC item
   useEffect(() => {
@@ -228,9 +215,8 @@ export default function PublicDocumentView() {
     return () => obs.disconnect();
   }, [tocItems, formattedBody]);
 
-  // Determine access level
-  const isFree = doc?.is_free === true;
-  const hasFullAccess = isFree || !!user;
+  // Access level
+  const hasFullAccess = !!user;
 
   // Find index of 3rd article for freemium gate
   const thirdArticleIndex = useMemo(() => {
@@ -246,7 +232,6 @@ export default function PublicDocumentView() {
     toast.success('Ссылка скопирована');
   }, []);
 
-  /* ── Loading state ─── */
   if (isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
@@ -268,22 +253,23 @@ export default function PublicDocumentView() {
     );
   }
 
-  const typeLabel = docTypeLabel[doc.doc_type] || doc.doc_type;
-  const typeBadgeClass = docTypeBadgeClass[doc.doc_type] || 'bg-muted text-muted-foreground';
-
-  const changeTypeLabel: Record<string, string> = { amended: 'Изменён', new_version: 'Новая редакция', repealed: 'Утратил силу' };
+  const dt = doc.document_types as any;
+  const ib = doc.issuing_bodies as any;
+  const typeLabel = dt?.name_ru || '';
+  const typeSlug = dt?.slug || '';
+  const typeBadgeClass = docTypeBadgeClass[typeSlug] || 'bg-muted text-muted-foreground';
 
   const legalDocJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Legislation',
     name: doc.title,
     description: `Полный текст ${typeLabel} "${doc.title}"`,
-    datePublished: doc.date_adopted,
-    dateModified: doc.updated_at,
-    publisher: doc.organ ? { '@type': 'Organization', name: doc.organ } : undefined,
+    datePublished: doc.doc_date,
+    dateModified: doc.last_updated,
+    publisher: ib ? { '@type': 'Organization', name: ib.name_ru } : undefined,
     inLanguage: 'ru',
-    legislationIdentifier: doc.reg_number || doc.doc_number,
-    url: `/doc/${doc.slug || doc.id}`,
+    legislationIdentifier: doc.doc_number,
+    url: `/documents/${doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
@@ -307,8 +293,8 @@ export default function PublicDocumentView() {
     <div className="mx-auto max-w-7xl px-4 py-6">
       <PageSEO
         title={`${doc.title} — полный текст`}
-        description={`Читайте полный текст ${typeLabel} "${doc.title}"${doc.date_adopted ? ` от ${formatDateShort(doc.date_adopted)}` : ''}. Актуальная редакция.`}
-        path={`/doc/${doc.slug || doc.id}`}
+        description={`Читайте полный текст ${typeLabel} "${doc.title}"${doc.doc_date ? ` от ${formatDateShort(doc.doc_date)}` : ''}. Актуальная редакция.`}
+        path={`/documents/${doc.id}`}
         type="article"
         jsonLd={[legalDocJsonLd, breadcrumbJsonLd]}
       />
@@ -329,17 +315,19 @@ export default function PublicDocumentView() {
             </span>
             {doc.status === 'active' ? (
               <Badge variant="outline" className="border-green-500 text-green-600 dark:text-green-400 text-xs">● Действующий</Badge>
-            ) : doc.status === 'repealed' ? (
-              <Badge variant="outline" className="border-red-500 text-red-600 dark:text-red-400 text-xs">● Утратил силу</Badge>
+            ) : doc.status === 'cancelled' ? (
+              <Badge variant="outline" className="border-red-500 text-red-600 dark:text-red-400 text-xs">● Отменён</Badge>
+            ) : doc.status === 'expired' ? (
+              <Badge variant="outline" className="border-red-500 text-red-600 dark:text-red-400 text-xs">● Истёк</Badge>
             ) : (
-              <Badge variant="outline" className="border-orange-500 text-orange-600 dark:text-orange-400 text-xs">● Изменён</Badge>
+              <Badge variant="outline" className="border-orange-500 text-orange-600 dark:text-orange-400 text-xs">● Не вступил в силу</Badge>
             )}
           </div>
           <h1 className="text-2xl font-bold leading-snug mb-3">{doc.title}</h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {doc.date_adopted && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {format(new Date(doc.date_adopted), 'dd.MM.yyyy')}</span>}
-            {(doc as any).reg_number && <span>№ {(doc as any).reg_number}{(doc as any).reg_date ? ` от ${format(new Date((doc as any).reg_date), 'dd.MM.yyyy')}` : ''}</span>}
-            {(doc as any).organ && <span>Орган: {(doc as any).organ}</span>}
+            {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {format(new Date(doc.doc_date), 'dd.MM.yyyy')}</span>}
+            {doc.doc_number && <span>№ {doc.doc_number}</span>}
+            {ib && <span>Орган: {ib.name_ru}</span>}
             {doc.source_url && (
               <a href={doc.source_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
                 <ExternalLink className="h-3.5 w-3.5" />Источник
@@ -384,16 +372,6 @@ export default function PublicDocumentView() {
         </div>
       </div>
 
-      {/* Summary */}
-      {doc.summary && (
-        <Card className="mb-6 rounded-xl shadow-sm">
-          <CardContent className="p-4">
-            <h2 className="text-sm font-semibold mb-2">Краткое содержание</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">{doc.summary}</p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Main content: TOC + Body + Sidebar */}
       <div className="flex gap-6">
         {/* Left: TOC (desktop) */}
@@ -412,7 +390,7 @@ export default function PublicDocumentView() {
 
         {/* Center: Document body */}
         <div className="flex-1 min-w-0">
-          {doc.body_text ? (
+          {bodyText ? (
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 relative">
                 <h2 className="text-sm font-semibold mb-4">Текст документа</h2>
@@ -434,13 +412,11 @@ export default function PublicDocumentView() {
                 {/* Freemium gate overlay */}
                 {!hasFullAccess && formattedBody.length > thirdArticleIndex && (
                   <div className="relative mt-0">
-                    {/* Blurred preview of remaining text */}
                     <div className="blur-sm select-none pointer-events-none" style={{ minHeight: 300 }}>
                       {formattedBody.slice(thirdArticleIndex, thirdArticleIndex + 15).map((s) => (
                         <p key={s.id} className="text-sm leading-relaxed mb-3">{s.text}</p>
                       ))}
                     </div>
-                    {/* CTA overlay */}
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-background via-background/90 to-transparent">
                       <div className="text-center p-8">
                         <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
@@ -478,9 +454,8 @@ export default function PublicDocumentView() {
                 <CollapsibleContent className="mt-3 space-y-2">
                   {versions && versions.length > 0 ? versions.map((v) => (
                     <div key={v.id} className="flex items-center gap-3 text-sm py-1.5 border-b last:border-0">
-                      <span className="text-muted-foreground w-24 shrink-0">{format(new Date(v.detected_at), 'dd.MM.yyyy')}</span>
-                      <Badge variant="outline" className="text-xs">{changeTypeLabel[v.change_type] || v.change_type}</Badge>
-                      <span className="text-muted-foreground">{v.summary || `Версия ${v.version_number}`}</span>
+                      <span className="text-muted-foreground w-24 shrink-0">{format(new Date(v.created_at), 'dd.MM.yyyy')}</span>
+                      <span className="text-muted-foreground">{v.change_description || `Версия ${v.version_number}`}</span>
                     </div>
                   )) : (
                     <p className="text-sm text-muted-foreground">Нет записей об изменениях.</p>
@@ -537,19 +512,23 @@ function RelatedDocsBlock({ docs }: { docs: any[] }) {
       <CardContent className="p-4">
         <h3 className="text-sm font-semibold mb-3">Связанные документы</h3>
         <div className="space-y-2.5">
-          {docs.map((d: any) => (
-            <Link
-              key={d.id}
-              to={d.slug ? `/doc/${d.slug}` : `/documents/${d.id}`}
-              className="block text-sm hover:text-primary transition-colors"
-            >
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5 ${docTypeBadgeClass[d.doc_type] || 'bg-muted text-muted-foreground'}`}>
-                {docTypeLabel[d.doc_type] || d.doc_type}
-              </span>
-              <span className="leading-snug">{d.title}</span>
-              {d.date_adopted && <span className="block text-xs text-muted-foreground mt-0.5">{format(new Date(d.date_adopted), 'dd.MM.yyyy')}</span>}
-            </Link>
-          ))}
+          {docs.map((d: any) => {
+            const dt = d.document_types as any;
+            const typeSlug = dt?.slug || '';
+            return (
+              <Link
+                key={d.id}
+                to={`/documents/${d.id}`}
+                className="block text-sm hover:text-primary transition-colors"
+              >
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5 ${docTypeBadgeClass[typeSlug] || 'bg-muted text-muted-foreground'}`}>
+                  {dt?.name_ru || ''}
+                </span>
+                <span className="leading-snug">{d.title}</span>
+                {d.doc_date && <span className="block text-xs text-muted-foreground mt-0.5">{format(new Date(d.doc_date), 'dd.MM.yyyy')}</span>}
+              </Link>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

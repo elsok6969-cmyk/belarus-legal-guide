@@ -59,10 +59,6 @@ const pricingPlans = [
   },
 ];
 
-const docTypeLabel: Record<string, string> = {
-  codex: 'Кодекс', law: 'Закон', decree: 'Указ', resolution: 'Постановление',
-};
-
 function formatDate(d: string | null) {
   if (!d) return '';
   try { return format(new Date(d), 'd MMM yyyy', { locale: ru }); } catch { return d; }
@@ -80,8 +76,8 @@ export default function Landing() {
     queryKey: ['landing-latest-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
-        .select('id, title, doc_type, date_adopted, updated_at')
-        .order('updated_at', { ascending: false }).limit(5);
+        .select('id, title, doc_date, last_updated, document_types(slug, name_ru)')
+        .order('last_updated', { ascending: false }).limit(5);
       return data ?? [];
     },
   });
@@ -109,12 +105,11 @@ export default function Landing() {
     },
   });
 
-  // TODO: sort by view_count when column is added
   const { data: popularDocs } = useQuery({
     queryKey: ['landing-popular-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
-        .select('id, title, doc_type, date_adopted')
+        .select('id, title, doc_date, document_types(slug, name_ru)')
         .order('created_at', { ascending: false }).limit(10);
       return data ?? [];
     },
@@ -126,9 +121,9 @@ export default function Landing() {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       const { data } = await supabase.from('documents')
-        .select('id, title, doc_type, updated_at')
-        .gte('updated_at', weekAgo.toISOString())
-        .order('updated_at', { ascending: false }).limit(10);
+        .select('id, title, last_updated, document_types(slug, name_ru)')
+        .gte('last_updated', weekAgo.toISOString())
+        .order('last_updated', { ascending: false }).limit(10);
       return data ?? [];
     },
   });
@@ -139,6 +134,11 @@ export default function Landing() {
     name: 'Бабиджон',
     description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов бесплатно',
     inLanguage: 'ru',
+  };
+
+  const getDocTypeLabel = (doc: any) => {
+    const dt = doc.document_types as any;
+    return dt?.name_ru || '';
   };
 
   return (
@@ -191,7 +191,6 @@ export default function Landing() {
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <div className="grid gap-6 md:grid-cols-3">
-          {/* Col 1 — Latest docs */}
           <Card className="rounded-xl shadow-sm hover:shadow-md transition">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Последние НПА</CardTitle>
@@ -200,13 +199,13 @@ export default function Landing() {
               {latestDocs?.map((doc) => (
                 <div key={doc.id} className="flex items-start gap-2">
                   <Badge variant="secondary" className="shrink-0 text-[10px] mt-0.5">
-                    {docTypeLabel[doc.doc_type] || doc.doc_type}
+                    {getDocTypeLabel(doc)}
                   </Badge>
                   <div className="min-w-0">
                     <Link to={`/documents/${doc.id}`} className="text-sm font-medium hover:text-primary transition-colors line-clamp-2">
                       {doc.title}
                     </Link>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(doc.date_adopted)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(doc.doc_date)}</p>
                   </div>
                 </div>
               ))}
@@ -217,7 +216,6 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          {/* Col 2 — Rates + Deadlines */}
           <div className="space-y-6">
             <Card className="rounded-xl shadow-sm hover:shadow-md transition">
               <CardHeader className="pb-3">
@@ -264,7 +262,6 @@ export default function Landing() {
             </Card>
           </div>
 
-          {/* Col 3 — Popular sections */}
           <Card className="rounded-xl shadow-sm hover:shadow-md transition">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Популярные разделы</CardTitle>
@@ -291,9 +288,9 @@ export default function Landing() {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             {popularDocs.map((doc) => (
               <Link key={doc.id} to={`/documents/${doc.id}`} className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition group">
-                <Badge variant="secondary" className="text-[10px] mb-2">{docTypeLabel[doc.doc_type] || doc.doc_type}</Badge>
+                <Badge variant="secondary" className="text-[10px] mb-2">{getDocTypeLabel(doc)}</Badge>
                 <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{doc.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{formatDate(doc.date_adopted)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(doc.doc_date)}</p>
               </Link>
             ))}
           </div>
@@ -308,11 +305,11 @@ export default function Landing() {
             {recentChanges.map((doc, i) => (
               <Link key={doc.id} to={`/documents/${doc.id}`} className={`flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors ${i !== 0 ? 'border-t' : ''}`}>
                 <div className="flex items-center gap-3 min-w-0">
-                  <Badge variant="secondary" className="shrink-0 text-[10px]">{docTypeLabel[doc.doc_type] || doc.doc_type}</Badge>
+                  <Badge variant="secondary" className="shrink-0 text-[10px]">{getDocTypeLabel(doc)}</Badge>
                   <span className="text-sm font-medium truncate">{doc.title}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
-                  <span className="text-xs text-muted-foreground">{formatDate(doc.updated_at)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(doc.last_updated)}</span>
                   <Badge className="bg-warning text-warning-foreground text-[10px]">ИЗМЕНЁН</Badge>
                 </div>
               </Link>

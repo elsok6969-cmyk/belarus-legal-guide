@@ -36,7 +36,7 @@ export default function Index() {
     queryFn: async () => {
       const { data } = await supabase
         .from('documents')
-        .select('id, title, doc_type, doc_number, status, date_adopted')
+        .select('id, title, doc_number, status')
         .order('created_at', { ascending: false })
         .limit(5);
       return data || [];
@@ -51,7 +51,6 @@ export default function Index() {
         .select('*')
         .order('rate_date', { ascending: false })
         .limit(7);
-      // Get latest date and filter
       if (!data || data.length === 0) return [];
       const latestDate = data[0].rate_date;
       return data.filter((r) => r.rate_date === latestDate);
@@ -78,7 +77,6 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
-      {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Добро пожаловать{displayName ? `, ${displayName}` : ''}
@@ -88,7 +86,6 @@ export default function Index() {
         </p>
       </div>
 
-      {/* Stats row */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
@@ -136,7 +133,6 @@ export default function Index() {
         </Card>
       </div>
 
-      {/* Quick actions */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <Button asChild variant="outline" className="h-auto py-4 justify-start">
           <Link to="/app/search">
@@ -168,7 +164,6 @@ export default function Index() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent documents */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base">Последние документы</CardTitle>
@@ -201,7 +196,6 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {/* Deadlines */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base">Ближайшие сроки</CardTitle>
@@ -252,7 +246,6 @@ export default function Index() {
         </Card>
       </div>
 
-      {/* Currency rates mini */}
       {rates && rates.length > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
