@@ -43,6 +43,7 @@ import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
+import AdminHealth from './pages/AdminHealth';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
@@ -133,6 +134,7 @@ const App = () => (
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
+          <Route path="/admin/health" element={<AdminGuard><AppLayout><AdminHealth /></AppLayout></AdminGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

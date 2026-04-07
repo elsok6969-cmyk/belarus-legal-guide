@@ -848,6 +848,77 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_documents: {
+        Row: {
+          discovered_at: string
+          doc_type: string | null
+          id: string
+          notes: string | null
+          source_url: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          discovered_at?: string
+          doc_type?: string | null
+          id?: string
+          notes?: string | null
+          source_url?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          discovered_at?: string
+          doc_type?: string | null
+          id?: string
+          notes?: string | null
+          source_url?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      pending_updates: {
+        Row: {
+          discovered_at: string
+          document_id: string
+          id: string
+          new_date: string | null
+          notes: string | null
+          old_date: string | null
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          discovered_at?: string
+          document_id: string
+          id?: string
+          new_date?: string | null
+          notes?: string | null
+          old_date?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Update: {
+          discovered_at?: string
+          document_id?: string
+          id?: string
+          new_date?: string | null
+          notes?: string | null
+          old_date?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_updates_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           ai_requests_reset_at: string | null
@@ -978,6 +1049,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
       }
       tax_deadlines: {
         Row: {
