@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Bookmark, FileText, Trash2, Calendar, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,14 +11,16 @@ import { toast } from '@/hooks/use-toast';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
-  amended: 'Изменён',
-  repealed: 'Утратил силу',
+  expired: 'Истёк',
+  cancelled: 'Отменён',
+  not_effective_yet: 'Не вступил в силу',
 };
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-800',
-  amended: 'bg-amber-100 text-amber-800',
-  repealed: 'bg-red-100 text-red-800',
+  expired: 'bg-red-100 text-red-800',
+  cancelled: 'bg-red-100 text-red-800',
+  not_effective_yet: 'bg-amber-100 text-amber-800',
 };
 
 export default function Bookmarks() {
@@ -30,7 +32,7 @@ export default function Bookmarks() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('bookmarks')
-        .select('id, created_at, document_id, documents(id, title, doc_type, doc_number, status, date_adopted)')
+        .select('id, created_at, document_id, documents(id, title, doc_number, status, doc_date)')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -87,10 +89,10 @@ export default function Bookmarks() {
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         {doc.doc_number && <span>№ {doc.doc_number}</span>}
-                        {doc.date_adopted && (
+                        {doc.doc_date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {new Date(doc.date_adopted).toLocaleDateString('ru-RU')}
+                            {new Date(doc.doc_date).toLocaleDateString('ru-RU')}
                           </span>
                         )}
                         <Badge className={STATUS_COLORS[doc.status] || ''} variant="secondary">
