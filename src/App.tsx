@@ -18,6 +18,8 @@ import Pricing from './pages/Pricing';
 import Legal from './pages/Legal';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Subscription from './pages/Subscription';
 import News from './pages/News';
 import NewsArticle from './pages/NewsArticle';
