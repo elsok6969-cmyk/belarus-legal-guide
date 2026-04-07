@@ -215,17 +215,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Auth: accept IMPORT_SECRET or service role key
-  const importSecret = Deno.env.get("IMPORT_SECRET");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "") || "";
-  const isAuthorized = !importSecret || authHeader === importSecret || authHeader === serviceKey;
-  if (!isAuthorized) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // Auth handled by edge function JWT verification
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
