@@ -654,6 +654,95 @@ export type Database = {
         }
         Relationships: []
       }
+      guide_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name_ru: string
+          parent_id: string | null
+          profession: string | null
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name_ru: string
+          parent_id?: string | null
+          profession?: string | null
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name_ru?: string
+          parent_id?: string | null
+          profession?: string | null
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "guide_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guide_items: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          document_id: string | null
+          id: string
+          sort_order: number
+          title_override: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          sort_order?: number
+          title_override?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          sort_order?: number
+          title_override?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "guide_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guide_items_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_logs: {
         Row: {
           completed_at: string | null
