@@ -4,6 +4,7 @@ import { Mail, Send } from 'lucide-react';
 const sections = [
   { label: 'Документы', to: '/documents' },
   { label: 'Кодексы', to: '/documents?filter=codex' },
+  { label: 'Курсы валют', to: '/currencies' },
   { label: 'Календарь', to: '/calendar' },
   { label: 'AI-помощник', to: '/app/assistant' },
   { label: 'Тарифы', to: '/pricing' },
