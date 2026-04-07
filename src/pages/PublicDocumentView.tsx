@@ -3,7 +3,8 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   FileText, Clock, Download, Share2, Bookmark, Bell, Lock,
-  ChevronRight, BookOpen, ExternalLink, Mail, ListTree,
+  ExternalLink, Mail, Search, ChevronLeft, ChevronRight,
+  BookOpen, Menu, MoreHorizontal,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
@@ -13,102 +14,80 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DocumentTOCPanel, TocEntry } from '@/components/document/DocumentTOCPanel';
+import { DocumentArticleRenderer } from '@/components/document/DocumentArticleRenderer';
+import { DocumentSearchPanel } from '@/components/document/DocumentSearchPanel';
+import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
-/* ── helpers ────────────────────────────────────────── */
+/* ─── types ─────────────────────────────────────── */
 
-const docTypeBadgeClass: Record<string, string> = {
+interface DocSection {
+  id: string;
+  title: string | null;
+  number: string | null;
+  content_markdown: string | null;
+  content_text: string | null;
+  level: number;
+  sort_order: number;
+  section_type: string;
+  parent_id: string | null;
+}
+
+interface UnifiedSection {
+  id: string;
+  title: string | null;
+  number: string | null;
+  content: string;
+  level: number;
+  sort_order: number;
+}
+
+/* ─── helpers ───────────────────────────────────── */
+
+const STATUS_MAP: Record<string, { label: string; cls: string }> = {
+  active: { label: 'Действующий', cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  expired: { label: 'Истёк', cls: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  cancelled: { label: 'Отменён', cls: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  not_effective_yet: { label: 'Не вступил в силу', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
+};
+
+const TYPE_CLS: Record<string, string> = {
   codex: 'bg-primary/15 text-primary',
   law: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   decree: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
   resolution: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
 };
 
-interface TocItem { id: string; label: string; level: number }
-
-function parseToc(text: string): TocItem[] {
-  const items: TocItem[] = [];
-  const lines = text.split('\n');
-  let articleIdx = 0;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const sectionMatch = trimmed.match(/^(Раздел\s+[IVXLC]+)/i);
-    const chapterMatch = trimmed.match(/^(Глава\s+\d+)/i);
-    const articleMatch = trimmed.match(/^(Статья\s+\d+)/i);
-    if (sectionMatch) {
-      items.push({ id: `section-${items.length}`, label: trimmed.slice(0, 80), level: 0 });
-    } else if (chapterMatch) {
-      items.push({ id: `chapter-${items.length}`, label: trimmed.slice(0, 80), level: 1 });
-    } else if (articleMatch) {
-      articleIdx++;
-      items.push({ id: `article-${articleIdx}`, label: trimmed.slice(0, 80), level: 2 });
-    }
-  }
-  return items;
+function formatDate(d: string | null) {
+  if (!d) return '';
+  try { return format(new Date(d), 'dd.MM.yyyy'); } catch { return d; }
 }
 
-interface FormattedSection { id: string; type: 'section' | 'chapter' | 'article' | 'paragraph'; text: string }
-
-function formatBodyText(text: string): FormattedSection[] {
-  const sections: FormattedSection[] = [];
-  const lines = text.split('\n');
-  let articleIdx = 0;
-  for (const line of lines) {
-    const t = line.trim();
-    if (!t) continue;
-    if (/^Раздел\s+[IVXLC]+/i.test(t)) {
-      sections.push({ id: `section-${sections.length}`, type: 'section', text: t });
-    } else if (/^Глава\s+\d+/i.test(t)) {
-      sections.push({ id: `chapter-${sections.length}`, type: 'chapter', text: t });
-    } else if (/^Статья\s+\d+/i.test(t)) {
-      articleIdx++;
-      sections.push({ id: `article-${articleIdx}`, type: 'article', text: t });
-    } else {
-      sections.push({ id: `p-${sections.length}`, type: 'paragraph', text: t });
-    }
-  }
-  return sections;
-}
-
-/* ── TOC component ──────────────────────────────────── */
-
-function TableOfContents({ items, activeId, onClickItem, onFocusItem }: { items: TocItem[]; activeId: string; onClickItem?: () => void; onFocusItem?: (id: string) => void }) {
-  return (
-    <nav className="space-y-0.5 text-sm">
-      {items.map((item) => (
-        <a
-          key={item.id}
-          href={`#${item.id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            window.history.replaceState(null, '', `#${item.id}`);
-            onFocusItem?.(item.id);
-            onClickItem?.();
-          }}
-          className={`block truncate py-1 transition-colors hover:text-primary ${
-            item.level === 0 ? 'font-semibold' : item.level === 1 ? 'pl-3' : 'pl-6 text-muted-foreground'
-          } ${activeId === item.id ? 'text-primary font-medium' : ''}`}
-        >
-          {item.label}
-        </a>
-      ))}
-    </nav>
-  );
-}
-
-/* ── Main page ──────────────────────────────────────── */
+/* ─── main component ────────────────────────────── */
 
 export default function PublicDocumentView() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { user } = useAuth();
-  const [activeId, setActiveId] = useState('');
+  const isMobile = useIsMobile();
+
+  const [viewMode, setViewMode] = useState<'focus' | 'full'>('focus');
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchMatches, setSearchMatches] = useState<{ sectionId: string; title: string }[]>([]);
+  const [searchIndex, setSearchIndex] = useState(0);
+  const [tocOpen, setTocOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  /* ── data fetching ── */
 
   const { data: doc, isLoading } = useQuery({
     queryKey: ['public-doc', id],
@@ -120,138 +99,280 @@ export default function PublicDocumentView() {
       return data;
     },
     enabled: !!id,
+    staleTime: 3600000,
   });
 
-  // Bookmark & subscription state
-  const { data: isBookmarked } = useQuery({
-    queryKey: ['bookmark', doc?.id, user?.id],
+  const { data: dbSections } = useQuery({
+    queryKey: ['document-sections', id],
     queryFn: async () => {
-      const { data } = await supabase.from('bookmarks').select('id').eq('user_id', user!.id).eq('document_id', doc!.id).maybeSingle();
+      const { data } = await supabase
+        .from('document_sections')
+        .select('*')
+        .eq('document_id', id!)
+        .order('sort_order');
+      return (data || []) as DocSection[];
+    },
+    enabled: !!id,
+    staleTime: 3600000,
+  });
+
+  const { data: relations } = useQuery({
+    queryKey: ['document-relations', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('document_relations')
+        .select('*, source:documents!document_relations_source_document_id_fkey(id, title, short_title, doc_date), target:documents!document_relations_target_document_id_fkey(id, title, short_title, doc_date)')
+        .or(`source_document_id.eq.${id},target_document_id.eq.${id}`);
+      return data || [];
+    },
+    enabled: !!id,
+    staleTime: 3600000,
+  });
+
+  const { data: isBookmarked } = useQuery({
+    queryKey: ['bookmark', id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('bookmarks').select('id').eq('user_id', user!.id).eq('document_id', id!).maybeSingle();
       return !!data;
     },
-    enabled: !!user && !!doc,
+    enabled: !!user && !!id,
   });
 
   const { data: isSubscribed } = useQuery({
-    queryKey: ['subscription', doc?.id, user?.id],
+    queryKey: ['subscription', id, user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('subscriptions').select('id').eq('user_id', user!.id).eq('document_id', doc!.id).maybeSingle();
+      const { data } = await supabase.from('subscriptions').select('id').eq('user_id', user!.id).eq('document_id', id!).maybeSingle();
       return !!data;
     },
-    enabled: !!user && !!doc,
+    enabled: !!user && !!id,
   });
 
-  const toggleBookmark = useCallback(async () => {
-    if (!user || !doc) { toast.error('Войдите, чтобы добавить в избранное'); return; }
-    if (isBookmarked) {
-      await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('document_id', doc.id);
-      toast('Удалено из избранного');
-    } else {
-      await supabase.from('bookmarks').insert({ user_id: user.id, document_id: doc.id });
-      toast.success('Добавлено в избранное');
+  /* ── unified sections ── */
+
+  const virtualSections = useMemo(() => {
+    if (dbSections && dbSections.length > 0) return null;
+    if (!doc?.content_markdown) return null;
+    return parseMarkdownIntoSections(doc.content_markdown);
+  }, [dbSections, doc?.content_markdown]);
+
+  const sections: UnifiedSection[] = useMemo(() => {
+    if (dbSections && dbSections.length > 0) {
+      return dbSections.map(s => ({
+        id: s.id,
+        title: s.title,
+        number: s.number,
+        content: s.content_markdown || s.content_text || '',
+        level: s.level,
+        sort_order: s.sort_order,
+      }));
     }
-  }, [user, doc, isBookmarked]);
-
-  const toggleSubscription = useCallback(async () => {
-    if (!user || !doc) { toast.error('Войдите, чтобы подписаться на изменения'); return; }
-    if (isSubscribed) {
-      await supabase.from('subscriptions').delete().eq('user_id', user.id).eq('document_id', doc.id);
-      toast('Подписка отменена');
-    } else {
-      await supabase.from('subscriptions').insert({ user_id: user.id, document_id: doc.id });
-      toast.success('Вы подписаны на изменения');
+    if (virtualSections && virtualSections.length > 0) {
+      return virtualSections.map(s => ({
+        id: s.id,
+        title: s.title,
+        number: null,
+        content: s.content,
+        level: s.level,
+        sort_order: s.sort_order,
+      }));
     }
-  }, [user, doc, isSubscribed]);
+    return [];
+  }, [dbSections, virtualSections]);
 
-  // Related documents
-  const { data: relatedDocs } = useQuery({
-    queryKey: ['related-docs', doc?.document_type_id, doc?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from('documents')
-        .select('id, title, doc_date, document_types(slug, name_ru)')
-        .eq('document_type_id', doc!.document_type_id)
-        .neq('id', doc!.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      return data || [];
-    },
-    enabled: !!doc,
-  });
+  const tocSections: TocEntry[] = useMemo(
+    () => sections.filter(s => s.level <= 3).map(s => ({
+      id: s.id,
+      title: s.title,
+      number: s.number,
+      level: s.level,
+      sort_order: s.sort_order,
+    })),
+    [sections]
+  );
 
-  // Document versions (history)
-  const { data: versions } = useQuery({
-    queryKey: ['doc-versions', doc?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from('document_versions')
-        .select('*')
-        .eq('document_id', doc!.id)
-        .order('created_at', { ascending: false });
-      return data || [];
-    },
-    enabled: !!doc,
-  });
+  /* ── navigation helpers ── */
 
-  // Parse TOC & body from content_markdown
-  const bodyText = doc?.content_markdown || '';
-  const tocItems = useMemo(() => bodyText ? parseToc(bodyText) : [], [bodyText]);
-  const formattedBody = useMemo(() => bodyText ? formatBodyText(bodyText) : [], [bodyText]);
+  // Articles are sections with level >= 2 (chapters level 2, articles level 3)
+  const articleIds = useMemo(
+    () => sections.filter(s => s.level >= 2).map(s => s.id),
+    [sections]
+  );
 
-  // Initialize focusedId from URL hash
-  const location = useLocation();
+  const currentArticleIndex = useMemo(
+    () => focusedId ? articleIds.indexOf(focusedId) : -1,
+    [articleIds, focusedId]
+  );
+
+  // Initialize from hash
   useEffect(() => {
-    const hash = location.hash?.replace('#', '');
-    if (hash && tocItems.some(t => t.id === hash)) {
-      setFocusedId(hash);
-      setActiveId(hash);
+    const hash = location.hash?.replace('#section-', '').replace('#', '');
+    if (hash && sections.length > 0) {
+      const found = sections.find(s => s.id === hash);
+      if (found) {
+        setFocusedId(hash);
+        return;
+      }
+      // Try article-N pattern
+      const artMatch = hash.match(/article-(\d+)/);
+      if (artMatch) {
+        const artNum = artMatch[1];
+        const match = sections.find(s =>
+          (s.number && s.number.includes(artNum)) ||
+          (s.title && new RegExp(`Статья\\s+${artNum}\\b`, 'i').test(s.title))
+        );
+        if (match) { setFocusedId(match.id); return; }
+      }
     }
-  }, [tocItems, location.hash]);
+    // Default: focus on first article-level section
+    if (sections.length > 0 && !focusedId) {
+      const firstArticle = sections.find(s => s.level >= 2);
+      if (firstArticle) setFocusedId(firstArticle.id);
+    }
+  }, [sections, location.hash]);
 
-  // Compute focused (filtered) sections — show only the clicked section and its content
+  const handleSelectSection = useCallback((sectionId: string) => {
+    if (viewMode === 'focus') {
+      setFocusedId(sectionId);
+      window.history.replaceState(null, '', `#section-${sectionId}`);
+      contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Full mode — scroll to anchor
+      const el = document.getElementById(`section-${sectionId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setTocOpen(false);
+  }, [viewMode]);
+
+  const handleArticleRefClick = useCallback((artNum: string) => {
+    const target = sections.find(s => {
+      if (s.number && s.number.match(new RegExp(`\\b${artNum}\\b`))) return true;
+      if (s.title && new RegExp(`Статья\\s+${artNum}\\b`, 'i').test(s.title)) return true;
+      return false;
+    });
+    if (target) {
+      setViewMode('focus');
+      setFocusedId(target.id);
+      window.history.replaceState(null, '', `#section-${target.id}`);
+      contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [sections]);
+
+  const goToArticle = useCallback((direction: 'prev' | 'next') => {
+    const newIdx = direction === 'prev' ? currentArticleIndex - 1 : currentArticleIndex + 1;
+    if (newIdx >= 0 && newIdx < articleIds.length) {
+      const newId = articleIds[newIdx];
+      setFocusedId(newId);
+      window.history.replaceState(null, '', `#section-${newId}`);
+      contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentArticleIndex, articleIds]);
+
+  /* ── focused sections logic ── */
+
   const focusedSections = useMemo(() => {
-    if (!focusedId) return null;
-    const startIdx = formattedBody.findIndex(s => s.id === focusedId);
+    if (viewMode !== 'focus' || !focusedId) return null;
+    const startIdx = sections.findIndex(s => s.id === focusedId);
     if (startIdx === -1) return null;
-    const startSection = formattedBody[startIdx];
-    // Determine section level priority: section > chapter > article
-    const levelPriority = { section: 0, chapter: 1, article: 2, paragraph: 3 };
-    const startLevel = levelPriority[startSection.type] ?? 3;
-    // Collect everything from startIdx until the next heading of same or higher level
-    const result = [formattedBody[startIdx]];
-    for (let i = startIdx + 1; i < formattedBody.length; i++) {
-      const s = formattedBody[i];
-      const sLevel = levelPriority[s.type] ?? 3;
-      if (sLevel <= startLevel && s.type !== 'paragraph') break;
-      result.push(s);
+    const startLevel = sections[startIdx].level;
+    const result = [sections[startIdx]];
+    for (let i = startIdx + 1; i < sections.length; i++) {
+      if (sections[i].level <= startLevel) break;
+      result.push(sections[i]);
     }
     return result;
-  }, [focusedId, formattedBody]);
+  }, [viewMode, focusedId, sections]);
 
-  const handleFocusSection = useCallback((id: string) => {
-    setFocusedId(id);
-    setActiveId(id);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  /* ── search ── */
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      if (e.key === 'Escape') {
+        setShowSearch(false);
+        setSearchQuery('');
+        setSearchMatches([]);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const handleShowAll = useCallback(() => {
-    setFocusedId(null);
-  }, []);
-
-  // Access level
-  const hasFullAccess = !!user;
-
-  // Find index of 3rd article for freemium gate
-  const thirdArticleIndex = useMemo(() => {
-    let count = 0;
-    for (let i = 0; i < formattedBody.length; i++) {
-      if (formattedBody[i].type === 'article') { count++; if (count === 4) return i; }
+  const handleSearch = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (q.length < 2) { setSearchMatches([]); return; }
+    const lower = q.toLowerCase();
+    const matches = sections
+      .filter(s => s.content.toLowerCase().includes(lower) || (s.title || '').toLowerCase().includes(lower))
+      .map(s => ({ sectionId: s.id, title: `${s.number ? s.number + ' ' : ''}${s.title || ''}` }));
+    setSearchMatches(matches);
+    setSearchIndex(0);
+    if (matches.length > 0) {
+      setViewMode('focus');
+      setFocusedId(matches[0].sectionId);
     }
-    return formattedBody.length;
-  }, [formattedBody]);
+  }, [sections]);
+
+  const handleSearchNavigate = useCallback((dir: 'prev' | 'next') => {
+    if (!searchMatches.length) return;
+    const next = dir === 'next'
+      ? (searchIndex + 1) % searchMatches.length
+      : (searchIndex - 1 + searchMatches.length) % searchMatches.length;
+    setSearchIndex(next);
+    setFocusedId(searchMatches[next].sectionId);
+    setViewMode('focus');
+  }, [searchMatches, searchIndex]);
+
+  /* ── actions ── */
+
+  const toggleBookmark = useCallback(async () => {
+    if (!user || !id) { toast.error('Войдите, чтобы добавить в избранное'); return; }
+    if (isBookmarked) {
+      await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('document_id', id);
+      toast('Удалено из избранного');
+    } else {
+      await supabase.from('bookmarks').insert({ user_id: user.id, document_id: id });
+      toast.success('Добавлено в избранное');
+    }
+  }, [user, id, isBookmarked]);
+
+  const toggleSubscription = useCallback(async () => {
+    if (!user || !id) { toast.error('Войдите, чтобы подписаться'); return; }
+    if (isSubscribed) {
+      await supabase.from('subscriptions').delete().eq('user_id', user.id).eq('document_id', id);
+      toast('Подписка отменена');
+    } else {
+      await supabase.from('subscriptions').insert({ user_id: user.id, document_id: id });
+      toast.success('Вы подписаны на изменения');
+    }
+  }, [user, id, isSubscribed]);
 
   const handleShare = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Ссылка скопирована');
   }, []);
+
+  const handleAIExplain = useCallback((title: string, content: string) => {
+    toast.info('AI-объяснение будет доступно в следующем обновлении');
+  }, []);
+
+  /* ── access ── */
+  const hasFullAccess = !!user;
+  const previewLimit = 3; // Show first N articles for guests
+
+  const gatedSections = useMemo(() => {
+    if (hasFullAccess || viewMode === 'focus') return null;
+    let count = 0;
+    for (let i = 0; i < sections.length; i++) {
+      if (sections[i].level >= 2) count++;
+      if (count > previewLimit) return i;
+    }
+    return null;
+  }, [hasFullAccess, viewMode, sections]);
+
+  /* ── loading / error ── */
 
   if (isLoading) {
     return (
@@ -259,7 +380,11 @@ export default function PublicDocumentView() {
         <Skeleton className="h-4 w-48 mb-4" />
         <Skeleton className="h-8 w-3/4 mb-4" />
         <Skeleton className="h-4 w-1/2 mb-8" />
-        <div className="flex gap-8"><Skeleton className="h-[600px] w-64 hidden md:block" /><Skeleton className="h-[600px] flex-1" /></div>
+        <div className="flex gap-6">
+          <Skeleton className="h-[600px] w-[280px] hidden md:block" />
+          <Skeleton className="h-[600px] flex-1" />
+          <Skeleton className="h-[400px] w-[280px] hidden lg:block" />
+        </div>
       </div>
     );
   }
@@ -278,192 +403,227 @@ export default function PublicDocumentView() {
   const ib = doc.issuing_bodies as any;
   const typeLabel = dt?.name_ru || '';
   const typeSlug = dt?.slug || '';
-  const typeBadgeClass = docTypeBadgeClass[typeSlug] || 'bg-muted text-muted-foreground';
+  const statusInfo = STATUS_MAP[doc.status] || { label: doc.status, cls: 'bg-muted text-muted-foreground' };
+
+  const RELATION_LABELS: Record<string, string> = {
+    amends: 'Изменяет', amended_by: 'Изменён', repeals: 'Отменяет',
+    repealed_by: 'Отменён', references: 'Ссылается', referenced_by: 'Упомянут',
+    supersedes: 'Заменяет', superseded_by: 'Заменён',
+  };
 
   const legalDocJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Legislation',
-    name: doc.title,
-    description: `Полный текст ${typeLabel} "${doc.title}"`,
-    datePublished: doc.doc_date,
-    dateModified: doc.last_updated,
+    '@context': 'https://schema.org', '@type': 'Legislation',
+    name: doc.title, datePublished: doc.doc_date, dateModified: doc.last_updated,
     publisher: ib ? { '@type': 'Organization', name: ib.name_ru } : undefined,
-    inLanguage: 'ru',
-    legislationIdentifier: doc.doc_number,
+    inLanguage: 'ru', legislationIdentifier: doc.doc_number,
     url: `/documents/${doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Главная', item: '/' },
-      { '@type': 'ListItem', position: 2, name: 'Документы', item: '/documents' },
-      { '@type': 'ListItem', position: 3, name: typeLabel },
-      { '@type': 'ListItem', position: 4, name: doc.title },
-    ],
-  };
-
-  const formatDateShort = (d: string | null) => {
-    if (!d) return '';
-    try { return format(new Date(d), 'dd.MM.yyyy'); } catch { return d; }
-  };
+  const displaySections = viewMode === 'focus' && focusedSections
+    ? focusedSections
+    : gatedSections !== null
+      ? sections.slice(0, gatedSections)
+      : sections;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <PageSEO
         title={`${doc.title} — полный текст`}
-        description={`Читайте полный текст ${typeLabel} "${doc.title}"${doc.doc_date ? ` от ${formatDateShort(doc.doc_date)}` : ''}. Актуальная редакция.`}
+        description={`Полный текст ${typeLabel} «${doc.title}»${doc.doc_date ? ` от ${formatDate(doc.doc_date)}` : ''}. Актуальная редакция.`}
         path={`/documents/${doc.id}`}
         type="article"
-        jsonLd={[legalDocJsonLd, breadcrumbJsonLd]}
+        jsonLd={[legalDocJsonLd]}
       />
 
+      {/* Search panel */}
+      {showSearch && (
+        <DocumentSearchPanel
+          matches={searchMatches}
+          currentIndex={searchIndex}
+          onSearch={handleSearch}
+          onNavigate={handleSearchNavigate}
+          onClose={() => { setShowSearch(false); setSearchQuery(''); setSearchMatches([]); }}
+        />
+      )}
+
+      {/* Breadcrumbs */}
       <Breadcrumbs items={[
         { label: 'Главная', href: '/' },
-        { label: 'Документы', href: '/documents' },
-        { label: typeLabel },
-        { label: doc.title },
+        { label: typeLabel || 'Документы', href: '/documents' },
+        { label: doc.short_title || doc.title },
       ]} />
 
-      {/* Header + Actions */}
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${typeBadgeClass}`}>
-              {typeLabel}
-            </span>
-            {doc.status === 'active' ? (
-              <Badge variant="outline" className="border-green-500 text-green-600 dark:text-green-400 text-xs">● Действующий</Badge>
-            ) : doc.status === 'cancelled' ? (
-              <Badge variant="outline" className="border-red-500 text-red-600 dark:text-red-400 text-xs">● Отменён</Badge>
-            ) : doc.status === 'expired' ? (
-              <Badge variant="outline" className="border-red-500 text-red-600 dark:text-red-400 text-xs">● Истёк</Badge>
-            ) : (
-              <Badge variant="outline" className="border-orange-500 text-orange-600 dark:text-orange-400 text-xs">● Не вступил в силу</Badge>
-            )}
-          </div>
-          <h1 className="text-2xl font-bold leading-snug mb-3">{doc.title}</h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {format(new Date(doc.doc_date), 'dd.MM.yyyy')}</span>}
-            {doc.doc_number && <span>№ {doc.doc_number}</span>}
-            {ib && <span>Орган: {ib.name_ru}</span>}
-            {doc.source_url && (
-              <a href={doc.source_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
-                <ExternalLink className="h-3.5 w-3.5" />Источник
-              </a>
-            )}
-          </div>
+      {/* Document header */}
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${TYPE_CLS[typeSlug] || 'bg-muted text-muted-foreground'}`}>
+            {typeLabel}
+          </span>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.cls}`}>
+            ● {statusInfo.label}
+          </span>
+        </div>
+
+        <h1 className="text-2xl font-bold leading-snug mb-3">{doc.title}</h1>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-4">
+          {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {formatDate(doc.doc_date)}</span>}
+          {doc.doc_number && <span>№ {doc.doc_number}</span>}
+          {ib && <span>{ib.name_ru}</span>}
+          {doc.source_url && (
+            <a href={doc.source_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+              <ExternalLink className="h-3.5 w-3.5" />Источник
+            </a>
+          )}
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">PDF</span>
+                <Download className="h-4 w-4" /><span className="hidden sm:inline">PDF</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Доступно на тарифе Профи</TooltipContent>
           </Tooltip>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleShare}>
-            <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Поделиться</span>
+            <Share2 className="h-4 w-4" /><span className="hidden sm:inline">Поделиться</span>
           </Button>
-          <Button
-            variant={isBookmarked ? 'default' : 'outline'}
-            size="sm"
-            className="gap-1.5"
-            onClick={toggleBookmark}
-          >
-            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-            <span className="hidden sm:inline">Избранное</span>
+          <Button variant={isBookmarked ? 'default' : 'outline'} size="sm" className="gap-1.5" onClick={toggleBookmark}>
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} /><span className="hidden sm:inline">Избранное</span>
           </Button>
-          <Button
-            variant={isSubscribed ? 'default' : 'outline'}
-            size="sm"
-            className="gap-1.5"
-            onClick={toggleSubscription}
-          >
-            <Bell className={`h-4 w-4 ${isSubscribed ? 'fill-current' : ''}`} />
-            <span className="hidden sm:inline">Следить</span>
+          <Button variant={isSubscribed ? 'default' : 'outline'} size="sm" className="gap-1.5" onClick={toggleSubscription}>
+            <Bell className={`h-4 w-4 ${isSubscribed ? 'fill-current' : ''}`} /><span className="hidden sm:inline">Следить</span>
           </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowSearch(true)}>
+            <Search className="h-4 w-4" /><span className="hidden sm:inline">Поиск</span>
+          </Button>
+
+          {/* Mobile TOC trigger */}
+          {isMobile && tocSections.length > 0 && (
+            <Sheet open={tocOpen} onOpenChange={setTocOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Menu className="h-4 w-4" />Содержание
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] p-0">
+                <DocumentTOCPanel
+                  sections={tocSections}
+                  activeId={focusedId}
+                  onSelect={handleSelectSection}
+                  mode={viewMode}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
 
-      {/* Main content: TOC + Body + Sidebar */}
+      {/* Three-column layout */}
       <div className="flex gap-6">
-        {/* Left: TOC (desktop) */}
-        {tocItems.length > 0 && (
-          <aside className="hidden md:block w-64 shrink-0">
-            <div className="sticky top-20">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
-                <ListTree className="h-4 w-4" />Содержание
-              </h3>
-              <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-                <TableOfContents items={tocItems} activeId={activeId} onFocusItem={handleFocusSection} />
-              </div>
+        {/* LEFT: TOC */}
+        {!isMobile && tocSections.length > 0 && (
+          <aside className="hidden md:block w-[280px] shrink-0">
+            <div className="sticky top-20 border border-border rounded-lg overflow-hidden h-[calc(100vh-120px)]">
+              <DocumentTOCPanel
+                sections={tocSections}
+                activeId={focusedId}
+                onSelect={handleSelectSection}
+                mode={viewMode}
+              />
             </div>
           </aside>
         )}
 
-        {/* Center: Document body */}
-        <div className="flex-1 min-w-0">
-          {bodyText ? (
+        {/* CENTER: Document body */}
+        <div className="flex-1 min-w-0 max-w-[820px] mx-auto">
+          {/* Mode switcher */}
+          {sections.length > 0 && (
+            <div className="mb-4">
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'focus' | 'full')}>
+                <TabsList className="grid w-full max-w-xs grid-cols-2">
+                  <TabsTrigger value="focus">Текст документа</TabsTrigger>
+                  <TabsTrigger value="full">Весь текст</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+
+          {/* Focused section badge */}
+          {viewMode === 'focus' && focusedSections && focusedSections[0] && (
+            <div className="mb-4 flex items-center gap-2">
+              <Badge variant="secondary" className="font-normal text-xs">
+                {focusedSections[0].number ? `${focusedSections[0].number} ` : ''}{focusedSections[0].title || ''}
+              </Badge>
+            </div>
+          )}
+
+          {/* Content */}
+          {sections.length > 0 ? (
             <Card className="rounded-xl shadow-sm">
-              <CardContent className="p-6 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold">
-                    {focusedId ? (
-                      <span className="flex items-center gap-2">
-                        Текст документа
-                        <Badge variant="secondary" className="font-normal text-xs">
-                          {focusedSections?.[0]?.text?.slice(0, 50) || ''}
-                        </Badge>
-                      </span>
-                    ) : 'Текст документа'}
-                  </h2>
-                  {focusedId && (
-                    <Button variant="outline" size="sm" onClick={handleShowAll} className="text-xs">
-                      ← Показать весь текст
-                    </Button>
-                  )}
-                </div>
-                <div className="space-y-0">
-                  {(focusedSections || formattedBody.slice(0, hasFullAccess ? undefined : thirdArticleIndex)).map((s) => {
-                    switch (s.type) {
-                      case 'section':
-                        return <h3 key={s.id} id={s.id} className="text-lg font-semibold mt-8 mb-4 scroll-mt-24">{s.text}</h3>;
-                      case 'chapter':
-                        return <h4 key={s.id} id={s.id} className="text-base font-semibold mt-6 mb-3 scroll-mt-24">{s.text}</h4>;
-                      case 'article':
-                        return <h5 key={s.id} id={s.id} className="text-base font-medium mt-6 mb-2 text-primary scroll-mt-24">{s.text}</h5>;
-                      default:
-                        return <p key={s.id} className="text-sm leading-relaxed mb-3">{s.text}</p>;
-                    }
-                  })}
+              <CardContent className="p-6 md:p-8" ref={contentRef}>
+                <div className="max-w-none">
+                  {displaySections.map(section => (
+                    <DocumentArticleRenderer
+                      key={section.id}
+                      id={section.id}
+                      title={section.title}
+                      number={section.number}
+                      content={section.content}
+                      level={section.level}
+                      searchQuery={searchQuery}
+                      onArticleClick={handleArticleRefClick}
+                      onAIExplain={handleAIExplain}
+                    />
+                  ))}
                 </div>
 
-                {/* Freemium gate overlay — only when showing all */}
-                {!focusedId && !hasFullAccess && formattedBody.length > thirdArticleIndex && (
-                  <div className="relative mt-0">
-                    <div className="blur-sm select-none pointer-events-none" style={{ minHeight: 300 }}>
-                      {formattedBody.slice(thirdArticleIndex, thirdArticleIndex + 15).map((s) => (
-                        <p key={s.id} className="text-sm leading-relaxed mb-3">{s.text}</p>
-                      ))}
-                    </div>
+                {/* Article navigation (focus mode) */}
+                {viewMode === 'focus' && articleIds.length > 0 && (
+                  <div className="flex items-center justify-between mt-8 pt-4 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      disabled={currentArticleIndex <= 0}
+                      onClick={() => goToArticle('prev')}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Предыдущая
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {currentArticleIndex >= 0 ? `${currentArticleIndex + 1} из ${articleIds.length}` : ''}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      disabled={currentArticleIndex >= articleIds.length - 1}
+                      onClick={() => goToArticle('next')}
+                    >
+                      Следующая
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Freemium gate */}
+                {!hasFullAccess && viewMode === 'full' && gatedSections !== null && (
+                  <div className="relative mt-4">
+                    <div className="blur-sm select-none pointer-events-none h-[200px]" />
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-background via-background/90 to-transparent">
                       <div className="text-center p-8">
                         <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
                         <h3 className="text-xl font-bold mb-2">Полный текст доступен после регистрации</h3>
                         <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-                          Зарегистрируйтесь бесплатно, чтобы читать полные тексты документов, использовать AI-ассистент и сохранять закладки.
+                          Зарегистрируйтесь бесплатно для полного доступа.
                         </p>
                         <div className="flex gap-3 justify-center">
-                          <Button asChild><Link to="/register">Зарегистрироваться бесплатно</Link></Button>
-                          <Button asChild variant="outline"><Link to="/login">Войти</Link></Button>
+                          <Button asChild><Link to="/auth">Зарегистрироваться</Link></Button>
+                          <Button asChild variant="outline"><Link to="/auth">Войти</Link></Button>
                         </div>
                       </div>
                     </div>
@@ -471,120 +631,114 @@ export default function PublicDocumentView() {
                 )}
               </CardContent>
             </Card>
+          ) : doc.content_markdown ? (
+            <Card className="rounded-xl shadow-sm">
+              <CardContent className="p-8 text-center">
+                <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Текст документа обрабатывается...</p>
+              </CardContent>
+            </Card>
           ) : (
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-8 text-center">
                 <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Полный текст документа пока не загружен.</p>
+                <p className="text-sm text-muted-foreground">Текст документа пока не загружен.</p>
               </CardContent>
             </Card>
           )}
-
-          {/* Version history (collapsible) */}
-          <Collapsible className="mt-6">
-            <Card className="rounded-xl shadow-sm">
-              <CardContent className="p-4">
-                <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-semibold">
-                  <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />История изменений</span>
-                  <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3 space-y-2">
-                  {versions && versions.length > 0 ? versions.map((v) => (
-                    <div key={v.id} className="flex items-center gap-3 text-sm py-1.5 border-b last:border-0">
-                      <span className="text-muted-foreground w-24 shrink-0">{format(new Date(v.created_at), 'dd.MM.yyyy')}</span>
-                      <span className="text-muted-foreground">{v.change_description || `Версия ${v.version_number}`}</span>
-                    </div>
-                  )) : (
-                    <p className="text-sm text-muted-foreground">Нет записей об изменениях.</p>
-                  )}
-                </CollapsibleContent>
-              </CardContent>
-            </Card>
-          </Collapsible>
-
-          {/* Mobile: related docs & comments below body */}
-          <div className="lg:hidden mt-6 space-y-6">
-            <RelatedDocsBlock docs={relatedDocs || []} />
-            <ExpertCommentsBlock />
-          </div>
         </div>
 
-        {/* Right sidebar (desktop) */}
-        <aside className="hidden lg:block w-72 shrink-0 space-y-6">
-          <RelatedDocsBlock docs={relatedDocs || []} />
-          <ExpertCommentsBlock />
-        </aside>
+        {/* RIGHT: Sidebar */}
+        {!isMobile && (
+          <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
+            <div className="sticky top-20 space-y-4">
+              {/* Related documents */}
+              <Card className="rounded-xl shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4" />Связанные документы
+                  </h3>
+                  {relations && relations.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {relations.slice(0, 8).map((rel: any) => {
+                        const isSource = rel.source_document_id === id;
+                        const linked = isSource ? rel.target : rel.source;
+                        if (!linked) return null;
+                        return (
+                          <Link
+                            key={rel.id}
+                            to={`/documents/${linked.id}`}
+                            className="block text-xs hover:text-primary transition-colors"
+                          >
+                            <Badge variant="outline" className="text-[10px] mb-0.5">
+                              {RELATION_LABELS[rel.relation_type] || rel.relation_type}
+                            </Badge>
+                            <p className="line-clamp-2">{linked.short_title || linked.title}</p>
+                            {linked.doc_date && <span className="text-muted-foreground">{formatDate(linked.doc_date)}</span>}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Нет связанных документов</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Expert comments placeholder */}
+              <Card className="rounded-xl shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold mb-2">Экспертные комментарии</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Комментарии экспертов появятся в ближайшее время.
+                  </p>
+                  <div className="flex gap-2">
+                    <Input placeholder="Ваш email" className="text-sm h-8" />
+                    <Button size="sm" className="gap-1 shrink-0 h-8 text-xs">
+                      <Mail className="h-3.5 w-3.5" />Уведомить
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </aside>
+        )}
       </div>
 
-      {/* Mobile FAB: table of contents */}
-      {tocItems.length > 0 && (
-        <div className="fixed bottom-6 right-6 md:hidden z-40">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="lg" className="rounded-full shadow-lg gap-2">
-                <BookOpen className="h-5 w-5" />Содержание
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl">
-              <SheetHeader>
-                <SheetTitle>Содержание</SheetTitle>
-              </SheetHeader>
-              <div className="overflow-y-auto mt-4 pb-8">
-                <TableOfContents items={tocItems} activeId={activeId} onClickItem={() => {}} onFocusItem={handleFocusSection} />
+      {/* Mobile: right sidebar content below */}
+      {isMobile && (
+        <div className="mt-6 space-y-4">
+          {relations && relations.length > 0 && (
+            <Card className="rounded-xl shadow-sm">
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold mb-3">Связанные документы</h3>
+                <div className="space-y-2">
+                  {relations.slice(0, 5).map((rel: any) => {
+                    const isSource = rel.source_document_id === id;
+                    const linked = isSource ? rel.target : rel.source;
+                    if (!linked) return null;
+                    return (
+                      <Link key={rel.id} to={`/documents/${linked.id}`} className="block text-xs hover:text-primary">
+                        <p className="line-clamp-2">{linked.short_title || linked.title}</p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <Card className="rounded-xl shadow-sm">
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold mb-2">Экспертные комментарии</h3>
+              <p className="text-xs text-muted-foreground mb-3">Появятся в ближайшее время.</p>
+              <div className="flex gap-2">
+                <Input placeholder="Ваш email" className="text-sm h-8" />
+                <Button size="sm" className="gap-1 shrink-0 h-8 text-xs"><Mail className="h-3.5 w-3.5" />Уведомить</Button>
               </div>
-            </SheetContent>
-          </Sheet>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
-  );
-}
-
-/* ── Sidebar blocks ─────────────────────────────────── */
-
-function RelatedDocsBlock({ docs }: { docs: any[] }) {
-  if (!docs.length) return null;
-  return (
-    <Card className="rounded-xl shadow-sm">
-      <CardContent className="p-4">
-        <h3 className="text-sm font-semibold mb-3">Связанные документы</h3>
-        <div className="space-y-2.5">
-          {docs.map((d: any) => {
-            const dt = d.document_types as any;
-            const typeSlug = dt?.slug || '';
-            return (
-              <Link
-                key={d.id}
-                to={`/documents/${d.id}`}
-                className="block text-sm hover:text-primary transition-colors"
-              >
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5 ${docTypeBadgeClass[typeSlug] || 'bg-muted text-muted-foreground'}`}>
-                  {dt?.name_ru || ''}
-                </span>
-                <span className="leading-snug">{d.title}</span>
-                {d.doc_date && <span className="block text-xs text-muted-foreground mt-0.5">{format(new Date(d.doc_date), 'dd.MM.yyyy')}</span>}
-              </Link>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ExpertCommentsBlock() {
-  return (
-    <Card className="rounded-xl shadow-sm">
-      <CardContent className="p-4">
-        <h3 className="text-sm font-semibold mb-2">Экспертные комментарии</h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          Комментарии экспертов появятся в ближайшее время. Хотите получить уведомление?
-        </p>
-        <div className="flex gap-2">
-          <Input placeholder="Ваш email" className="text-sm h-9" />
-          <Button size="sm" className="gap-1 shrink-0"><Mail className="h-3.5 w-3.5" />Уведомить</Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
