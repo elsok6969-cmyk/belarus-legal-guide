@@ -414,9 +414,25 @@ export default function PublicDocumentView() {
           {bodyText ? (
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 relative">
-                <h2 className="text-sm font-semibold mb-4">Текст документа</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-semibold">
+                    {focusedId ? (
+                      <span className="flex items-center gap-2">
+                        Текст документа
+                        <Badge variant="secondary" className="font-normal text-xs">
+                          {focusedSections?.[0]?.text?.slice(0, 50) || ''}
+                        </Badge>
+                      </span>
+                    ) : 'Текст документа'}
+                  </h2>
+                  {focusedId && (
+                    <Button variant="outline" size="sm" onClick={handleShowAll} className="text-xs">
+                      ← Показать весь текст
+                    </Button>
+                  )}
+                </div>
                 <div className="space-y-0">
-                  {formattedBody.slice(0, hasFullAccess ? undefined : thirdArticleIndex).map((s) => {
+                  {(focusedSections || formattedBody.slice(0, hasFullAccess ? undefined : thirdArticleIndex)).map((s) => {
                     switch (s.type) {
                       case 'section':
                         return <h3 key={s.id} id={s.id} className="text-lg font-semibold mt-8 mb-4 scroll-mt-24">{s.text}</h3>;
@@ -430,8 +446,8 @@ export default function PublicDocumentView() {
                   })}
                 </div>
 
-                {/* Freemium gate overlay */}
-                {!hasFullAccess && formattedBody.length > thirdArticleIndex && (
+                {/* Freemium gate overlay — only when showing all */}
+                {!focusedId && !hasFullAccess && formattedBody.length > thirdArticleIndex && (
                   <div className="relative mt-0">
                     <div className="blur-sm select-none pointer-events-none" style={{ minHeight: 300 }}>
                       {formattedBody.slice(thirdArticleIndex, thirdArticleIndex + 15).map((s) => (
