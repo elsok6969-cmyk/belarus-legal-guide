@@ -141,35 +141,35 @@ export function DocumentArticleRenderer({
   return (
     <article
       id={`section-${id}`}
-      className="scroll-mt-24 relative group"
+      className="scroll-mt-24"
     >
       {displayTitle && (
-        <h2 className={headingClass}>{displayTitle}</h2>
+        <div className="flex items-start justify-between gap-2">
+          <h2 className={headingClass}>{displayTitle}</h2>
+          <div className="flex items-center gap-1 shrink-0 mt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
+              onClick={handleCopy}
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? 'Скопировано' : 'Копировать'}
+            </Button>
+            {onAIExplain && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
+                onClick={handleAI}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                Объяснить
+              </Button>
+            )}
+          </div>
+        </div>
       )}
-
-      {/* Hover actions */}
-      <div className="absolute top-0 right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-xs gap-1"
-          onClick={handleCopy}
-        >
-          {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? 'Скопировано' : 'Копировать'}
-        </Button>
-        {onAIExplain && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1"
-            onClick={handleAI}
-          >
-            <Bot className="h-3.5 w-3.5" />
-            Объяснить
-          </Button>
-        )}
-      </div>
 
       {/* Content */}
       <div className="font-serif text-base leading-[1.8] text-foreground">
@@ -194,7 +194,6 @@ export function DocumentArticleRenderer({
         </div>
       )}
 
-      {/* Separator for articles */}
       {level >= 2 && <div className="border-b border-border/40 mt-6" />}
     </article>
   );
