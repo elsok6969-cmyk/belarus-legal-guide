@@ -105,6 +105,7 @@ const App = () => (
           <Route path="/app/calculator" element={<AppLayout><Calculators /></AppLayout>} />
           <Route path="/app/calculator/:slug" element={<AppLayout><CalculatorRouter /></AppLayout>} />
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
+          <Route path="/app/guide" element={<AppLayout><Guide /></AppLayout>} />
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
