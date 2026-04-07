@@ -6,167 +6,201 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Список кодексов Беларуси с их кодами на pravo.by
+// Codexes list with pravo.by codes
 const CODEX_CODES = [
-  { code: "2121", title: "Гражданский кодекс", slug: "grazhdanskij-kodeks" },
-  { code: "2235", title: "Трудовой кодекс", slug: "trudovoj-kodeks" },
-  { code: "2919", title: "Налоговый кодекс (Общая часть)", slug: "nalogovyj-kodeks-obshchaya" },
-  { code: "34603", title: "Налоговый кодекс (Особенная часть)", slug: "nalogovyj-kodeks-osobennaya" },
-  { code: "2583", title: "Уголовный кодекс", slug: "ugolovnyj-kodeks" },
-  { code: "2974", title: "Кодекс об административных правонарушениях", slug: "koap" },
-  { code: "2661", title: "Гражданский процессуальный кодекс", slug: "gpk" },
-  { code: "3361", title: "Хозяйственный процессуальный кодекс", slug: "hpk" },
-  { code: "2584", title: "Уголовно-процессуальный кодекс", slug: "upk" },
-  { code: "2640", title: "Кодекс о браке и семье", slug: "kodeks-o-brake-i-seme" },
-  { code: "9535", title: "Жилищный кодекс", slug: "zhilishchnyj-kodeks" },
-  { code: "2614", title: "Земельный кодекс", slug: "zemelnyj-kodeks" },
-  { code: "5477", title: "Лесной кодекс", slug: "lesnoj-kodeks" },
-  { code: "5605", title: "Водный кодекс", slug: "vodnyj-kodeks" },
-  { code: "6549", title: "Воздушный кодекс", slug: "vozdushnyj-kodeks" },
-  { code: "7623", title: "Кодекс внутреннего водного транспорта", slug: "kvvt" },
-  { code: "3429", title: "Таможенный кодекс ЕАЭС", slug: "tamozhennyj-kodeks-eaes" },
-  { code: "12243", title: "Кодекс о земле", slug: "kodeks-o-zemle" },
-  { code: "2586", title: "Исполнительный кодекс", slug: "ispolnitelnyj-kodeks" },
-  { code: "15202", title: "Кодекс об образовании", slug: "kodeks-ob-obrazovanii" },
-  { code: "15203", title: "Кодекс здравоохранения", slug: "kodeks-zdravoohraneniya" },
-  { code: "348", title: "Банковский кодекс", slug: "bankovskij-kodeks" },
-  { code: "15601", title: "Избирательный кодекс", slug: "izbiratelnyj-kodeks" },
-  { code: "15700", title: "Кодекс о культуре", slug: "kodeks-o-kulture" },
-  { code: "15800", title: "Кодекс о недрах", slug: "kodeks-o-nedrah" },
-  { code: "3950", title: "Уголовно-исполнительный кодекс", slug: "uik" },
+  { code: "2121", title: "Гражданский кодекс Республики Беларусь" },
+  { code: "2235", title: "Трудовой кодекс Республики Беларусь" },
+  { code: "2919", title: "Налоговый кодекс Республики Беларусь (Общая часть)" },
+  { code: "34603", title: "Налоговый кодекс Республики Беларусь (Особенная часть)" },
+  { code: "2583", title: "Уголовный кодекс Республики Беларусь" },
+  { code: "2974", title: "Кодекс Республики Беларусь об административных правонарушениях" },
+  { code: "2661", title: "Гражданский процессуальный кодекс Республики Беларусь" },
+  { code: "3361", title: "Хозяйственный процессуальный кодекс Республики Беларусь" },
+  { code: "2584", title: "Уголовно-процессуальный кодекс Республики Беларусь" },
+  { code: "2640", title: "Кодекс Республики Беларусь о браке и семье" },
+  { code: "9535", title: "Жилищный кодекс Республики Беларусь" },
+  { code: "2614", title: "Кодекс Республики Беларусь о земле" },
+  { code: "348", title: "Банковский кодекс Республики Беларусь" },
+  { code: "2586", title: "Уголовно-исполнительный кодекс Республики Беларусь" },
 ];
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Known important laws
+const IMPORTANT_LAWS = [
+  {
+    title: "Конституция Республики Беларусь",
+    doc_type_slug: "constitution",
+    source_url: "https://pravo.by/pravovaya-informatsiya/normativnye-dokumenty/konstitutsiya-respubliki-belarus/",
+    doc_number: null,
+    doc_date: "1994-03-15",
+    body_slug: "parliament",
+  },
+  {
+    title: "О нормативных правовых актах",
+    doc_type_slug: "law",
+    source_url: "https://pravo.by/document/?guid=3961&p0=H11700130",
+    doc_number: "130-З",
+    doc_date: "2017-07-17",
+    body_slug: "parliament",
+  },
+  {
+    title: "О государственной регистрации и ликвидации (прекращении деятельности) субъектов хозяйствования",
+    doc_type_slug: "decree",
+    source_url: "https://pravo.by/document/?guid=3961&p0=Pd0900001",
+    doc_number: "1",
+    doc_date: "2009-01-16",
+    body_slug: "president",
+  },
+  {
+    title: "Об утверждении Инструкции о порядке исчисления и уплаты налога на добавленную стоимость",
+    doc_type_slug: "instruction",
+    source_url: null,
+    doc_number: null,
+    doc_date: null,
+    body_slug: "mns",
+  },
+  {
+    title: "О бухгалтерском учёте и отчётности",
+    doc_type_slug: "law",
+    source_url: "https://pravo.by/document/?guid=3961&p0=H11300057",
+    doc_number: "57-З",
+    doc_date: "2013-07-12",
+    body_slug: "parliament",
+  },
+  {
+    title: "Об аудиторской деятельности",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "56-З",
+    doc_date: "2013-07-12",
+    body_slug: "parliament",
+  },
+  {
+    title: "О хозяйственных обществах",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "2020-З",
+    doc_date: "2020-12-17",
+    body_slug: "parliament",
+  },
+  {
+    title: "О государственных закупках товаров (работ, услуг)",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "419-З",
+    doc_date: "2006-07-13",
+    body_slug: "parliament",
+  },
+  {
+    title: "Об охране труда",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "356-З",
+    doc_date: "2008-06-23",
+    body_slug: "parliament",
+  },
+  {
+    title: "Об охране окружающей среды",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "1982-XII",
+    doc_date: "1992-11-26",
+    body_slug: "parliament",
+  },
+  {
+    title: "О защите прав потребителей",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "90-З",
+    doc_date: "2002-01-09",
+    body_slug: "parliament",
+  },
+  {
+    title: "О подоходном налоге с физических лиц",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: null,
+    doc_date: null,
+    body_slug: "parliament",
+  },
+  {
+    title: "О пенсионном обеспечении",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "1596-XII",
+    doc_date: "1992-04-17",
+    body_slug: "parliament",
+  },
+  {
+    title: "Об обязательных страховых взносах в бюджет ФСЗН",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "138-XIII",
+    doc_date: "1995-10-29",
+    body_slug: "parliament",
+  },
+  {
+    title: "О валютном регулировании и валютном контроле",
+    doc_type_slug: "law",
+    source_url: null,
+    doc_number: "226-З",
+    doc_date: "2003-07-22",
+    body_slug: "parliament",
+  },
+];
 
-async function hashText(text: string): Promise<string> {
-  const data = new TextEncoder().encode(text);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchDocumentMeta(
-  code: string
-): Promise<{ source_url: string; title?: string; date_adopted?: string | null; reg_number?: string; organ?: string } | null> {
+// Fetch page and try to parse document text from pravo.by
+async function fetchDocContent(url: string): Promise<{ content_markdown: string; content_text: string } | null> {
   try {
-    const url = `https://pravo.by/document/?guid=3961&p0=${code}`;
-    const response = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; LegalPortal-Bot/1.0)" },
-    });
-    if (!response.ok) return null;
-    const html = await response.text();
-
-    const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
-    const dateMatch = html.match(/Дата принятия[^:]*:\s*(\d{2}\.\d{2}\.\d{4})/);
-    const numMatch = html.match(/Рег[\. ]номер[^:]*:\s*([^\n<]+)/);
-    const organMatch = html.match(/Орган[^:]*:\s*([^\n<]+)/);
-
-    return {
-      source_url: url,
-      title: titleMatch?.[1]?.trim(),
-      date_adopted: dateMatch ? dateMatch[1].split(".").reverse().join("-") : null,
-      reg_number: numMatch?.[1]?.trim(),
-      organ: organMatch?.[1]?.trim(),
-    };
-  } catch (e) {
-    console.error(`Error fetching meta for code ${code}:`, e);
-    return null;
-  }
-}
-
-async function fetchDocumentText(sourceUrl: string): Promise<string | null> {
-  const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!apiKey) return null;
-
-  try {
-    const etalonUrl = sourceUrl.replace("pravo.by", "etalonline.by");
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
+    const resp = await fetch(url, {
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "User-Agent": "Mozilla/5.0 (compatible; LegalPortal/1.0)",
+        "Accept-Language": "ru-RU,ru;q=0.9",
       },
-      body: JSON.stringify({
-        url: etalonUrl,
-        formats: ["markdown"],
-        onlyMainContent: true,
-      }),
     });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.data?.markdown || null;
+    if (!resp.ok) return null;
+    const html = await resp.text();
+
+    // Try to extract main content
+    const bodyMatch = html.match(/<div[^>]*class="[^"]*(?:document-body|lawbody|text-body)[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<\/|$)/i);
+    let bodyHtml = bodyMatch?.[1] || "";
+
+    if (bodyHtml.length < 200) {
+      // Fallback: find largest content div
+      const allDivs: { content: string; len: number }[] = [];
+      const divRe = /<div[^>]*>([\s\S]{500,}?)<\/div>/gi;
+      let m;
+      while ((m = divRe.exec(html)) !== null) {
+        const text = m[1].replace(/<[^>]+>/g, "").trim();
+        allDivs.push({ content: m[1], len: text.length });
+      }
+      allDivs.sort((a, b) => b.len - a.len);
+      if (allDivs.length > 0) bodyHtml = allDivs[0].content;
+    }
+
+    if (!bodyHtml || bodyHtml.length < 100) return null;
+
+    // Simple HTML → text + markdown
+    let md = bodyHtml;
+    // Headings
+    for (let i = 6; i >= 1; i--) {
+      const prefix = "#".repeat(i);
+      md = md.replace(new RegExp(`<h${i}[^>]*>([\\s\\S]*?)<\\/h${i}>`, "gi"), (_, c) => `\n${prefix} ${c.replace(/<[^>]+>/g, "").trim()}\n`);
+    }
+    md = md.replace(/<br\s*\/?>/gi, "\n");
+    md = md.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_, c) => `\n${c.replace(/<[^>]+>/g, "").trim()}\n`);
+    md = md.replace(/<[^>]+>/g, "");
+    md = md.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+    md = md.replace(/\n{3,}/g, "\n\n").trim();
+
+    const content_text = md.replace(/[#*_`|>-]/g, "").replace(/\n{2,}/g, "\n").trim();
+
+    return { content_markdown: md, content_text };
   } catch (e) {
-    console.error("Firecrawl error:", e);
+    console.error(`Fetch error for ${url}:`, e);
     return null;
   }
-}
-
-interface ImportResults {
-  imported: number;
-  updated: number;
-  errors: number;
-}
-
-async function importDocuments(
-  supabase: ReturnType<typeof createClient>,
-  type: string,
-  limit: number
-): Promise<ImportResults> {
-  const results: ImportResults = { imported: 0, updated: 0, errors: 0 };
-  const documents = type === "codex" ? CODEX_CODES.slice(0, limit) : [];
-
-  for (const doc of documents) {
-    try {
-      await sleep(500);
-
-      const meta = await fetchDocumentMeta(doc.code);
-      if (!meta) {
-        results.errors++;
-        continue;
-      }
-
-      const bodyText = await fetchDocumentText(meta.source_url);
-      await sleep(500);
-
-      const contentHash = bodyText ? await hashText(bodyText) : null;
-
-      const { data: existing } = await supabase
-        .from("documents")
-        .select("id, content_hash")
-        .eq("slug", doc.slug)
-        .single();
-
-      const docData: Record<string, unknown> = {
-        title: meta.title || doc.title,
-        doc_type: "codex",
-        organ: meta.organ || "",
-        date_adopted: meta.date_adopted || null,
-        reg_number: meta.reg_number || "",
-        body_text: bodyText || "",
-        slug: doc.slug,
-        source_url: meta.source_url,
-        is_free: true,
-        updated_at: new Date().toISOString(),
-        ...(contentHash && { content_hash: contentHash }),
-      };
-
-      if (existing) {
-        if (contentHash && existing.content_hash !== contentHash) {
-          await supabase.from("documents").update(docData).eq("id", existing.id);
-          results.updated++;
-        }
-      } else {
-        await supabase.from("documents").insert(docData);
-        results.imported++;
-      }
-    } catch (e) {
-      console.error(`Error processing ${doc.title}:`, e);
-      results.errors++;
-    }
-  }
-
-  return results;
 }
 
 Deno.serve(async (req) => {
@@ -181,6 +215,7 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Auth check
   const importSecret = Deno.env.get("IMPORT_SECRET");
   if (importSecret) {
     const authHeader = req.headers.get("Authorization");
@@ -196,26 +231,148 @@ Deno.serve(async (req) => {
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  let type = "codex";
-  let limit = 50;
+  let type = "all"; // "codex", "law", "all"
+  let limit = 100;
+  let scrapeContent = false;
+
   try {
     const body = await req.json();
     if (body.type) type = body.type;
     if (body.limit) limit = body.limit;
+    if (body.scrape) scrapeContent = true;
   } catch {
     // defaults
   }
 
-  const startTime = Date.now();
+  // Load document_types and issuing_bodies for lookups
+  const { data: docTypes } = await supabase.from("document_types").select("id, slug");
+  const { data: bodies } = await supabase.from("issuing_bodies").select("id, slug");
 
+  const typeMap = new Map((docTypes || []).map((t) => [t.slug, t.id]));
+  const bodyMap = new Map((bodies || []).map((b) => [b.slug, b.id]));
+
+  const startTime = Date.now();
   const { data: logEntry } = await supabase
     .from("import_logs")
     .insert({ type, limit_count: limit, status: "running", started_at: new Date().toISOString() })
     .select("id")
     .single();
 
+  let imported = 0;
+  let skipped = 0;
+  let errors = 0;
+
   try {
-    const results = await importDocuments(supabase, type, limit);
+    // --- Import codexes ---
+    if (type === "codex" || type === "all") {
+      const codexTypeId = typeMap.get("codex");
+      const parliamentId = bodyMap.get("parliament");
+
+      if (!codexTypeId) {
+        console.error("document_type 'codex' not found");
+      } else {
+        for (const codex of CODEX_CODES.slice(0, limit)) {
+          const sourceUrl = `https://pravo.by/document/?guid=3961&p0=${codex.code}`;
+
+          // Check duplicate
+          const { data: existing } = await supabase
+            .from("documents")
+            .select("id")
+            .eq("source_url", sourceUrl)
+            .maybeSingle();
+
+          if (existing) {
+            skipped++;
+            continue;
+          }
+
+          let content_markdown: string | null = null;
+          let content_text: string | null = null;
+
+          if (scrapeContent) {
+            await sleep(500);
+            const content = await fetchDocContent(sourceUrl);
+            if (content) {
+              content_markdown = content.content_markdown;
+              content_text = content.content_text;
+            }
+          }
+
+          const { error } = await supabase.from("documents").insert({
+            title: codex.title,
+            document_type_id: codexTypeId,
+            issuing_body_id: parliamentId || null,
+            source_url: sourceUrl,
+            status: "active",
+            content_markdown,
+            content_text,
+          });
+
+          if (error) {
+            console.error(`Insert codex error: ${error.message}`);
+            errors++;
+          } else {
+            imported++;
+          }
+        }
+      }
+    }
+
+    // --- Import important laws ---
+    if (type === "law" || type === "all") {
+      for (const law of IMPORTANT_LAWS.slice(0, limit)) {
+        const docTypeId = typeMap.get(law.doc_type_slug);
+        if (!docTypeId) {
+          console.warn(`Doc type not found: ${law.doc_type_slug}`);
+          errors++;
+          continue;
+        }
+
+        // Check duplicate by title
+        const { data: existing } = await supabase
+          .from("documents")
+          .select("id")
+          .eq("title", law.title)
+          .maybeSingle();
+
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        let content_markdown: string | null = null;
+        let content_text: string | null = null;
+
+        if (scrapeContent && law.source_url) {
+          await sleep(500);
+          const content = await fetchDocContent(law.source_url);
+          if (content) {
+            content_markdown = content.content_markdown;
+            content_text = content.content_text;
+          }
+        }
+
+        const { error } = await supabase.from("documents").insert({
+          title: law.title,
+          document_type_id: docTypeId,
+          issuing_body_id: bodyMap.get(law.body_slug) || null,
+          doc_number: law.doc_number,
+          doc_date: law.doc_date,
+          source_url: law.source_url,
+          status: "active",
+          content_markdown,
+          content_text,
+        });
+
+        if (error) {
+          console.error(`Insert law error: ${error.message}`);
+          errors++;
+        } else {
+          imported++;
+        }
+      }
+    }
+
     const duration = Date.now() - startTime;
 
     if (logEntry?.id) {
@@ -223,30 +380,29 @@ Deno.serve(async (req) => {
         .from("import_logs")
         .update({
           status: "completed",
-          imported: results.imported,
-          updated: results.updated,
-          errors: results.errors,
+          imported,
+          errors,
           duration_ms: duration,
           completed_at: new Date().toISOString(),
         })
         .eq("id", logEntry.id);
     }
 
-    console.log(`Import completed: ${results.imported} imported, ${results.updated} updated, ${results.errors} errors in ${duration}ms`);
+    console.log(`Import done: ${imported} imported, ${skipped} skipped, ${errors} errors in ${duration}ms`);
 
-    return new Response(JSON.stringify({ success: true, ...results, duration_ms: duration }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: true, imported, skipped, errors, duration_ms: duration }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (e) {
-    const errorMsg = e instanceof Error ? e.message : String(e);
+    const msg = e instanceof Error ? e.message : String(e);
     if (logEntry?.id) {
       await supabase
         .from("import_logs")
-        .update({ status: "failed", error_message: errorMsg, completed_at: new Date().toISOString() })
+        .update({ status: "failed", error_message: msg, completed_at: new Date().toISOString() })
         .eq("id", logEntry.id);
     }
-
-    return new Response(JSON.stringify({ success: false, error: errorMsg }), {
+    return new Response(JSON.stringify({ success: false, error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
