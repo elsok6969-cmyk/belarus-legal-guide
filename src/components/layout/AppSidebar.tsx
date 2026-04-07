@@ -38,14 +38,14 @@ const navItems = [
 ];
 
 const personalItems = [
-  { title: 'Избранное', url: '/app/bookmarks', icon: Star },
-  { title: 'Уведомления', url: '/app/updates', icon: Bell, badge: true },
-  { title: 'История просмотров', url: '/app/search', icon: Clock },
+  { title: 'Избранное', url: '/app/account/favorites', icon: Star },
+  { title: 'Уведомления', url: '/app/account/notifications', icon: Bell, badge: true },
+  { title: 'История просмотров', url: '/app/account/history', icon: Clock },
 ];
 
 const bottomNav = [
   { title: 'AI-помощник', url: '/app/assistant', icon: Bot },
-  { title: 'Настройки', url: '/app/settings', icon: Settings },
+  { title: 'Настройки', url: '/app/account/settings', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -132,7 +132,7 @@ export function AppSidebar() {
         {!collapsed && user && (
           <div className="p-4 pb-2">
             <Link
-              to="/profile"
+              to="/app/account/profile"
               onClick={closeMobile}
               className="flex items-center gap-3 rounded-lg p-2 hover:bg-sidebar-accent/50 transition-colors group"
             >
