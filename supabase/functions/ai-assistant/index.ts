@@ -33,59 +33,67 @@ serve(async (req) => {
   );
 
   try {
-    // Auth
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !user) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Load profile & check limits
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan, ai_requests_today, ai_requests_reset_at")
-      .eq("user_id", user.id)
-      .single();
-
-    const today = new Date().toISOString().split("T")[0];
-    let requestsToday = profile?.ai_requests_today || 0;
-
-    if (profile?.ai_requests_reset_at !== today) {
-      requestsToday = 0;
-      await supabase
-        .from("profiles")
-        .update({ ai_requests_today: 0, ai_requests_reset_at: today })
-        .eq("user_id", user.id);
-    }
-
-    const isFree = !profile?.plan || profile.plan === "free";
-    if (isFree && requestsToday >= FREE_PLAN_DAILY_LIMIT) {
-      return new Response(
-        JSON.stringify({
-          error: "limit_exceeded",
-          message: `Достигнут дневной лимит ${FREE_PLAN_DAILY_LIMIT} запросов. Обновите тариф для неограниченного доступа.`,
-          requests_used: requestsToday,
-          requests_limit: FREE_PLAN_DAILY_LIMIT,
-        }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const body = await req.json();
-    const { question, session_id, context_document_id } = body;
+    const { question, session_id, context_document_id, guest } = body;
+
     if (!question || typeof question !== "string") {
       return new Response(JSON.stringify({ error: "question is required" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let user: any = null;
+    let profile: any = null;
+    let requestsToday = 0;
+    let isFree = true;
+
+    // Auth — optional for guest mode
+    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    if (token) {
+      const { data: { user: u }, error: authErr } = await supabase.auth.getUser(token);
+      if (authErr || !u) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      user = u;
+
+      // Load profile & check limits
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("plan, ai_requests_today, ai_requests_reset_at")
+        .eq("user_id", user.id)
+        .single();
+      profile = prof;
+
+      const today = new Date().toISOString().split("T")[0];
+      requestsToday = profile?.ai_requests_today || 0;
+
+      if (profile?.ai_requests_reset_at !== today) {
+        requestsToday = 0;
+        await supabase
+          .from("profiles")
+          .update({ ai_requests_today: 0, ai_requests_reset_at: today })
+          .eq("user_id", user.id);
+      }
+
+      isFree = !profile?.plan || profile.plan === "free";
+      if (isFree && requestsToday >= FREE_PLAN_DAILY_LIMIT) {
+        return new Response(
+          JSON.stringify({
+            error: "limit_exceeded",
+            message: `Достигнут дневной лимит ${FREE_PLAN_DAILY_LIMIT} запросов. Обновите тариф для неограниченного доступа.`,
+            requests_used: requestsToday,
+            requests_limit: FREE_PLAN_DAILY_LIMIT,
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else if (!guest) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -257,7 +265,7 @@ serve(async (req) => {
       },
       async flush() {
         // Save messages after stream completes
-        if (session_id && fullAnswer) {
+        if (user && session_id && fullAnswer) {
           await supabase.from("assistant_messages").insert([
             { conversation_id: session_id, role: "user", content: question },
             {
@@ -272,11 +280,13 @@ serve(async (req) => {
             .update({ last_message_at: new Date().toISOString() })
             .eq("id", session_id);
         }
-        // Increment counter
-        await supabase
-          .from("profiles")
-          .update({ ai_requests_today: requestsToday + 1 })
-          .eq("user_id", user.id);
+        // Increment counter for authenticated users only
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ ai_requests_today: requestsToday + 1 })
+            .eq("user_id", user.id);
+        }
       },
     });
 
