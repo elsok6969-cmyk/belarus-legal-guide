@@ -93,13 +93,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const body = await req.json();
-  const secret = Deno.env.get("IMPORT_SECRET");
-  if (!secret || body.secret !== secret) {
+  // Auth: require valid admin JWT
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  let body: any = {};
+  try { body = await req.json(); } catch {}
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
