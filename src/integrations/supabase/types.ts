@@ -296,6 +296,53 @@ export type Database = {
         }
         Relationships: []
       }
+      deadlines: {
+        Row: {
+          created_at: string
+          deadline_date: string
+          deadline_type: string
+          description: string | null
+          document_id: string | null
+          id: string
+          profession_tags: string[] | null
+          recurrence_rule: string | null
+          recurring: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          deadline_date: string
+          deadline_type: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          profession_tags?: string[] | null
+          recurrence_rule?: string | null
+          recurring?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          deadline_date?: string
+          deadline_type?: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          profession_tags?: string[] | null
+          recurrence_rule?: string | null
+          recurring?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deadlines_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_relations: {
         Row: {
           created_at: string | null
@@ -543,6 +590,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      economic_indicators: {
+        Row: {
+          current_value: string
+          effective_date: string | null
+          id: string
+          name_ru: string
+          slug: string
+          source_url: string | null
+          updated_at: string
+          value_type: string | null
+        }
+        Insert: {
+          current_value: string
+          effective_date?: string | null
+          id?: string
+          name_ru: string
+          slug: string
+          source_url?: string | null
+          updated_at?: string
+          value_type?: string | null
+        }
+        Update: {
+          current_value?: string
+          effective_date?: string | null
+          id?: string
+          name_ru?: string
+          slug?: string
+          source_url?: string | null
+          updated_at?: string
+          value_type?: string | null
+        }
+        Relationships: []
       }
       experts: {
         Row: {
@@ -841,6 +921,147 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_document_history: {
+        Row: {
+          document_id: string
+          id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          document_id: string
+          id?: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          document_id?: string
+          id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_document_history_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          note: string | null
+          on_watch: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          note?: string | null
+          on_watch?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          note?: string | null
+          on_watch?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          id: string
+          is_read: boolean
+          message: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          profession: string | null
+          settings: Json
+          subscription_expires_at: string | null
+          subscription_plan: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          profession?: string | null
+          settings?: Json
+          subscription_expires_at?: string | null
+          subscription_plan?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          profession?: string | null
+          settings?: Json
+          subscription_expires_at?: string | null
+          subscription_plan?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
