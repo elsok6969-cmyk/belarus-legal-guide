@@ -37,7 +37,7 @@ export function TopBar() {
       const { data } = await supabase
         .from('economic_indicators')
         .select('*')
-        .in('slug', ['refinancing-rate', 'min-salary', 'base-value']);
+        .in('slug', ['refinancing-rate', 'min-salary', 'base-value', 'usd-rate', 'eur-rate', 'rub-rate']);
       return data || [];
     },
     staleTime: 3600000,
@@ -81,11 +81,11 @@ export function TopBar() {
       </div>
 
       {indicators && indicators.length > 0 && (
-        <div className="hidden lg:flex items-center gap-3 text-xs text-muted-foreground">
-          {indicators.map((ind) => (
+        <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground overflow-x-auto scrollbar-none">
+          {indicators.map((ind, i) => (
             <Tooltip key={ind.id}>
               <TooltipTrigger asChild>
-                <span className="cursor-default whitespace-nowrap">
+                <span className="cursor-default whitespace-nowrap px-1.5 py-0.5 rounded hover:bg-muted/50 transition-colors">
                   {ind.name_ru}: <span className="font-medium text-foreground">{ind.current_value}</span>
                 </span>
               </TooltipTrigger>

@@ -1,0 +1,1 @@
+ALTER TABLE public.economic_indicators ADD CONSTRAINT economic_indicators_slug_unique UNIQUE (slug);
