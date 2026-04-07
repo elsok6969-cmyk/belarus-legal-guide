@@ -74,7 +74,7 @@ export default function Forms() {
 
   return (
     <div className="space-y-6">
-      <PageSEO title="Формы и образцы документов" description="Каталог форм, бланков и образцов документов для бизнеса в Беларуси" />
+      <PageSEO title="Формы и образцы документов" description="Каталог форм, бланков и образцов документов для бизнеса в Беларуси" path="/app/forms" />
 
       <div>
         <h1 className="text-2xl font-bold">Формы и образцы документов</h1>
@@ -143,7 +143,7 @@ export default function Forms() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">{fi.label}</Badge>
                       {form.is_fillable && (
-                        <Badge variant="outline" className="text-[10px] text-green-600 border-green-300">Заполняемая</Badge>
+                        <Badge variant="outline" className="text-[10px]">Заполняемая</Badge>
                       )}
                     </div>
 
