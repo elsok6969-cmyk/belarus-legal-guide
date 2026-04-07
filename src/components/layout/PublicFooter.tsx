@@ -12,7 +12,7 @@ const product = [
 
 const resources = [
   { label: 'Календарь', to: '/calendar' },
-  { label: 'Курсы НБРБ', to: '/rates' },
+  { label: 'Курсы НБРБ', to: '/currencies' },
   { label: 'Статьи', to: '/news' },
   { label: 'Формы документов', to: '/app/forms' },
 ];

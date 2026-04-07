@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { label: 'Документы', to: '/documents' },
   { label: 'Кодексы', to: '/documents?filter=codex' },
+  { label: 'Курсы', to: '/currencies' },
   { label: 'Календарь', to: '/calendar' },
   { label: 'Калькуляторы', to: '/app/calculator' },
   { label: 'Тарифы', to: '/pricing' },
