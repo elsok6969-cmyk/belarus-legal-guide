@@ -97,6 +97,7 @@ const App = () => (
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
           <Route path="/app/codex" element={<AppLayout><Codexes /></AppLayout>} />
+          <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
