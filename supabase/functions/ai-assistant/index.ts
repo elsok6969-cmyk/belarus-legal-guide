@@ -265,7 +265,7 @@ serve(async (req) => {
       },
       async flush() {
         // Save messages after stream completes
-        if (session_id && fullAnswer) {
+        if (user && session_id && fullAnswer) {
           await supabase.from("assistant_messages").insert([
             { conversation_id: session_id, role: "user", content: question },
             {
@@ -280,11 +280,13 @@ serve(async (req) => {
             .update({ last_message_at: new Date().toISOString() })
             .eq("id", session_id);
         }
-        // Increment counter
-        await supabase
-          .from("profiles")
-          .update({ ai_requests_today: requestsToday + 1 })
-          .eq("user_id", user.id);
+        // Increment counter for authenticated users only
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ ai_requests_today: requestsToday + 1 })
+            .eq("user_id", user.id);
+        }
       },
     });
 
