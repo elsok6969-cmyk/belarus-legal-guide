@@ -18,6 +18,7 @@ import { DocumentTOC } from '@/components/document/DocumentTOC';
 import { DocumentSearchBar } from '@/components/document/DocumentSearchBar';
 import { DocumentSidebar } from '@/components/document/DocumentSidebar';
 import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
+import { DocumentFreshness } from '@/components/document/DocumentFreshness';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -608,6 +609,9 @@ export default function DocumentViewer() {
               </CardContent>
             </Card>
           )}
+
+          {/* Freshness disclaimer */}
+          <DocumentFreshness lastUpdated={doc.last_updated} sourceUrl={doc.source_url} />
 
           {/* Mobile: sidebar content below document */}
           {isMobile && (

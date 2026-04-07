@@ -20,6 +20,7 @@ import { DocumentTOCPanel, TocEntry } from '@/components/document/DocumentTOCPan
 import { DocumentArticleRenderer } from '@/components/document/DocumentArticleRenderer';
 import { DocumentSearchPanel } from '@/components/document/DocumentSearchPanel';
 import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
+import { DocumentFreshness } from '@/components/document/DocumentFreshness';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -646,6 +647,9 @@ export default function PublicDocumentView() {
               </CardContent>
             </Card>
           )}
+
+          {/* Freshness disclaimer */}
+          <DocumentFreshness lastUpdated={doc.last_updated} sourceUrl={doc.source_url} />
         </div>
 
         {/* RIGHT: Sidebar */}

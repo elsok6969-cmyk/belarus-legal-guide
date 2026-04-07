@@ -134,6 +134,7 @@ const App = () => (
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
+          <Route path="/admin/health" element={<AdminGuard><AppLayout><AdminHealth /></AppLayout></AdminGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
