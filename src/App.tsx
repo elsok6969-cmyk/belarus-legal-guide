@@ -45,6 +45,7 @@ import AdminImport from './pages/AdminImport';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
+import Subscribe from './pages/Subscribe';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
 
@@ -85,6 +86,7 @@ const App = () => (
           {/* Authenticated pages */}
           <Route path="/profile" element={<PublicLayout><AuthGuard><Profile /></AuthGuard></PublicLayout>} />
           <Route path="/subscription" element={<PublicLayout><Subscription /></PublicLayout>} />
+          <Route path="/subscribe/:plan" element={<PublicLayout><Subscribe /></PublicLayout>} />
           <Route path="/ai-assistant" element={<AppLayout><AIChat /></AppLayout>} />
 
           {/* App pages */}

@@ -762,6 +762,30 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_limits: {
+        Row: {
+          daily_limit: number | null
+          feature: string
+          id: string
+          monthly_limit: number | null
+          plan: string
+        }
+        Insert: {
+          daily_limit?: number | null
+          feature: string
+          id?: string
+          monthly_limit?: number | null
+          plan: string
+        }
+        Update: {
+          daily_limit?: number | null
+          feature?: string
+          id?: string
+          monthly_limit?: number | null
+          plan?: string
+        }
+        Relationships: []
+      }
       subscription_requests: {
         Row: {
           created_at: string | null
@@ -887,6 +911,27 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      usage_tracking: {
+        Row: {
+          feature: string
+          id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          id?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          id?: string
+          used_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1148,12 +1193,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_limit: {
+        Args: { p_feature: string; p_user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_usage: {
+        Args: { p_feature: string; p_user_id: string }
+        Returns: undefined
       }
       increment_view_count: { Args: { doc_id: string }; Returns: undefined }
       search_documents: {
