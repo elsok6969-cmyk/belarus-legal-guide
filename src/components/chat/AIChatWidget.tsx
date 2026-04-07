@@ -414,7 +414,30 @@ export function AIChatWidget() {
                     ) : msg.role === 'assistant' ? (
                       <>
                         <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>ul]:mb-1.5 text-xs">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown
+                            components={{
+                              a: ({ href, children }) => {
+                                if (href?.startsWith('/')) {
+                                  return (
+                                    <a
+                                      href={href}
+                                      className="text-primary underline underline-offset-2 cursor-pointer hover:text-primary/80"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setOpen(false);
+                                        navigate(href);
+                                      }}
+                                    >
+                                      {children}
+                                    </a>
+                                  );
+                                }
+                                return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
+                              },
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
                         </div>
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="mt-2 pt-1.5 border-t border-border/50 flex flex-wrap gap-1">
