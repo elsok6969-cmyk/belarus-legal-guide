@@ -28,7 +28,6 @@ import TopicDetail from './pages/TopicDetail';
 import Experts from './pages/Experts';
 import ExpertProfile from './pages/ExpertProfile';
 import PublicRates from './pages/PublicRates';
-import PublicCurrencies from './pages/PublicCurrencies';
 import PublicCalendar from './pages/PublicCalendar';
 import PublicDocuments from './pages/PublicDocuments';
 import PublicDocumentView from './pages/PublicDocumentView';
@@ -92,8 +91,7 @@ const App = () => (
           <Route path="/experts/:id" element={<PublicLayout><ExpertProfile /></PublicLayout>} />
 
           {/* Public content pages */}
-          <Route path="/rates" element={<Navigate to="/currencies" replace />} />
-          <Route path="/currencies" element={<PublicLayout><PublicCurrencies /></PublicLayout>} />
+          <Route path="/rates" element={<PublicLayout><PublicRates /></PublicLayout>} />
           <Route path="/calendar" element={<PublicLayout><PublicCalendar /></PublicLayout>} />
           <Route path="/documents" element={<PublicLayout><PublicDocuments /></PublicLayout>} />
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />

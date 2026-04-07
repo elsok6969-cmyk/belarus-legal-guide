@@ -1,67 +1,54 @@
 
 
-# Plan: Enrich Landing Page, Fix Currency Widget, Create /currencies Page
+# Plan: Calculator Catalog + 5 Calculators
 
-## Summary
-Three changes: (1) expand the landing page with 6 new content sections, (2) ensure currency rates load with fallback, (3) create a full /currencies page with converter and table.
+## Overview
+Create a calculator catalog page at `/app/calculator` and 5 individual calculator pages, each with live-updating results, copy/print, and responsive two-column layout.
 
-## 1. Landing Page — Add Content Sections
+## Steps
 
-**File: `src/pages/Landing.tsx`** — Major rewrite adding these sections in order:
+### 1. Create calculator catalog page — `src/pages/Calculators.tsx`
+- Grid of cards grouped by category (Зарплата, Налоги, Аренда, Трудовые отношения, Прочие)
+- Each card: Lucide icon + title + short description, links to `/app/calculator/:slug`
+- Search/filter input at top
 
-1. **HERO** — keep as-is
-2. **Dark Informers Bar** (NEW) — navy-900 background horizontal strip with economic indicators fetched from `economic_indicators` table + top currencies from `currency_rates`. Shows: refinancing rate, minimum wage, base amount, USD, EUR. Horizontally scrollable on mobile. Click currency → `/currencies`, click indicator → tooltip with update date.
-3. **Popular Documents** (NEW) — two-column layout:
-   - Left (60%): "Кодексы РБ" — hardcoded list of 8 popular codexes with emoji icons, linked to their document pages. "Все 26 кодексов →" link at bottom.
-   - Right (40%): "Последние документы" — query `documents` table ORDER BY `created_at` DESC LIMIT 5, show badge + truncated title + date. "Все документы →" link.
-4. **Features Grid** (REPLACE existing 3-card section) — expand to 2x3 grid (6 cards) with the specified content (search, article focus, AI, cross-references, calendar, rates).
-5. **Currency Cards** (NEW) — 4-column grid showing USD, EUR, RUB, CNY with flag emoji, large rate, change indicator, and mini sparkline from `currency_rates` history. "Все курсы и конвертер →" button → `/currencies`.
-6. **Deadlines** — keep existing but fetch 6 items instead of 4.
-7. **"Для кого Бабиджон"** (NEW) — horizontal row of 6 clickable profession pills with hover descriptions. Links to `/app/guide`.
-8. **Pricing** — keep as-is.
+### 2. Create 5 calculator components in `src/pages/calculators/`
 
-**Data queries to add:**
-- `economic_indicators` for refinancing rate, base amount, minimum wage
-- `documents` ORDER BY created_at DESC LIMIT 5 for "latest documents"
-- Extended `currency_rates` query for sparkline history (last 7 days for 4 currencies)
+Each calculator shares a common layout pattern:
+- Left: form inputs, Right: result card (stacked on mobile)
+- Results update live on input change (no submit button)
+- Reset button, Copy result, Print button
+- Footer with legal reference and date
 
-## 2. Fix Currency Widget on Landing
+**Files:**
+- `src/pages/calculators/IncomeTaxCalc.tsx` — Income tax with year selection, standard/child/dependent deductions, 13% rate
+- `src/pages/calculators/VacationPayCalc.tsx` — Vacation pay from average daily wage or 12-month salaries, minus income tax
+- `src/pages/calculators/TaxPenaltyCalc.tsx` — Penalty calculation using refinancing rate from `economic_indicators` table, days × rate/360
+- `src/pages/calculators/VatCalc.tsx` — VAT extract/add with 20/10/25/0% rates
+- `src/pages/calculators/WorkExperienceCalc.tsx` — Dynamic table of work periods, summed into years/months/days
 
-In `Landing.tsx`, the rates query already exists but may return empty. Add:
-- Fallback UI: if rates are empty/error, show "Курсы временно недоступны" instead of hiding the section
-- Keep the existing query but also fetch CNY in addition to USD/EUR/RUB
+### 3. Add routes to `App.tsx`
+- `/app/calculator` → Calculators catalog
+- `/app/calculator/:slug` → Router component that maps slug to calculator
 
-## 3. New /currencies Page
-
-**File: `src/pages/PublicCurrencies.tsx`** — new public page replacing the old `PublicRates.tsx`:
-
-- **Header**: h1 "Курсы валют НБРБ", subtitle with latest date from data
-- **Converter card** (gray-50 background): Two large input fields (amount + currency selector) with ⇄ swap button + readonly BYN result. Instant calculation using `rate`. Supports reverse conversion.
-- **Search filter**: small input "Найти валюту..." for client-side filtering
-- **Rates table**: columns — Flag+Code, Currency name, Rate (BYN), Change (colored ▲/▼), 7-day sparkline SVG. Priority sort: USD, EUR, RUB, CNY, PLN, UAH, GBP first, then alphabetical.
-- **Source attribution** at bottom
-
-Uses existing `currency_rates` table. Sparkline data from grouping rates by `rate_date` (multiple dates already stored by cron).
-
-**File: `src/App.tsx`** — add route `/currencies` → `PublicCurrencies` in PublicLayout. Keep `/rates` as redirect to `/currencies`.
-
-**File: `src/components/layout/PublicHeader.tsx`** — add "Курсы" nav link pointing to `/currencies`.
-
-**File: `src/components/layout/PublicFooter.tsx`** — update "Курсы НБРБ" link from `/rates` to `/currencies`.
+### 4. Update sidebar link
+- Point "Калькуляторы" in `AppSidebar.tsx` to `/app/calculator`
 
 ## Technical Details
 
-- All data comes from existing tables: `currency_rates`, `economic_indicators`, `documents`, `deadline_calendar`
-- No DB migrations needed
-- MiniSparkline component will be shared/inlined in both Landing and PublicCurrencies
-- Flag emoji map: `{ USD: '🇺🇸', EUR: '🇪🇺', RUB: '🇷🇺', CNY: '🇨🇳', PLN: '🇵🇱', UAH: '🇺🇦', GBP: '🇬🇧' }`
-- Converter formula: `amount * rate` (forward), `amount / rate` (reverse)
-- All styling uses existing navy/amber/gray CSS variables
+- Tax penalty fetches refinancing rate: `supabase.from('economic_indicators').select('current_value').eq('slug', 'refinancing-rate').single()`
+- Income tax deduction values for 2024/2025/2026 stored as constants in component
+- Work experience uses date-fns `differenceInDays` for period calculation
+- Copy uses `navigator.clipboard.writeText`, print uses `window.print()` with print-specific CSS
+- All formatters use `Intl.NumberFormat('ru-RU')` for BYN formatting
 
-## Files Changed
-- `src/pages/Landing.tsx` — major rewrite (add 4 new sections, expand features to 6)
-- `src/pages/PublicCurrencies.tsx` — new file
-- `src/App.tsx` — add `/currencies` route, redirect `/rates`
-- `src/components/layout/PublicHeader.tsx` — add "Курсы" nav link
-- `src/components/layout/PublicFooter.tsx` — update rates link
+### Files to create/modify
+- **Create**: `src/pages/Calculators.tsx` (catalog)
+- **Create**: `src/pages/calculators/IncomeTaxCalc.tsx`
+- **Create**: `src/pages/calculators/VacationPayCalc.tsx`
+- **Create**: `src/pages/calculators/TaxPenaltyCalc.tsx`
+- **Create**: `src/pages/calculators/VatCalc.tsx`
+- **Create**: `src/pages/calculators/WorkExperienceCalc.tsx`
+- **Modify**: `src/App.tsx` (add routes)
+- **Modify**: `src/components/layout/AppSidebar.tsx` (update link)
 
