@@ -7,19 +7,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Ты — правовой ассистент по законодательству Республики Беларусь.
+const SYSTEM_PROMPT = `Ты — профессиональный AI-помощник по законодательству Республики Беларусь в сервисе Бабиджон.
 
-Правила:
-1. Отвечай ТОЛЬКО на вопросы о белорусском праве и законодательстве.
-2. Всегда указывай конкретные статьи, пункты и нормативные акты.
-3. Используй официальные названия НПА (Трудовой кодекс РБ, НК РБ и т.д.).
-4. Если вопрос не о белорусском праве — вежливо откажись.
-5. Структурируй ответы: используй заголовки, списки, выделение жирным.
-6. В конце КАЖДОГО ответа добавляй строку:
-"⚠️ Это справочная информация, не юридическая консультация."
-7. Ты НЕ связан с государственными органами Республики Беларусь.
-
-Контекст из базы НПА будет предоставлен в сообщении пользователя в формате [ДОКУМЕНТЫ: ...].`;
+ПРАВИЛА:
+1. Отвечай ТОЛЬКО на основе предоставленных документов. Не выдумывай статьи и нормы.
+2. ВСЕГДА указывай конкретные ссылки: "Согласно ст. 242 ТК РБ..."
+3. Если информации недостаточно — честно скажи и предложи уточнить запрос.
+4. Отвечай на русском языке.
+5. Формат ответа: кратко суть, затем детали со ссылками на статьи.
+6. В конце всегда добавляй дисклеймер: "⚠️ Это информационная справка, не юридическая консультация. Для принятия решений обратитесь к специалисту."
+7. Если спрашивают о калькуляторах/расчётах — направляй в раздел калькуляторов.
+8. Ты НЕ связан с государственными органами Республики Беларусь.
+9. Структурируй ответы: используй заголовки, списки, выделение жирным.`;
 
 const FREE_PLAN_DAILY_LIMIT = 5;
 
@@ -69,7 +68,8 @@ serve(async (req) => {
         .eq("user_id", user.id);
     }
 
-    if (profile?.plan === "free" && requestsToday >= FREE_PLAN_DAILY_LIMIT) {
+    const isFree = !profile?.plan || profile.plan === "free";
+    if (isFree && requestsToday >= FREE_PLAN_DAILY_LIMIT) {
       return new Response(
         JSON.stringify({
           error: "limit_exceeded",
@@ -81,7 +81,8 @@ serve(async (req) => {
       );
     }
 
-    const { question, session_id } = await req.json();
+    const body = await req.json();
+    const { question, session_id, context_document_id } = body;
     if (!question || typeof question !== "string") {
       return new Response(JSON.stringify({ error: "question is required" }), {
         status: 400,
@@ -89,35 +90,80 @@ serve(async (req) => {
       });
     }
 
-    // Search related documents
-    const { data: relatedDocs } = await supabase
-      .from("documents")
-      .select("id, title, slug, body_text, doc_type")
-      .textSearch("fts", question, { type: "plain", config: "russian" })
-      .limit(3);
+    console.log("RAG: Starting search for:", question);
 
-    const sources = (relatedDocs || []).map((d) => ({
-      id: d.id,
-      title: d.title,
-      slug: d.slug,
-      doc_type: d.doc_type,
-    }));
+    // Step 1: Search documents using search_documents RPC
+    const { data: searchResults, error: searchErr } = await supabase.rpc("search_documents", {
+      search_query: question,
+      result_limit: 5,
+    });
 
-    // Build context from documents
-    let contextBlock = "";
-    if (relatedDocs && relatedDocs.length > 0) {
-      contextBlock =
-        "\n\n[ДОКУМЕНТЫ ИЗ БАЗЫ НПА:\n" +
-        relatedDocs
-          .map(
-            (d) =>
-              `${d.doc_type}: "${d.title}"\nФрагмент текста: ${d.body_text?.slice(0, 1500) || "текст недоступен"}`
-          )
-          .join("\n\n") +
-        "]";
+    if (searchErr) {
+      console.error("search_documents error:", searchErr);
     }
 
-    // Load conversation history (last 10 messages)
+    const sources: Array<{ document_id: string; title: string; short_title: string | null; section?: string; url: string }> = [];
+    let contextBlock = "";
+
+    if (searchResults && searchResults.length > 0) {
+      console.log(`RAG: Found ${searchResults.length} documents`);
+
+      // Load content snippets for top results
+      for (const result of searchResults.slice(0, 5)) {
+        sources.push({
+          document_id: result.id,
+          title: result.title,
+          short_title: result.short_title,
+          url: `/app/documents/${result.id}`,
+        });
+      }
+
+      contextBlock = "\n\n[НАЙДЕННЫЕ ДОКУМЕНТЫ:\n" +
+        searchResults.slice(0, 5).map((r: any, i: number) =>
+          `--- Документ ${i + 1}: ${r.title} (${r.document_type_name || ""}, № ${r.doc_number || "б/н"}) ---\n` +
+          `Статус: ${r.status}\n` +
+          (r.snippet ? `Фрагмент: ${r.snippet.replace(/<\/?mark>/g, "**")}` : "Текст недоступен")
+        ).join("\n\n") +
+        "\n]";
+    }
+
+    // Step 2: If context_document_id, search within that document
+    if (context_document_id) {
+      console.log("RAG: Searching within context document:", context_document_id);
+
+      const { data: docSections } = await supabase.rpc("search_within_document", {
+        p_document_id: context_document_id,
+        search_query: question,
+      });
+
+      if (docSections && docSections.length > 0) {
+        // Also get document title
+        const { data: ctxDoc } = await supabase
+          .from("documents")
+          .select("title, short_title")
+          .eq("id", context_document_id)
+          .single();
+
+        contextBlock += "\n\n[КОНТЕКСТНЫЙ ДОКУМЕНТ: " + (ctxDoc?.title || "") + "\n" +
+          docSections.slice(0, 10).map((s: any) =>
+            `${s.section_type} ${s.number || ""} ${s.title || ""}\n${s.snippet?.replace(/<\/?mark>/g, "**") || ""}`
+          ).join("\n---\n") +
+          "\n]";
+
+        // Add context doc sections to sources
+        for (const s of docSections.slice(0, 5)) {
+          sources.push({
+            document_id: context_document_id,
+            title: ctxDoc?.short_title || ctxDoc?.title || "",
+            short_title: null,
+            section: `${s.number || ""} ${s.title || ""}`.trim(),
+            url: `/app/documents/${context_document_id}#section-${s.section_id}`,
+          });
+        }
+      }
+    }
+
+    // Step 3: Load conversation history
     let historyMessages: Array<{ role: string; content: string }> = [];
     if (session_id) {
       const { data: history } = await supabase
@@ -125,17 +171,17 @@ serve(async (req) => {
         .select("role, content")
         .eq("conversation_id", session_id)
         .order("created_at", { ascending: true })
-        .limit(10);
+        .limit(20);
       if (history) historyMessages = history;
     }
 
+    // Step 4: Build messages and call AI
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...historyMessages.map((h) => ({ role: h.role, content: h.content })),
       { role: "user", content: question + contextBlock },
     ];
 
-    // Call Lovable AI Gateway with streaming
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -154,7 +200,6 @@ serve(async (req) => {
           messages,
           stream: true,
           temperature: 0.3,
-          max_tokens: 1500,
         }),
       }
     );
@@ -180,24 +225,24 @@ serve(async (req) => {
       );
     }
 
-    // Create a transform stream to:
-    // 1. Prepend sources SSE event
-    // 2. Pass through AI stream
-    // 3. After stream ends, save messages & increment counter
+    // Step 5: Stream response with metadata
     const encoder = new TextEncoder();
     let fullAnswer = "";
 
     const transform = new TransformStream({
       start(controller) {
-        // Send sources as first SSE event
+        // Send sources + metadata as first SSE event
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ sources, requests_used: requestsToday + 1, requests_limit: profile?.plan === "free" ? FREE_PLAN_DAILY_LIMIT : null })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({
+            sources,
+            requests_used: requestsToday + 1,
+            requests_limit: isFree ? FREE_PLAN_DAILY_LIMIT : null,
+          })}\n\n`)
         );
       },
       transform(chunk, controller) {
         controller.enqueue(chunk);
 
-        // Parse chunk to collect full answer
         const text = new TextDecoder().decode(chunk);
         for (const line of text.split("\n")) {
           if (!line.startsWith("data: ")) continue;
@@ -227,7 +272,7 @@ serve(async (req) => {
             .update({ last_message_at: new Date().toISOString() })
             .eq("id", session_id);
         }
-        // Increment request counter
+        // Increment counter
         await supabase
           .from("profiles")
           .update({ ai_requests_today: requestsToday + 1 })
