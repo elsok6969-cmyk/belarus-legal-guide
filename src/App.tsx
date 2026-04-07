@@ -40,6 +40,7 @@ import Updates from './pages/Updates';
 import Settings from './pages/Settings';
 import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
+import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import Codexes from './pages/Codexes';
 import NotFound from './pages/NotFound';
