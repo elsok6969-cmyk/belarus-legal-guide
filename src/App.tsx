@@ -42,6 +42,7 @@ import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
 import AdminImport from './pages/AdminImport';
 import NotFound from './pages/NotFound';
+import { AIChatWidget } from './components/chat/AIChatWidget';
 
 const queryClient = new QueryClient();
 
