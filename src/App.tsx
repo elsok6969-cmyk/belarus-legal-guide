@@ -47,6 +47,7 @@ import Calculators from './pages/Calculators';
 import CalculatorRouter from './pages/CalculatorRouter';
 import Subscribe from './pages/Subscribe';
 import Guide from './pages/Guide';
+import Forms from './pages/Forms';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
 
@@ -106,6 +107,7 @@ const App = () => (
           <Route path="/app/calculator/:slug" element={<AppLayout><CalculatorRouter /></AppLayout>} />
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
           <Route path="/app/guide" element={<AppLayout><Guide /></AppLayout>} />
+          <Route path="/app/forms" element={<AppLayout><Forms /></AppLayout>} />
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />

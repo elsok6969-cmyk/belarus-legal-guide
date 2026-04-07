@@ -31,7 +31,7 @@ const navItems = [
   { title: 'Новые документы', url: '/app/search', icon: FileText },
   { title: 'Проводник', url: '/app/guide', icon: Compass },
   { title: 'Калькуляторы', url: '/app/calculator', icon: Calculator },
-  { title: 'Формы документов', url: '/app/search?type=form', icon: FolderOpen },
+  { title: 'Формы документов', url: '/app/forms', icon: FolderOpen },
   { title: 'Классификаторы', url: '/app/search?type=classifier', icon: List },
   { title: 'Календарь дедлайнов', url: '/app/calendar', icon: CalendarDays },
   { title: 'Справочная информация', url: '/app/topics', icon: Info },
