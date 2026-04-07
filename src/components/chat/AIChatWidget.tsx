@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 type Msg = { role: 'user' | 'assistant' | 'system'; content: string; sources?: Source[] };
@@ -38,6 +38,7 @@ export function AIChatWidget() {
   const { user, session } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -73,6 +74,39 @@ export function AIChatWidget() {
   useEffect(() => {
     if (!user) setGuestLimitReached(getGuestCount() >= GUEST_LIMIT);
   }, [user]);
+
+  // Load last conversation when widget opens (authenticated only)
+  useEffect(() => {
+    if (!open || !user) return;
+    if (conversationId || messages.length > 0) return; // already have data
+
+    (async () => {
+      const { data: convs } = await supabase
+        .from('assistant_conversations')
+        .select('id')
+        .eq('user_id', user.id)
+        .order('last_message_at', { ascending: false })
+        .limit(1);
+
+      if (!convs || convs.length === 0) return;
+      const lastConvId = convs[0].id;
+
+      const { data: msgs } = await supabase
+        .from('assistant_messages')
+        .select('role, content, sources')
+        .eq('conversation_id', lastConvId)
+        .order('created_at', { ascending: true });
+
+      if (msgs && msgs.length > 0) {
+        setConversationId(lastConvId);
+        setMessages(msgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          sources: (m.sources as any) || undefined,
+        })));
+      }
+    })();
+  }, [open, user]);
 
   const startNew = useCallback(() => {
     setConversationId(null);
@@ -380,7 +414,30 @@ export function AIChatWidget() {
                     ) : msg.role === 'assistant' ? (
                       <>
                         <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>ul]:mb-1.5 text-xs">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown
+                            components={{
+                              a: ({ href, children }) => {
+                                if (href?.startsWith('/')) {
+                                  return (
+                                    <a
+                                      href={href}
+                                      className="text-primary underline underline-offset-2 cursor-pointer hover:text-primary/80"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setOpen(false);
+                                        navigate(href);
+                                      }}
+                                    >
+                                      {children}
+                                    </a>
+                                  );
+                                }
+                                return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
+                              },
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
                         </div>
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="mt-2 pt-1.5 border-t border-border/50 flex flex-wrap gap-1">
