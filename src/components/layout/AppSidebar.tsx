@@ -33,7 +33,7 @@ const navItems = [
   { title: 'Калькуляторы', url: '/app/services/rates', icon: Calculator },
   { title: 'Формы документов', url: '/app/search?type=form', icon: FolderOpen },
   { title: 'Классификаторы', url: '/app/search?type=classifier', icon: List },
-  { title: 'Календарь дедлайнов', url: '/app/services/calendar', icon: CalendarDays },
+  { title: 'Календарь дедлайнов', url: '/app/calendar', icon: CalendarDays },
   { title: 'Справочная информация', url: '/app/topics', icon: Info },
 ];
 

@@ -40,6 +40,7 @@ import Updates from './pages/Updates';
 import Settings from './pages/Settings';
 import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
+import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import Codexes from './pages/Codexes';
 import NotFound from './pages/NotFound';
@@ -96,6 +97,7 @@ const App = () => (
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
           <Route path="/app/codex" element={<AppLayout><Codexes /></AppLayout>} />
+          <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
 
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
