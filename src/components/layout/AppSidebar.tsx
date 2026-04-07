@@ -27,7 +27,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const navItems = [
   { title: 'Главная', url: '/app', icon: Home, end: true },
-  { title: 'Кодексы', url: '/app/search?type=codex', icon: BookOpen },
+  { title: 'Кодексы', url: '/app/codex', icon: BookOpen },
   { title: 'Новые документы', url: '/app/search', icon: FileText },
   { title: 'Проводник', url: '/app/topics', icon: Compass },
   { title: 'Калькуляторы', url: '/app/services/rates', icon: Calculator },
