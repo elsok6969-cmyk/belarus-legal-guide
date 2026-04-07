@@ -23,50 +23,126 @@ const SYSTEM_PROMPT = `Ты — профессиональный AI-помощн
 11. Если пользователь просит найти статью, закон или норму — давай прямые ссылки на документы в ответе.`;
 
 const FREE_PLAN_DAILY_LIMIT = 5;
+const GUEST_DAILY_LIMIT = 3;
+const MAX_QUESTION_LENGTH = 2000;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// --- Rate limiter (in-memory, per-instance) ---
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_MAX_REQUESTS = 15; // max per window
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_MAX_REQUESTS;
+}
+
+// Clean up stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimitMap) {
+    if (now > v.resetAt) rateLimitMap.delete(k);
+  }
+}, 300_000);
+
+function errorResponse(msg: string, status: number, extra?: Record<string, unknown>) {
+  return new Response(JSON.stringify({ error: msg, ...extra }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+  // Only POST allowed
+  if (req.method !== "POST") {
+    return errorResponse("Method not allowed", 405);
+  }
 
   try {
-    const body = await req.json();
-    const { question, session_id, context_document_id, guest } = body;
-
-    if (!question || typeof question !== "string") {
-      return new Response(JSON.stringify({ error: "question is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // --- Parse & validate body ---
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return errorResponse("Invalid JSON body", 400);
     }
 
-    let user: any = null;
+    const { question, session_id, context_document_id, guest } = body as {
+      question?: unknown;
+      session_id?: unknown;
+      context_document_id?: unknown;
+      guest?: unknown;
+    };
+
+    // Validate question
+    if (!question || typeof question !== "string") {
+      return errorResponse("question is required and must be a string", 400);
+    }
+    const trimmedQuestion = question.trim();
+    if (trimmedQuestion.length === 0) {
+      return errorResponse("question must not be empty", 400);
+    }
+    if (trimmedQuestion.length > MAX_QUESTION_LENGTH) {
+      return errorResponse(`question exceeds maximum length of ${MAX_QUESTION_LENGTH} characters`, 400);
+    }
+
+    // Validate optional UUIDs
+    if (session_id !== undefined && session_id !== null) {
+      if (typeof session_id !== "string" || !UUID_REGEX.test(session_id)) {
+        return errorResponse("session_id must be a valid UUID", 400);
+      }
+    }
+    if (context_document_id !== undefined && context_document_id !== null) {
+      if (typeof context_document_id !== "string" || !UUID_REGEX.test(context_document_id)) {
+        return errorResponse("context_document_id must be a valid UUID", 400);
+      }
+    }
+
+    // --- Rate limiting ---
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    let user: { id: string } | null = null;
     let profile: any = null;
     let requestsToday = 0;
     let isFree = true;
 
     // Auth — optional for guest mode
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (token) {
-      const { data: { user: u }, error: authErr } = await supabase.auth.getUser(token);
-      if (authErr || !u) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // Validate JWT via getClaims first (fast, no DB call)
+      const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
+      if (claimsErr || !claimsData?.claims?.sub) {
+        return errorResponse("unauthorized", 401);
       }
-      user = u;
+
+      const userId = claimsData.claims.sub as string;
+      user = { id: userId };
+
+      // Rate limit by user ID
+      if (isRateLimited(`user:${userId}`)) {
+        return errorResponse("Слишком много запросов. Подождите минуту.", 429);
+      }
 
       // Load profile & check limits
       const { data: prof } = await supabase
         .from("profiles")
         .select("plan, ai_requests_today, ai_requests_reset_at")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
       profile = prof;
 
@@ -78,33 +154,35 @@ serve(async (req) => {
         await supabase
           .from("profiles")
           .update({ ai_requests_today: 0, ai_requests_reset_at: today })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
       }
 
       isFree = !profile?.plan || profile.plan === "free";
       if (isFree && requestsToday >= FREE_PLAN_DAILY_LIMIT) {
-        return new Response(
-          JSON.stringify({
-            error: "limit_exceeded",
+        return errorResponse(
+          "limit_exceeded",
+          429,
+          {
             message: `Достигнут дневной лимит ${FREE_PLAN_DAILY_LIMIT} запросов. Обновите тариф для неограниченного доступа.`,
             requests_used: requestsToday,
             requests_limit: FREE_PLAN_DAILY_LIMIT,
-          }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          }
         );
       }
-    } else if (!guest) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    } else if (guest === true) {
+      // Rate limit guests by IP (stricter)
+      if (isRateLimited(`guest:${clientIP}`)) {
+        return errorResponse("Слишком много запросов. Подождите минуту.", 429);
+      }
+    } else {
+      return errorResponse("unauthorized", 401);
     }
 
-    console.log("RAG: Starting search for:", question);
+    console.log("RAG: Starting search for:", trimmedQuestion.substring(0, 100));
 
     // Step 1: Search documents using search_documents RPC
     const { data: searchResults, error: searchErr } = await supabase.rpc("search_documents", {
-      search_query: question,
+      search_query: trimmedQuestion,
       result_limit: 5,
     });
 
@@ -116,9 +194,6 @@ serve(async (req) => {
     let contextBlock = "";
 
     if (searchResults && searchResults.length > 0) {
-      console.log(`RAG: Found ${searchResults.length} documents`);
-
-      // Load content snippets for top results
       for (const result of searchResults.slice(0, 5)) {
         sources.push({
           document_id: result.id,
@@ -139,16 +214,13 @@ serve(async (req) => {
     }
 
     // Step 2: If context_document_id, search within that document
-    if (context_document_id) {
-      console.log("RAG: Searching within context document:", context_document_id);
-
+    if (context_document_id && typeof context_document_id === "string") {
       const { data: docSections } = await supabase.rpc("search_within_document", {
         p_document_id: context_document_id,
-        search_query: question,
+        search_query: trimmedQuestion,
       });
 
       if (docSections && docSections.length > 0) {
-        // Also get document title
         const { data: ctxDoc } = await supabase
           .from("documents")
           .select("title, short_title")
@@ -173,9 +245,9 @@ serve(async (req) => {
       }
     }
 
-    // Step 3: Load conversation history
+    // Step 3: Load conversation history (only for authenticated users with valid session)
     let historyMessages: Array<{ role: string; content: string }> = [];
-    if (session_id) {
+    if (session_id && user && typeof session_id === "string") {
       const { data: history } = await supabase
         .from("assistant_messages")
         .select("role, content")
@@ -189,7 +261,7 @@ serve(async (req) => {
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...historyMessages.map((h) => ({ role: h.role, content: h.content })),
-      { role: "user", content: question + contextBlock },
+      { role: "user", content: trimmedQuestion + contextBlock },
     ];
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -216,23 +288,14 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Слишком много запросов. Подождите немного." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Слишком много запросов. Подождите немного.", 429);
       }
       if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Исчерпан лимит AI-запросов." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Исчерпан лимит AI-запросов.", 402);
       }
       const t = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, t);
-      return new Response(
-        JSON.stringify({ error: "Ошибка AI-сервиса" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Ошибка AI-сервиса", 500);
     }
 
     // Step 5: Stream response with metadata
@@ -241,7 +304,6 @@ serve(async (req) => {
 
     const transform = new TransformStream({
       start(controller) {
-        // Send sources + metadata as first SSE event
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({
             sources,
@@ -266,10 +328,9 @@ serve(async (req) => {
         }
       },
       async flush() {
-        // Save messages after stream completes
         if (user && session_id && fullAnswer) {
           await supabase.from("assistant_messages").insert([
-            { conversation_id: session_id, role: "user", content: question },
+            { conversation_id: session_id, role: "user", content: trimmedQuestion },
             {
               conversation_id: session_id,
               role: "assistant",
@@ -282,7 +343,6 @@ serve(async (req) => {
             .update({ last_message_at: new Date().toISOString() })
             .eq("id", session_id);
         }
-        // Increment counter for authenticated users only
         if (user) {
           await supabase
             .from("profiles")
@@ -299,9 +359,6 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("ai-assistant error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Internal server error", 500);
   }
 });
