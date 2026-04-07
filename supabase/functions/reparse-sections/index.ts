@@ -42,7 +42,7 @@ interface FlatSection {
 
 function parseSectionsFromMarkdown(markdown: string): FlatSection[] {
   const lines = markdown.split('\n');
-  const sections: FlatSection[] = [];
+  const rawSections: FlatSection[] = [];
   let cur: { type: string; number: string; title: string; level: number; lines: string[] } | null = null;
 
   for (const line of lines) {
@@ -50,14 +50,11 @@ function parseSectionsFromMarkdown(markdown: string): FlatSection[] {
     if (m) {
       if (cur) {
         const content_md = cur.lines.join('\n').trim();
-        sections.push({
-          section_type: cur.type,
-          number: cur.number,
-          title: cur.title,
+        rawSections.push({
+          section_type: cur.type, number: cur.number, title: cur.title,
           content_markdown: content_md,
           content_text: content_md.replace(/[#*_`|>]/g, '').replace(/\n{2,}/g, '\n').trim(),
-          level: cur.level,
-          sort_order: sections.length,
+          level: cur.level, sort_order: rawSections.length,
         });
       }
       cur = { type: m.type, number: m.number, title: m.title, level: m.level, lines: [] };
@@ -67,17 +64,32 @@ function parseSectionsFromMarkdown(markdown: string): FlatSection[] {
   }
   if (cur) {
     const content_md = cur.lines.join('\n').trim();
-    sections.push({
-      section_type: cur.type,
-      number: cur.number,
-      title: cur.title,
+    rawSections.push({
+      section_type: cur.type, number: cur.number, title: cur.title,
       content_markdown: content_md,
       content_text: content_md.replace(/[#*_`|>]/g, '').replace(/\n{2,}/g, '\n').trim(),
-      level: cur.level,
-      sort_order: sections.length,
+      level: cur.level, sort_order: rawSections.length,
     });
   }
-  return sections;
+
+  // Deduplicate: pravo.by docs have a TOC at top with empty article lines,
+  // then the full body later. Keep the version with more content.
+  const seen = new Map<string, number>();
+  const result: FlatSection[] = [];
+  for (const sec of rawSections) {
+    const key = `${sec.number}||${sec.title}`;
+    const prevIdx = seen.get(key);
+    if (prevIdx !== undefined) {
+      if (sec.content_markdown.length > result[prevIdx].content_markdown.length) {
+        result[prevIdx] = sec;
+      }
+    } else {
+      seen.set(key, result.length);
+      result.push(sec);
+    }
+  }
+  for (let i = 0; i < result.length; i++) result[i].sort_order = i;
+  return result;
 }
 
 Deno.serve(async (req) => {
