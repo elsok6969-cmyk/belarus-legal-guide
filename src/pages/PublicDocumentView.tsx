@@ -107,6 +107,7 @@ export default function PublicDocumentView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [activeId, setActiveId] = useState('');
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const { data: doc, isLoading } = useQuery({
