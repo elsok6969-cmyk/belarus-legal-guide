@@ -1,52 +1,44 @@
 
 
-# Профессиональный AI-ассистент с привязкой к базе НПА
+# Plan: Admin Import Dashboard (`/admin/import`)
 
-## Обзор
-Создать новую edge function `ai-assistant` с поиском по базе документов, лимитами запросов и отображением источников. Переработать UI чата с 6 примерами, счётчиком лимитов и ссылками на НПА.
+## Overview
+Create an admin-only page at `/admin/import` with 4 sections: database status, codex import, single document import, and data cleanup tools.
 
-## Решения по архитектуре
+## Steps
 
-- **Не создаём `ai_chat_history`** — уже есть `assistant_conversations` + `assistant_messages` с RLS. Добавим колонку `sources` в `assistant_messages` (уже есть — `jsonb DEFAULT '[]'`). Переиспользуем.
-- **Lovable AI вместо OpenAI** — проект уже использует Lovable AI Gateway. OpenAI из запроса заменяется на `ai.gateway.lovable.dev`.
-- **Streaming сохраняется** — edge function делает поиск документов, проверяет лимиты, затем стримит ответ. Источники возвращаются в отдельном SSE-событии перед стримом.
-- **Профиль: `user_id`** — в таблице `profiles` ключ `user_id`, не `id`. Лимиты проверяются по `user_id`.
+### 1. Create `AdminGuard` component
+New file `src/components/auth/AdminGuard.tsx`. Wraps children, checks auth + admin role via `user_roles` table (using `has_role` pattern). Shows spinner while loading, redirects to `/` if not admin.
 
-## Шаг 1. Edge Function `ai-assistant`
+### 2. Create `AdminImport` page
+New file `src/pages/AdminImport.tsx` with 4 sections:
 
-Новый файл `supabase/functions/ai-assistant/index.ts`:
+**Section 1 — Database Status**: Query `document_types` joined with `documents`, compute counts (total, with content >500 chars, broken). Display in a table with conditional row colors (yellow if broken > 0, red if no content at all).
 
-1. Извлечь JWT из заголовка, получить user через `supabase.auth.getUser(token)`
-2. Загрузить профиль (`plan`, `ai_requests_today`, `ai_requests_reset_at`) по `user_id`
-3. Сбросить счётчик если новый день; проверить лимит (free = 5/день)
-4. Принять `question` + `session_id`; поиск по `documents.fts` (русская конфигурация, limit 3)
-5. Собрать контекст из найденных документов (первые 1500 символов body_text)
-6. Загрузить историю сессии (последние 10 сообщений из `assistant_messages`)
-7. Отправить SSE-событие `data: {"sources": [...]}` с найденными документами
-8. Стримить ответ через Lovable AI Gateway (`google/gemini-3-flash-preview`)
-9. После стрима — сохранить оба сообщения в `assistant_messages`, инкрементировать счётчик
+**Section 2 — Import Codexes**: Button calls `import-codexes` edge function via fetch (SSE stream). Progress bar + readonly textarea log with auto-scroll. Supports batch parameter. Parses SSE `data:` lines for progress updates.
 
-Лимит-ответ (429): JSON с `error: 'limit_exceeded'`, `requests_used`, `requests_limit`.
+**Section 3 — Single Document Import**: URL input + document type dropdown (fetched from `document_types`). "Parse" button calls `parse-pravo-document` edge function. Shows preview (title, char count, first 500 chars). "Save to DB" button inserts into `documents` + `document_sections`.
 
-## Шаг 2. Переработка UI (`src/pages/AIChat.tsx`)
+**Section 4 — Data Cleanup**: Three buttons with confirmation dialogs:
+- Delete broken records (content_text < 500 chars) — calls delete via supabase client
+- Delete duplicates (same title + type, keep largest) — custom logic
+- Reindex — calls a small edge function or raw SQL
 
-- Убрать боковую панель разговоров (упростить до session-based)
-- Шапка: «AI-ассистент» + счётчик запросов (прогресс-бар) + кнопка «Новый диалог»
-- Пустой чат: 6 карточек-примеров в `grid-cols-2 md:grid-cols-3`
-- Сообщения: user (справа, bg-teal-600) / assistant (слева, bg-muted) с markdown
-- Блок источников под ответом ассистента: ссылки на `/documents/{slug}`
-- Анимация загрузки: три точки (bounce)
-- Баннер лимита: textarea disabled + предложение апгрейда
-- Redirect на `/auth?return=/ai-assistant` если не авторизован
+Each dangerous action shows an `AlertDialog` with count of affected records before proceeding.
 
-## Шаг 3. Обновить маршрут
+### 3. Add route to `App.tsx`
+Add `/admin/import` route wrapped in `AdminGuard` + `AppLayout`.
 
-В `App.tsx`: добавить `/ai-assistant` как публичный роут с AuthGuard (редирект на /auth). Оставить `/app/assistant` как алиас.
+### Technical Details
 
-## Затрагиваемые файлы
-- `supabase/functions/ai-assistant/index.ts` — новый
-- `src/pages/AIChat.tsx` — полная переработка
-- `src/App.tsx` — добавить маршрут `/ai-assistant`
+- **Role check**: Query `user_roles` table where `user_id = auth.uid()` and `role = 'admin'`. This uses the existing `user_roles` table and `has_role` function.
+- **SSE parsing**: Use `fetch` + `ReadableStream` reader to parse `text/event-stream` from `import-codexes`.
+- **Cleanup operations**: Since the client has RLS restricting deletes to admin role, the delete/update operations need to go through edge functions (service_role). Will create a small `admin-cleanup` edge function for delete/reindex operations.
+- **Edge function for cleanup**: New `supabase/functions/admin-cleanup/index.ts` that accepts action type (`delete_broken`, `delete_duplicates`, `reindex`) and performs the operation with service_role privileges. Validates admin role from JWT before executing.
 
-Существующая edge function `chat` остаётся без изменений (может использоваться как fallback). Миграции БД не нужны — все таблицы и колонки уже существуют.
+### Files to create/modify
+- **Create**: `src/components/auth/AdminGuard.tsx`
+- **Create**: `src/pages/AdminImport.tsx`
+- **Create**: `supabase/functions/admin-cleanup/index.ts`
+- **Modify**: `src/App.tsx` — add admin route
 
