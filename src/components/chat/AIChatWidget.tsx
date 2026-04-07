@@ -74,6 +74,39 @@ export function AIChatWidget() {
     if (!user) setGuestLimitReached(getGuestCount() >= GUEST_LIMIT);
   }, [user]);
 
+  // Load last conversation when widget opens (authenticated only)
+  useEffect(() => {
+    if (!open || !user) return;
+    if (conversationId || messages.length > 0) return; // already have data
+
+    (async () => {
+      const { data: convs } = await supabase
+        .from('assistant_conversations')
+        .select('id')
+        .eq('user_id', user.id)
+        .order('last_message_at', { ascending: false })
+        .limit(1);
+
+      if (!convs || convs.length === 0) return;
+      const lastConvId = convs[0].id;
+
+      const { data: msgs } = await supabase
+        .from('assistant_messages')
+        .select('role, content, sources')
+        .eq('conversation_id', lastConvId)
+        .order('created_at', { ascending: true });
+
+      if (msgs && msgs.length > 0) {
+        setConversationId(lastConvId);
+        setMessages(msgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          sources: (m.sources as any) || undefined,
+        })));
+      }
+    })();
+  }, [open, user]);
+
   const startNew = useCallback(() => {
     setConversationId(null);
     setMessages([]);
