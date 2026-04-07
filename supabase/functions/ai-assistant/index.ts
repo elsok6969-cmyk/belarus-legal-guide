@@ -157,18 +157,17 @@ serve(async (req) => {
 
         contextBlock += "\n\n[КОНТЕКСТНЫЙ ДОКУМЕНТ: " + (ctxDoc?.title || "") + "\n" +
           docSections.slice(0, 10).map((s: any) =>
-            `${s.section_type} ${s.number || ""} ${s.title || ""}\n${s.snippet?.replace(/<\/?mark>/g, "**") || ""}`
+            `${s.section_type} ${s.number || ""} ${s.title || ""}\nURL: /documents/${context_document_id}#section-${s.section_id}\n${s.snippet?.replace(/<\/?mark>/g, "**") || ""}`
           ).join("\n---\n") +
           "\n]";
 
-        // Add context doc sections to sources
         for (const s of docSections.slice(0, 5)) {
           sources.push({
             document_id: context_document_id,
             title: ctxDoc?.short_title || ctxDoc?.title || "",
             short_title: null,
             section: `${s.number || ""} ${s.title || ""}`.trim(),
-            url: `/app/documents/${context_document_id}#section-${s.section_id}`,
+            url: `/documents/${context_document_id}#section-${s.section_id}`,
           });
         }
       }
