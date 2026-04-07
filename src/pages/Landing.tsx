@@ -39,22 +39,17 @@ const popularSections = [
 const pricingPlans = [
   {
     name: 'Бесплатный', price: '0',
-    features: ['Кодексы + топ-200 законов', '5 AI-запросов/день', 'Курсы НБРБ и календарь'],
+    features: ['26 кодексов РБ', '3 AI-запроса/день', 'Курсы НБРБ и календарь'],
     cta: 'Начать бесплатно', to: '/register', popular: false,
   },
   {
-    name: 'Стандарт', price: '19',
-    features: ['Все НПА без ограничений', 'Закладки', 'Подписки на изменения'],
-    cta: 'Подключить', to: '/pricing', popular: false,
-  },
-  {
-    name: 'Профи', price: '49',
-    features: ['AI без лимитов', 'История редакций', 'Экспорт в PDF', 'Приоритетная поддержка'],
+    name: 'Базовый', price: '29',
+    features: ['Все НПА без ограничений', '30 AI-запросов/день', 'Избранное и контроль'],
     cta: 'Подключить', to: '/pricing', popular: true,
   },
   {
-    name: 'Бизнес', price: '149',
-    features: ['Всё из Профи', '5 пользователей', 'API доступ', 'SLA'],
+    name: 'Про', price: '59',
+    features: ['AI без лимитов', 'Все калькуляторы', 'Экспорт в PDF', 'Приоритетная поддержка'],
     cta: 'Подключить', to: '/pricing', popular: false,
   },
 ];
@@ -324,7 +319,7 @@ export default function Landing() {
           <h2 className="text-2xl md:text-3xl font-bold">Простые и честные тарифы</h2>
           <p className="mt-2 text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
           {pricingPlans.map((plan) => (
             <Card key={plan.name} className={`rounded-xl shadow-sm hover:shadow-md transition relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
               {plan.popular && (
