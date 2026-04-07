@@ -1,9 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Copy, Check, Bot, ScrollText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface ArticleRendererProps {
   id: string;
@@ -16,10 +14,7 @@ interface ArticleRendererProps {
   onAIExplain?: (title: string, content: string) => void;
 }
 
-/** Detect amendment notes like "(в ред. Закона от ...)" */
 const AMENDMENT_RE = /\(в\s+ред\.\s+.+?\)/gi;
-
-/** Detect cross-references like "статья 45", "ст. 102" */
 const ARTICLE_REF_RE = /(?:стать[яиейю]|ст\.)\s*(\d+(?:[.-]\d+)?)/gi;
 
 function highlightSearch(text: string, query: string): React.ReactNode {
@@ -28,7 +23,7 @@ function highlightSearch(text: string, query: string): React.ReactNode {
   const regex = new RegExp(`(${escaped})`, 'gi');
   const parts = text.split(regex);
   return parts.map((part, i) =>
-    regex.test(part) ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">{part}</mark> : part
+    regex.test(part) ? <mark key={i} style={{ background: 'hsl(var(--yellow-bg))', color: 'hsl(var(--yellow-text))', padding: '0 2px', borderRadius: 2 }}>{part}</mark> : part
   );
 }
 
@@ -47,20 +42,28 @@ function processContent(
       continue;
     }
 
-    // Check if this is an amendment note
     const isAmendment = AMENDMENT_RE.test(line);
     AMENDMENT_RE.lastIndex = 0;
 
     if (isAmendment) {
       result.push(
-        <div key={i} className="text-sm text-muted-foreground italic border-l-[3px] border-muted-foreground/30 pl-3 my-2">
+        <div
+          key={i}
+          className="my-3"
+          style={{
+            fontSize: 14,
+            color: 'hsl(var(--gray-400))',
+            fontStyle: 'italic',
+            borderLeft: '3px solid hsl(var(--gray-200))',
+            paddingLeft: 12,
+          }}
+        >
           {highlightSearch(line, searchQuery || '')}
         </div>
       );
       continue;
     }
 
-    // Process cross-references
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
@@ -75,7 +78,8 @@ function processContent(
         <button
           key={`ref-${i}-${match.index}`}
           onClick={() => onArticleClick?.(artNum)}
-          className="text-primary underline decoration-dotted underline-offset-2 cursor-pointer hover:text-primary/80 transition-colors"
+          className="underline decoration-dotted underline-offset-2 cursor-pointer transition-colors"
+          style={{ color: 'hsl(var(--navy-600))' }}
         >
           {highlightSearch(match[0], searchQuery || '')}
         </button>
@@ -88,7 +92,7 @@ function processContent(
     }
 
     result.push(
-      <p key={i} className="mb-1.5 leading-[1.8]">
+      <p key={i} style={{ marginBottom: 6, lineHeight: 1.8 }}>
         {parts.length > 0 ? parts : highlightSearch(line, searchQuery || '')}
       </p>
     );
@@ -125,76 +129,80 @@ export function DocumentArticleRenderer({
 
   const displayTitle = number ? `${number} ${title || ''}` : title;
 
-  const headingClass = cn(
-    'font-serif',
-    level <= 0 && 'text-xl font-bold tracking-tight mt-10 mb-4 first:mt-0 uppercase text-foreground',
-    level === 1 && 'text-lg font-bold mt-8 mb-3 uppercase text-foreground',
-    level === 2 && 'text-lg font-bold mt-8 mb-2 text-foreground',
-    level >= 3 && 'text-[18px] font-bold mt-8 mb-2 text-foreground',
-  );
-
   const processedContent = useMemo(
     () => processContent(content, searchQuery, onArticleClick),
     [content, searchQuery, onArticleClick]
   );
 
   return (
-    <article
-      id={`section-${id}`}
-      className="scroll-mt-24"
-    >
+    <article id={`section-${id}`} className="scroll-mt-24">
       {displayTitle && (
         <div className="flex items-start justify-between gap-2">
-          <h2 className={headingClass}>{displayTitle}</h2>
+          <h2
+            style={{
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+              fontSize: level <= 1 ? 20 : 18,
+              fontWeight: 600,
+              color: 'hsl(var(--navy-900))',
+              marginTop: level <= 1 ? 40 : 32,
+              marginBottom: level <= 1 ? 16 : 8,
+              textTransform: level <= 0 ? 'uppercase' : undefined,
+              letterSpacing: level <= 0 ? '0.5px' : undefined,
+            }}
+          >
+            {displayTitle}
+          </h2>
           <div className="flex items-center gap-1 shrink-0 mt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
+            <button
               onClick={handleCopy}
+              className="btn-ghost flex items-center gap-1.5 text-xs"
+              style={{ padding: '4px 10px', fontSize: 12 }}
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? <Check className="h-3.5 w-3.5" style={{ color: 'hsl(var(--green-text))' }} /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? 'Скопировано' : 'Копировать'}
-            </Button>
+            </button>
             {onAIExplain && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
+              <button
                 onClick={handleAI}
+                className="btn-ghost flex items-center gap-1.5 text-xs"
+                style={{ padding: '4px 10px', fontSize: 12 }}
               >
                 <Bot className="h-3.5 w-3.5" />
                 Объяснить
-              </Button>
+              </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Content */}
-      <div className="font-serif text-base leading-[1.8] text-foreground">
+      <div
+        style={{
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontSize: 17,
+          lineHeight: 1.8,
+          color: 'hsl(var(--gray-900))',
+        }}
+      >
         {processedContent}
       </div>
 
-      {/* Amendment history button */}
       {hasAmendments && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-2 text-xs text-muted-foreground gap-1"
+        <button
+          className="btn-ghost flex items-center gap-1 mt-2"
+          style={{ fontSize: 12 }}
           onClick={() => setShowHistory(!showHistory)}
         >
           <ScrollText className="h-3.5 w-3.5" />
           История изменений
-        </Button>
+        </button>
       )}
       {showHistory && (
-        <div className="mt-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+        <div className="mt-2 p-3 rounded-xl text-sm" style={{ background: 'hsl(var(--gray-50))', color: 'hsl(var(--gray-600))' }}>
           <p>Хронология изменений будет доступна в ближайшем обновлении.</p>
         </div>
       )}
 
-      {level >= 2 && <div className="border-b border-border/40 mt-6" />}
+      {level >= 2 && <div className="mt-6" style={{ borderBottom: '1px solid hsl(var(--gray-200))' }} />}
     </article>
   );
 }
