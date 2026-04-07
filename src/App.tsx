@@ -43,6 +43,8 @@ import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import Codexes from './pages/Codexes';
+import Calculators from './pages/Calculators';
+import CalculatorRouter from './pages/CalculatorRouter';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
 
@@ -97,6 +99,8 @@ const App = () => (
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
           <Route path="/app/codex" element={<AppLayout><Codexes /></AppLayout>} />
+          <Route path="/app/calculator" element={<AppLayout><Calculators /></AppLayout>} />
+          <Route path="/app/calculator/:slug" element={<AppLayout><CalculatorRouter /></AppLayout>} />
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
 
           {/* Admin pages */}
