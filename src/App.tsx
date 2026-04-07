@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { AdminGuard } from '@/components/auth/AdminGuard';
 
 import Landing from './pages/Landing';
 import About from './pages/About';
@@ -39,6 +40,7 @@ import Updates from './pages/Updates';
 import Settings from './pages/Settings';
 import CurrencyRates from './pages/CurrencyRates';
 import DeadlineCalendar from './pages/DeadlineCalendar';
+import AdminImport from './pages/AdminImport';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -91,6 +93,9 @@ const App = () => (
           <Route path="/app/settings" element={<AppLayout><Settings /></AppLayout>} />
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
+
+          {/* Admin pages */}
+          <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
