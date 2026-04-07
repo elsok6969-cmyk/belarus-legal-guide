@@ -124,13 +124,14 @@ serve(async (req) => {
           document_id: result.id,
           title: result.title,
           short_title: result.short_title,
-          url: `/app/documents/${result.id}`,
+          url: `/documents/${result.id}`,
         });
       }
 
       contextBlock = "\n\n[НАЙДЕННЫЕ ДОКУМЕНТЫ:\n" +
         searchResults.slice(0, 5).map((r: any, i: number) =>
           `--- Документ ${i + 1}: ${r.title} (${r.document_type_name || ""}, № ${r.doc_number || "б/н"}) ---\n` +
+          `URL: /documents/${r.id}\n` +
           `Статус: ${r.status}\n` +
           (r.snippet ? `Фрагмент: ${r.snippet.replace(/<\/?mark>/g, "**")}` : "Текст недоступен")
         ).join("\n\n") +
