@@ -196,25 +196,45 @@ export default function PublicDocumentView() {
   const tocItems = useMemo(() => bodyText ? parseToc(bodyText) : [], [bodyText]);
   const formattedBody = useMemo(() => bodyText ? formatBodyText(bodyText) : [], [bodyText]);
 
-  // Intersection Observer for active TOC item
+  // Initialize focusedId from URL hash
+  const location = useLocation();
   useEffect(() => {
-    if (!tocItems.length) return;
-    observerRef.current?.disconnect();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) { setActiveId(e.target.id); break; }
-        }
-      },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 }
-    );
-    observerRef.current = obs;
-    for (const item of tocItems) {
-      const el = document.getElementById(item.id);
-      if (el) obs.observe(el);
+    const hash = location.hash?.replace('#', '');
+    if (hash && tocItems.some(t => t.id === hash)) {
+      setFocusedId(hash);
+      setActiveId(hash);
     }
-    return () => obs.disconnect();
-  }, [tocItems, formattedBody]);
+  }, [tocItems, location.hash]);
+
+  // Compute focused (filtered) sections — show only the clicked section and its content
+  const focusedSections = useMemo(() => {
+    if (!focusedId) return null;
+    const startIdx = formattedBody.findIndex(s => s.id === focusedId);
+    if (startIdx === -1) return null;
+    const startSection = formattedBody[startIdx];
+    // Determine section level priority: section > chapter > article
+    const levelPriority = { section: 0, chapter: 1, article: 2, paragraph: 3 };
+    const startLevel = levelPriority[startSection.type] ?? 3;
+    // Collect everything from startIdx until the next heading of same or higher level
+    const result = [formattedBody[startIdx]];
+    for (let i = startIdx + 1; i < formattedBody.length; i++) {
+      const s = formattedBody[i];
+      const sLevel = levelPriority[s.type] ?? 3;
+      if (sLevel <= startLevel && s.type !== 'paragraph') break;
+      result.push(s);
+    }
+    return result;
+  }, [focusedId, formattedBody]);
+
+  const handleFocusSection = useCallback((id: string) => {
+    setFocusedId(id);
+    setActiveId(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleShowAll = useCallback(() => {
+    setFocusedId(null);
+  }, []);
 
   // Access level
   const hasFullAccess = !!user;
