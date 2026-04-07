@@ -1,79 +1,64 @@
 
 
-# Plan: Full-Text Search with PostgreSQL Functions
+# Plan: Document Viewer Page `/app/documents/:id`
 
 ## Overview
-Replace the current `ilike`-based search with proper PostgreSQL full-text search using `ts_vector`/`ts_query`, add advanced filters, snippet highlighting, pagination, and URL sync. Two DB functions + rewritten `AppSearch.tsx`.
+Complete rewrite of `DocumentViewer.tsx` into a three-column layout with sticky TOC, in-document search via `search_within_document` RPC, related documents sidebar, view history tracking, and mobile responsiveness via a sheet-based TOC.
 
 ## Steps
 
-### 1. Database migration — two search functions
+### 1. Rewrite `src/pages/DocumentViewer.tsx`
 
-**`search_documents`**: Accepts query, filters (type slug, status, date range, issuing body, exact_match, title_only), limit/offset. Returns joined results with `ts_headline` snippets, `ts_rank_cd` ranking, and `total_count` via window function. Uses `websearch_to_tsquery('russian', ...)` by default, `phraseto_tsquery` for exact match. Falls back to `ilike` on title if query is empty (browse mode).
+**Three-column layout** (desktop: 250px left | flex center | 250px right):
 
-**`search_within_document`**: Accepts document_id + query. Searches `document_sections.content_text` with snippets and ranking. For use inside the document viewer.
+**Left column — TOC (sticky, hidden on mobile)**:
+- Tree from `document_sections` with indentation (`level * 16px`)
+- Collapsible top-level sections (РАЗДЕЛ/ГЛАВА) using local state
+- Active section tracking via Intersection Observer on each `<section>` element
+- Active item highlighted with `bg-primary/10 text-primary`
+- Mobile: accessible via Sheet triggered by "☰ Оглавление" button
 
-### 2. Rewrite `AppSearch.tsx`
+**Center column — Document body**:
+- **Header**: Type badge (colored by slug: codex=blue, law=green, etc.), status badge, `<h1>` title, metadata row (number, date, issuing body, effective date), action buttons (bookmark, subscribe/watch, copy link, share)
+- **Body**: Each section wrapped in `<section id="section-{id}">`, separated by thin borders for articles. Section numbers bold, titles semibold. Typography: `text-base leading-[1.7]`, max-width 800px centered. Hover on section shows copy button.
+- **In-document search**: Fixed mini-bar at top (toggled by search button or Ctrl+F override). Calls `search_within_document` RPC. Shows "Найдено в N статьях" with prev/next navigation arrows that scroll between matching sections. Results highlighted.
 
-Replace the entire page with a new implementation:
+**Right column (hidden on mobile)**:
+- "Связанные документы" — query `document_relations` joined with `documents` for this document ID
+- "Изменения и редакции" — query `document_versions` for this document
+- "Похожие документы" — placeholder card with "В разработке"
+- Mobile: these become a collapsible section below the document body
 
-- **URL sync**: Read/write `q`, `type`, `status`, `exact`, `title_only`, `date_from`, `date_to`, `body`, `page` from `useSearchParams`. On mount, if `q` exists, auto-search.
-- **Search bar**: Large input with Search icon, submit on Enter/button click. Below it, collapsible "Расширенный поиск" panel.
-- **Advanced filters panel** (hidden by default, toggled by link):
-  - Checkboxes: "Точное совпадение", "Искать только в названии"
-  - Select: document type (from `document_types` table)
-  - Input: issuing body name
-  - Date range: two date inputs (от — до)
-  - Select: status
-- **Results**: Count header, cards with type badge + status badge, title as link to `/app/documents/:id`, metadata row (number, date, issuing body), snippet with `<mark>` rendered via `dangerouslySetInnerHTML`.
-- **Pagination**: Page buttons at bottom, 50 results per page.
-- **Loading**: Skeleton cards. **Empty**: contextual message.
+### 2. View history tracking
+- On mount, if user is authenticated, check `user_document_history` for last entry with same `document_id` and `user_id`
+- If last `viewed_at` was more than 5 minutes ago (or no entry), insert new record
+- Use a `useEffect` with the document ID and user ID as dependencies
 
-### 3. Update route (no change needed)
+### 3. Breadcrumbs
+- Add breadcrumbs: Главная > {document_type.name_ru} > {doc.short_title || doc.title}
+- Use the existing `Breadcrumbs` component or simple inline breadcrumb links
 
-Route `/app/search` already points to `AppSearch` in `App.tsx`. No routing changes needed.
+### 4. Performance for large documents
+- Use Intersection Observer to lazily render section content — initially render only sections near viewport
+- Sections outside viewport render as placeholder divs with estimated height
+- Cache document data via react-query `staleTime: 3600000` (1 hour)
 
 ## Technical Details
 
-### SQL function signature
-```sql
-CREATE OR REPLACE FUNCTION search_documents(
-  search_query text,
-  filter_type text DEFAULT NULL,
-  filter_status text DEFAULT NULL,
-  filter_date_from date DEFAULT NULL,
-  filter_date_to date DEFAULT NULL,
-  filter_body text DEFAULT NULL,
-  exact_match boolean DEFAULT false,
-  title_only boolean DEFAULT false,
-  result_limit integer DEFAULT 50,
-  result_offset integer DEFAULT 0
-) RETURNS TABLE (
-  id uuid, title text, short_title text, doc_number text,
-  doc_date date, status text, document_type_name text,
-  document_type_slug text, issuing_body_name text,
-  snippet text, rank real, total_count bigint
-)
-```
-
-- When `search_query` is empty/null: skip FTS, return all docs matching filters ordered by `doc_date DESC`
-- Snippet uses `ts_headline('russian', ...)` with `MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>`
-- Filters applied via `WHERE` clauses with `COALESCE` for optional params
-
-### Frontend RPC call
+- **Intersection Observer for TOC**: One observer watches all `<section>` elements. The topmost visible section sets `activeSection` state, which highlights the TOC item.
+- **Collapsible TOC sections**: State `collapsedSections: Set<string>`. Clicking a level-0 item toggles its children's visibility.
+- **Copy article text**: On hover, show a small clipboard button. On click, copy `section.content_text || section.content_markdown` to clipboard via `navigator.clipboard.writeText`.
+- **In-document search RPC call**:
 ```typescript
-const { data } = await supabase.rpc('search_documents', {
-  search_query: q,
-  filter_type: type || null,
-  filter_status: status || null,
-  exact_match: exactMatch,
-  title_only: titleOnly,
-  result_limit: 50,
-  result_offset: (page - 1) * 50,
+const { data } = await supabase.rpc('search_within_document', {
+  p_document_id: id,
+  search_query: query,
 });
 ```
+Results return `section_id` — scroll to matching section and highlight snippet.
+- **Related documents query**: `document_relations` where `source_document_id = id OR target_document_id = id`, joined with `documents` for title/short_title.
+- **Mobile layout**: Use `useIsMobile()` hook. On mobile, hide left/right columns. TOC opens in a `Sheet` from left. Right column content moves below the document body.
 
 ### Files
-- **Migration**: New SQL migration with both functions
-- **Rewrite**: `src/pages/AppSearch.tsx` — complete rewrite with URL params, advanced filters, pagination
+- **Rewrite**: `src/pages/DocumentViewer.tsx` — complete rewrite with three-column layout
 
