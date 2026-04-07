@@ -118,6 +118,11 @@ export function AIChatWidget() {
   const send = async () => {
     const text = input.trim();
     if (!text || isStreaming) return;
+    // Input length limit (match server-side)
+    if (text.length > 2000) {
+      toast({ title: 'Слишком длинный вопрос', description: 'Максимум 2000 символов', variant: 'destructive' });
+      return;
+    }
 
     // Guest mode check
     if (!user) {
