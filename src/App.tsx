@@ -100,6 +100,7 @@ const App = () => (
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AIChatWidget />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
