@@ -1156,6 +1156,45 @@ export type Database = {
         Returns: boolean
       }
       increment_view_count: { Args: { doc_id: string }; Returns: undefined }
+      search_documents: {
+        Args: {
+          exact_match?: boolean
+          filter_body?: string
+          filter_date_from?: string
+          filter_date_to?: string
+          filter_status?: string
+          filter_type?: string
+          result_limit?: number
+          result_offset?: number
+          search_query?: string
+          title_only?: boolean
+        }
+        Returns: {
+          doc_date: string
+          doc_number: string
+          document_type_name: string
+          document_type_slug: string
+          id: string
+          issuing_body_name: string
+          rank: number
+          short_title: string
+          snippet: string
+          status: string
+          title: string
+          total_count: number
+        }[]
+      }
+      search_within_document: {
+        Args: { p_document_id: string; search_query: string }
+        Returns: {
+          number: string
+          rank: number
+          section_id: string
+          section_type: string
+          snippet: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       app_role: "user" | "admin"
