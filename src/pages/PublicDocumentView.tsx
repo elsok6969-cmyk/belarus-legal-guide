@@ -21,6 +21,9 @@ import { DocumentArticleRenderer } from '@/components/document/DocumentArticleRe
 import { DocumentSearchPanel } from '@/components/document/DocumentSearchPanel';
 import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
 import { DocumentFreshness } from '@/components/document/DocumentFreshness';
+import { ContentGate } from '@/components/paywall/ContentGate';
+import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+import { getSessionId } from '@/hooks/useVisitTracking';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -360,18 +363,31 @@ export default function PublicDocumentView() {
   }, []);
 
   /* ── access ── */
-  const hasFullAccess = !!user;
-  const previewLimit = 3; // Show first N articles for guests
-
-  const gatedSections = useMemo(() => {
-    if (hasFullAccess || viewMode === 'focus') return null;
-    let count = 0;
-    for (let i = 0; i < sections.length; i++) {
-      if (sections[i].level >= 2) count++;
-      if (count > previewLimit) return i;
+  // Track content view
+  useEffect(() => {
+    if (id) {
+      const sid = getSessionId();
+      supabase.from('content_views').insert({
+        session_id: sid,
+        user_id: user?.id || null,
+        page_url: `/documents/${id}`,
+      }).then(() => {});
     }
-    return null;
-  }, [hasFullAccess, viewMode, sections]);
+  }, [id, user?.id]);
+
+  // Get user plan for ContentGate
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile-plan', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_profiles')
+        .select('subscription_plan')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 300000,
+  });
 
   /* ── loading / error ── */
 
@@ -412,7 +428,10 @@ export default function PublicDocumentView() {
     supersedes: 'Заменяет', superseded_by: 'Заменён',
   };
 
-  const legalDocJsonLd = {
+  const isPaid = userProfile?.subscription_plan === 'basic' || userProfile?.subscription_plan === 'professional';
+  const showPaywall = !isPaid;
+
+  const legalDocJsonLd: any = {
     '@context': 'https://schema.org', '@type': 'Legislation',
     name: doc.title, datePublished: doc.doc_date, dateModified: doc.last_updated,
     publisher: ib ? { '@type': 'Organization', name: ib.name_ru } : undefined,
@@ -421,11 +440,18 @@ export default function PublicDocumentView() {
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
+  if (showPaywall) {
+    legalDocJsonLd.isAccessibleForFree = false;
+    legalDocJsonLd.hasPart = {
+      '@type': 'WebPageElement',
+      isAccessibleForFree: true,
+      cssSelector: '.free-content',
+    };
+  }
+
   const displaySections = viewMode === 'focus' && focusedSections
     ? focusedSections
-    : gatedSections !== null
-      ? sections.slice(0, gatedSections)
-      : sections;
+    : sections;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
@@ -567,18 +593,26 @@ export default function PublicDocumentView() {
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 md:p-8" ref={contentRef}>
                 <div className="max-w-none">
-                  {displaySections.map(section => (
-                    <DocumentArticleRenderer
+                  {displaySections.map((section, idx) => (
+                    <ContentGate
                       key={section.id}
-                      id={section.id}
-                      title={section.title}
-                      number={section.number}
-                      content={section.content}
-                      level={section.level}
-                      searchQuery={searchQuery}
-                      onArticleClick={handleArticleRefClick}
-                      onAIExplain={handleAIExplain}
-                    />
+                      sectionIndex={idx}
+                      sectionTitle={section.title}
+                      documentTitle={doc.title}
+                      totalSections={sections.length}
+                      userPlan={userProfile?.subscription_plan}
+                    >
+                      <DocumentArticleRenderer
+                        id={section.id}
+                        title={section.title}
+                        number={section.number}
+                        content={section.content}
+                        level={section.level}
+                        searchQuery={searchQuery}
+                        onArticleClick={handleArticleRefClick}
+                        onAIExplain={handleAIExplain}
+                      />
+                    </ContentGate>
                   ))}
                 </div>
 
@@ -611,25 +645,7 @@ export default function PublicDocumentView() {
                   </div>
                 )}
 
-                {/* Freemium gate */}
-                {!hasFullAccess && viewMode === 'full' && gatedSections !== null && (
-                  <div className="relative mt-4">
-                    <div className="blur-sm select-none pointer-events-none h-[200px]" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-background via-background/90 to-transparent">
-                      <div className="text-center p-8">
-                        <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
-                        <h3 className="text-xl font-bold mb-2">Полный текст доступен после регистрации</h3>
-                        <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-                          Зарегистрируйтесь бесплатно для полного доступа.
-                        </p>
-                        <div className="flex gap-3 justify-center">
-                          <Button asChild><Link to="/auth">Зарегистрироваться</Link></Button>
-                          <Button asChild variant="outline"><Link to="/auth">Войти</Link></Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Removed old gate — ContentGate handles it per-section */}
               </CardContent>
             </Card>
           ) : doc.content_markdown ? (
