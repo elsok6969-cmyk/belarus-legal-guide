@@ -51,6 +51,7 @@ interface UnifiedSection {
   content: string;
   level: number;
   sort_order: number;
+  _snippet?: string;
 }
 
 /* ─── helpers ───────────────────────────────────── */
@@ -109,9 +110,11 @@ export default function PublicDocumentView() {
   const { data: dbSections } = useQuery({
     queryKey: ['document-sections', id],
     queryFn: async () => {
+      // Only fetch metadata + truncated content preview for TOC/gating
+      // Full content is fetched separately for allowed sections
       const { data } = await supabase
         .from('document_sections')
-        .select('*')
+        .select('id, title, number, level, sort_order, section_type, parent_id, content_markdown, content_text')
         .eq('document_id', id!)
         .order('sort_order');
       return (data || []) as DocSection[];
@@ -151,7 +154,20 @@ export default function PublicDocumentView() {
     enabled: !!user && !!id,
   });
 
-  /* ── unified sections ── */
+  // Get user plan for ContentGate
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile-plan', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_profiles')
+        .select('subscription_plan')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 300000,
+  });
+
 
   const virtualSections = useMemo(() => {
     if (dbSections && dbSections.length > 0) return null;
@@ -160,8 +176,9 @@ export default function PublicDocumentView() {
   }, [dbSections, doc?.content_markdown]);
 
   const sections: UnifiedSection[] = useMemo(() => {
+    let raw: UnifiedSection[] = [];
     if (dbSections && dbSections.length > 0) {
-      return dbSections.map(s => ({
+      raw = dbSections.map(s => ({
         id: s.id,
         title: s.title,
         number: s.number,
@@ -169,9 +186,8 @@ export default function PublicDocumentView() {
         level: s.level,
         sort_order: s.sort_order,
       }));
-    }
-    if (virtualSections && virtualSections.length > 0) {
-      return virtualSections.map(s => ({
+    } else if (virtualSections && virtualSections.length > 0) {
+      raw = virtualSections.map(s => ({
         id: s.id,
         title: s.title,
         number: null,
@@ -180,8 +196,36 @@ export default function PublicDocumentView() {
         sort_order: s.sort_order,
       }));
     }
-    return [];
-  }, [dbSections, virtualSections]);
+
+    // Strip full content from gated sections so it never reaches the DOM
+    // Keep only a short plain-text snippet for the boundary teaser
+    const isPaid = userProfile?.subscription_plan === 'basic' ||
+                   userProfile?.subscription_plan === 'professional';
+    const docTitle = doc?.title || '';
+    const isFreeDoc = ['гражданский кодекс', 'трудовой кодекс', 'налоговый кодекс'].some(
+      p => docTitle.toLowerCase().includes(p)
+    ) && (!!user || false);
+
+    let sectionLimit = Infinity;
+    if (!user) {
+      // Progressive limit from localStorage
+      const visits = parseInt(localStorage.getItem('babijon_visit_count') || '0', 10);
+      sectionLimit = visits >= 8 ? 1 : visits >= 4 ? 3 : 5;
+    } else if (!isPaid && !isFreeDoc) {
+      sectionLimit = 10;
+    }
+
+    return raw.map((s, idx) => {
+      if (idx < sectionLimit) return s; // Full content
+      // Gated: replace content with short snippet
+      const plainText = s.content.replace(/[#*_`>\[\]()]/g, '');
+      return {
+        ...s,
+        content: '', // Empty — no real content
+        _snippet: plainText.slice(0, 150), // Short teaser only
+      };
+    });
+  }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
 
   const tocSections: TocEntry[] = useMemo(
     () => sections.filter(s => s.level <= 3).map(s => ({
@@ -375,19 +419,6 @@ export default function PublicDocumentView() {
     }
   }, [id, user?.id]);
 
-  // Get user plan for ContentGate
-  const { data: userProfile } = useQuery({
-    queryKey: ['user-profile-plan', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from('user_profiles')
-        .select('subscription_plan')
-        .eq('id', user!.id)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 300000,
-  });
 
   /* ── loading / error ── */
 
@@ -598,21 +629,23 @@ export default function PublicDocumentView() {
                       key={section.id}
                       sectionIndex={idx}
                       sectionTitle={section.title}
+                      previewSnippet={section._snippet || ''}
                       documentTitle={doc.title}
                       totalSections={sections.length}
                       userPlan={userProfile?.subscription_plan}
-                    >
-                      <DocumentArticleRenderer
-                        id={section.id}
-                        title={section.title}
-                        number={section.number}
-                        content={section.content}
-                        level={section.level}
-                        searchQuery={searchQuery}
-                        onArticleClick={handleArticleRefClick}
-                        onAIExplain={handleAIExplain}
-                      />
-                    </ContentGate>
+                      renderContent={() => (
+                        <DocumentArticleRenderer
+                          id={section.id}
+                          title={section.title}
+                          number={section.number}
+                          content={section.content}
+                          level={section.level}
+                          searchQuery={searchQuery}
+                          onArticleClick={handleArticleRefClick}
+                          onAIExplain={handleAIExplain}
+                        />
+                      )}
+                    />
                   ))}
                 </div>
 

@@ -6,32 +6,34 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVisitTracking, getSessionId } from '@/hooks/useVisitTracking';
 import { supabase } from '@/integrations/supabase/client';
 
-// Codexes that are fully free for registered users
-// These IDs will be matched against document titles
 const FREE_CODEX_PATTERNS = [
   'гражданский кодекс',
   'трудовой кодекс',
   'налоговый кодекс.*общая часть',
 ];
 
-function isFreeCodуx(title: string): boolean {
+function isFreeCodex(title: string): boolean {
   const lower = title.toLowerCase();
   return FREE_CODEX_PATTERNS.some(p => new RegExp(p, 'i').test(lower));
 }
 
 interface ContentGateProps {
-  children: ReactNode;
+  /** Render function — only called when section is visible. Content never reaches DOM if gated. */
+  renderContent: () => ReactNode;
   sectionIndex: number;
   sectionTitle?: string | null;
+  /** Short plain-text snippet for the blurred boundary teaser. Real content is never sent to client. */
+  previewSnippet?: string;
   documentTitle: string;
   totalSections: number;
   userPlan?: string;
 }
 
 export function ContentGate({
-  children,
+  renderContent,
   sectionIndex,
   sectionTitle,
+  previewSnippet,
   documentTitle,
   totalSections,
   userPlan,
@@ -43,13 +45,12 @@ export function ContentGate({
   const plan = userPlan || 'free';
   const isPaid = plan === 'basic' || plan === 'professional' || plan === 'enterprise';
 
-  // Determine section limit
   let limit: number;
   if (!user) {
     limit = getFreeSectionsLimit();
   } else if (isPaid) {
     limit = Infinity;
-  } else if (isFreeCodуx(documentTitle)) {
+  } else if (isFreeCodex(documentTitle)) {
     limit = Infinity;
   } else {
     limit = 10;
@@ -59,7 +60,6 @@ export function ContentGate({
   const isBoundary = sectionIndex === limit;
   const isHidden = sectionIndex > limit;
 
-  // Track paywall impression
   useEffect(() => {
     if (isBoundary && !impressionTracked.current) {
       impressionTracked.current = true;
@@ -83,10 +83,12 @@ export function ContentGate({
     }).then(() => {});
   };
 
+  // ── FULLY VISIBLE: call renderContent — real content reaches client ──
   if (isFullyVisible) {
-    return <div className="free-content">{children}</div>;
+    return <div className="free-content">{renderContent()}</div>;
   }
 
+  // ── HIDDEN: NO content rendered at all — just greyed-out title ──
   if (isHidden) {
     return sectionTitle ? (
       <div className="py-2 px-4 text-sm text-muted-foreground/50 select-none">
@@ -95,13 +97,22 @@ export function ContentGate({
     ) : null;
   }
 
-  // Boundary section — show blurred preview + paywall
+  // ── BOUNDARY: show fake snippet (NOT real content) + paywall CTA ──
+  const snippet = previewSnippet || sectionTitle || '';
+
   return (
     <div>
-      <div className="relative max-h-[120px] overflow-hidden">
-        <div className="pointer-events-none select-none">{children}</div>
-        <div className="absolute bottom-0 left-0 right-0 h-[120px] bg-gradient-to-t from-background to-transparent" />
-      </div>
+      {snippet && (
+        <div className="relative max-h-[100px] overflow-hidden select-none pointer-events-none">
+          <div className="text-sm text-muted-foreground leading-relaxed px-1">
+            {sectionTitle && (
+              <p className="font-semibold text-foreground/60 mb-1">{sectionTitle}</p>
+            )}
+            <p className="text-foreground/40">{snippet.slice(0, 120)}...</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[80px] bg-gradient-to-t from-background to-transparent" />
+        </div>
+      )}
 
       <div className="my-6 rounded-xl border-2 border-primary/20 bg-card p-6 md:p-8 text-center">
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -110,9 +121,7 @@ export function ContentGate({
 
         {!user ? (
           <>
-            <h3 className="text-lg font-bold mb-2">
-              Продолжение доступно после регистрации
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Продолжение доступно после регистрации</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
               Зарегистрируйтесь бесплатно и получите доступ к 3 кодексам целиком + 5 вопросов AI в день
             </p>
@@ -133,12 +142,9 @@ export function ContentGate({
           </>
         ) : (
           <>
-            <h3 className="text-lg font-bold mb-2">
-              Полный текст доступен по подписке
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Полный текст доступен по подписке</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Вы прочитали {limit} из {totalSections} статей бесплатно.
-              Оформите подписку для полного доступа.
+              Вы прочитали {limit} из {totalSections} статей бесплатно. Оформите подписку для полного доступа.
             </p>
             <Button asChild onClick={() => trackClick('click_subscribe')}>
               <Link to="/pricing">Оформить подписку — 29 BYN/мес</Link>
