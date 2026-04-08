@@ -366,7 +366,9 @@ export default function PublicCalendar() {
             )}
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">Не удалось загрузить данные. Попробуйте обновить страницу.</p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
             </div>
