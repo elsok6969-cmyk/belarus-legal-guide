@@ -51,6 +51,7 @@ interface UnifiedSection {
   content: string;
   level: number;
   sort_order: number;
+  _snippet?: string;
 }
 
 /* ─── helpers ───────────────────────────────────── */
