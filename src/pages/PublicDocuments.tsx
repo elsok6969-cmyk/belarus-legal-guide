@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, FileText, Clock, BookOpen } from 'lucide-react';
+import { Search, FileText } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -28,38 +27,41 @@ interface SearchAllResult {
   rank: number;
 }
 
+type ChipFilter = '' | 'kodeks' | 'zakon' | 'ukaz' | 'postanovlenie' | 'sections';
+
+const CHIPS: { value: ChipFilter; label: string }[] = [
+  { value: '', label: 'Все' },
+  { value: 'kodeks', label: 'Кодексы' },
+  { value: 'zakon', label: 'Законы' },
+  { value: 'ukaz', label: 'Указы' },
+  { value: 'postanovlenie', label: 'Постановления' },
+  { value: 'sections', label: 'Статьи' },
+];
+
 export default function PublicDocuments() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const [search, setSearch] = useState(initialQuery);
-  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '');
+  const [chipFilter, setChipFilter] = useState<ChipFilter>('');
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (search.trim()) params.set('q', search.trim());
-    if (typeFilter) params.set('type', typeFilter);
+    if (chipFilter) params.set('type', chipFilter);
     setSearchParams(params, { replace: true });
-  }, [search, typeFilter, setSearchParams]);
+  }, [search, chipFilter, setSearchParams]);
 
-  const { data: docTypes } = useQuery({
-    queryKey: ['document-types'],
-    queryFn: async () => {
-      const { data } = await supabase.from('document_types').select('id, slug, name_ru').order('sort_order');
-      return data || [];
-    },
-  });
+  const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : null;
 
-  // Universal search via search_all RPC
   const { data: searchResults, isLoading: isSearching } = useQuery({
-    queryKey: ['search-all', search, typeFilter],
+    queryKey: ['search-all', search, rpcFilterType],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('search_all', {
         query: search.trim(),
-        filter_type: typeFilter || null,
+        filter_type: rpcFilterType,
         result_limit: 50,
       });
       if (error) throw error;
-      // Deduplicate: for sections, keep unique by section_id; for documents by document_id
       const seen = new Set<string>();
       return ((data || []) as SearchAllResult[]).filter(r => {
         const key = r.result_type === 'section' ? `s-${r.section_id}` : `d-${r.document_id}`;
@@ -71,30 +73,30 @@ export default function PublicDocuments() {
     enabled: search.trim().length >= 1,
   });
 
-  // Regular listing when no search
   const { data: docs, isLoading: isListLoading } = useQuery({
-    queryKey: ['public-documents', typeFilter],
+    queryKey: ['public-documents-list'],
     queryFn: async () => {
-      let q = supabase
+      const { data } = await supabase
         .from('documents')
         .select('id, title, doc_number, doc_date, status, document_types(slug, name_ru)')
-        .order('doc_date', { ascending: false, nullsFirst: false });
-
-      if (typeFilter) {
-        const dt = docTypes?.find(t => t.slug === typeFilter);
-        if (dt) q = q.eq('document_type_id', dt.id);
-      }
-
-      const { data } = await q.limit(50);
+        .order('doc_date', { ascending: false, nullsFirst: false })
+        .limit(50);
       return data || [];
     },
-    enabled: search.trim().length < 1 && (!typeFilter || !!docTypes),
+    enabled: search.trim().length < 1,
   });
 
   const isSearchMode = search.trim().length >= 1;
   const isLoading = isSearchMode ? isSearching : isListLoading;
 
-  const allTypes = [{ value: '', label: 'Все' }, ...(docTypes?.map(t => ({ value: t.slug, label: t.name_ru })) || [])];
+  // Filter by chip
+  let filteredResults = searchResults || [];
+  if (chipFilter === 'sections') {
+    filteredResults = filteredResults.filter(r => r.result_type === 'section');
+  }
+
+  const docResults = filteredResults.filter(r => r.result_type === 'document');
+  const sectionResults = filteredResults.filter(r => r.result_type === 'section');
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -114,132 +116,98 @@ export default function PublicDocuments() {
         Документы
       </h1>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1">
+      {/* Search bar */}
+      <div className="mb-3 w-full max-w-[560px]">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по названию, тексту и статьям... (например: 205 ук)"
+            placeholder="Поиск по документам и статьям..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-11 text-base"
           />
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {allTypes.map(t => (
-            <Button
-              key={t.value}
-              variant={typeFilter === t.value ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTypeFilter(t.value)}
-              className="text-xs"
-            >
-              {t.label}
-            </Button>
-          ))}
         </div>
       </div>
 
-      {isSearchMode && !isLoading && searchResults && (
+      {/* Chips */}
+      <div className="flex gap-1.5 mb-6 overflow-x-auto scrollbar-none pb-1">
+        {CHIPS.map(c => (
+          <Button
+            key={c.value}
+            variant={chipFilter === c.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setChipFilter(c.value)}
+            className="text-xs shrink-0"
+          >
+            {c.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Counter */}
+      {isSearchMode && !isLoading && filteredResults.length > 0 && (
         <p className="text-sm text-muted-foreground mb-4">
-          Найдено: {searchResults.length} результат{searchResults.length === 1 ? '' : searchResults.length < 5 ? 'а' : 'ов'}
+          Найдено: {filteredResults.length} результат{filteredResults.length === 1 ? '' : filteredResults.length < 5 ? 'а' : 'ов'}
+          {docResults.length > 0 && sectionResults.length > 0 && (
+            <span> ({docResults.length} документ{docResults.length === 1 ? '' : docResults.length < 5 ? 'а' : 'ов'}, {sectionResults.length} стат{sectionResults.length === 1 ? 'ья' : sectionResults.length < 5 ? 'ьи' : 'ей'})</span>
+          )}
         </p>
       )}
 
       {isLoading ? (
-        <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 w-full" />)}</div>
-      ) : isSearchMode && searchResults ? (
-        searchResults.length > 0 ? (
-          <div className="space-y-3">
-            {searchResults.map((r, idx) => {
-              const isSection = r.result_type === 'section' && r.section_id;
-              const linkTo = isSection
-                ? `/documents/${r.document_id}#section-${r.section_id}`
-                : `/documents/${r.document_id}`;
-
-              return (
-                <Link key={`${r.result_type}-${r.section_id || r.document_id}-${idx}`} to={linkTo}>
-                  <Card className="hover:shadow-md transition-shadow border">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-0.5 ${
-                          isSection
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-primary/10 text-primary'
-                        }`}>
-                          {isSection ? (
-                            <><BookOpen className="h-3 w-3 mr-1" />Статья</>
-                          ) : (
-                            r.doc_type_name || 'Документ'
-                          )}
-                        </span>
-                        <div className="min-w-0">
-                          {isSection ? (
-                            <>
-                              <h2 className="text-sm font-semibold leading-snug line-clamp-2">
-                                {r.section_title || `Статья ${r.section_number}`}
-                              </h2>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {r.document_short_title || r.document_title}
-                              </p>
-                            </>
-                          ) : (
-                            <h2 className="text-sm font-semibold leading-snug line-clamp-2">{r.document_title}</h2>
-                          )}
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            {r.doc_number && <span>№ {r.doc_number}</span>}
-                            {r.doc_date && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {format(new Date(r.doc_date), 'dd.MM.yyyy')}
-                              </span>
-                            )}
-                            {r.doc_status === 'active' && <span className="text-primary">Действует</span>}
-                          </div>
-                          {r.snippet && (
-                            <p
-                              className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3 [&>mark]:bg-yellow-200 [&>mark]:text-foreground [&>mark]:px-0.5 [&>mark]:rounded-sm"
-                              dangerouslySetInnerHTML={{ __html: r.snippet }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+        <div className="space-y-0 divide-y divide-border">
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 w-full rounded-none" />)}
+        </div>
+      ) : isSearchMode ? (
+        filteredResults.length > 0 ? (
+          <div>
+            {docResults.length > 0 && (
+              <>
+                {sectionResults.length > 0 && (
+                  <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-2">📚 Документы</p>
+                )}
+                <div className="divide-y divide-border border-t border-b border-border">
+                  {docResults.map((r, idx) => (
+                    <DocumentResultRow key={`d-${r.document_id}-${idx}`} result={r} />
+                  ))}
+                </div>
+              </>
+            )}
+            {sectionResults.length > 0 && (
+              <>
+                <p className={`text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-2 ${docResults.length > 0 ? 'mt-6' : ''}`}>
+                  📄 Статьи
+                </p>
+                <div className="divide-y divide-border border-t border-b border-border">
+                  {sectionResults.map((r, idx) => (
+                    <SectionResultRow key={`s-${r.section_id}-${idx}`} result={r} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : (
-          <p className="text-muted-foreground text-center py-8">Документы не найдены</p>
+          <div className="text-center py-12">
+            <p className="text-foreground font-medium">По запросу «{search.trim()}» ничего не найдено</p>
+            <p className="text-sm text-muted-foreground mt-1">Попробуйте другие ключевые слова или проверьте написание</p>
+          </div>
         )
       ) : docs && docs.length > 0 ? (
-        <div className="space-y-3">
+        <div className="divide-y divide-border border-t border-b border-border">
           {docs.map(doc => {
             const dt = doc.document_types as any;
             return (
-              <Link key={doc.id} to={`/documents/${doc.id}`}>
-                <Card className="hover:shadow-md transition-shadow border">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary mt-0.5">
-                        {dt?.name_ru || ''}
-                      </span>
-                      <div className="min-w-0">
-                        <h2 className="text-sm font-semibold leading-snug line-clamp-2">{doc.title}</h2>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                          {doc.doc_number && <span>№ {doc.doc_number}</span>}
-                          {doc.doc_date && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {format(new Date(doc.doc_date), 'dd.MM.yyyy')}
-                            </span>
-                          )}
-                          {doc.status === 'active' && <span className="text-primary">Действует</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <Link key={doc.id} to={`/documents/${doc.id}`} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-medium text-primary">{dt?.name_ru || ''}</span>
+                  {doc.status === 'active' && <span className="text-xs text-emerald-600">Действует</span>}
+                </div>
+                <h2 className="text-[15px] font-semibold leading-snug line-clamp-2 text-foreground">{doc.title}</h2>
+                <div className="flex items-center gap-2 mt-1 text-[13px] text-muted-foreground">
+                  {doc.doc_number && <span>№ {doc.doc_number}</span>}
+                  {doc.doc_number && doc.doc_date && <span>·</span>}
+                  {doc.doc_date && <span>{format(new Date(doc.doc_date), 'dd.MM.yyyy')}</span>}
+                </div>
               </Link>
             );
           })}
@@ -248,5 +216,46 @@ export default function PublicDocuments() {
         <p className="text-muted-foreground text-center py-8">Документы не найдены</p>
       )}
     </div>
+  );
+}
+
+function DocumentResultRow({ result: r }: { result: SearchAllResult }) {
+  return (
+    <Link to={`/documents/${r.document_id}`} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xs font-medium text-primary">{r.doc_type_name || 'Документ'}</span>
+        {r.doc_status === 'active' && <span className="text-xs text-emerald-600">Действует</span>}
+      </div>
+      <h2 className="text-[16px] font-semibold leading-snug line-clamp-2 text-foreground">{r.document_title}</h2>
+      <div className="flex items-center gap-2 mt-1 text-[13px] text-muted-foreground">
+        {r.doc_number && <span>№ {r.doc_number}</span>}
+        {r.doc_number && r.doc_date && <span>·</span>}
+        {r.doc_date && <span>{format(new Date(r.doc_date), 'dd.MM.yyyy')}</span>}
+      </div>
+      {r.snippet && (
+        <p
+          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-snippet"
+          dangerouslySetInnerHTML={{ __html: r.snippet }}
+        />
+      )}
+    </Link>
+  );
+}
+
+function SectionResultRow({ result: r }: { result: SearchAllResult }) {
+  const linkTo = `/documents/${r.document_id}#section-${r.section_id}`;
+  const title = r.section_title || (r.section_number ? `Статья ${r.section_number}` : 'Без названия');
+
+  return (
+    <Link to={linkTo} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
+      <h2 className="text-[15px] font-semibold leading-snug line-clamp-2 text-foreground">{title}</h2>
+      <p className="text-[13px] text-muted-foreground mt-0.5">{r.document_short_title || r.document_title}</p>
+      {r.snippet && (
+        <p
+          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-snippet"
+          dangerouslySetInnerHTML={{ __html: r.snippet }}
+        />
+      )}
+    </Link>
   );
 }
