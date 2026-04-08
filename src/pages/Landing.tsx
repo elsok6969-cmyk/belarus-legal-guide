@@ -181,35 +181,35 @@ export default function Landing() {
       />
 
       {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-4 pt-10 pb-6 bg-gradient-to-b from-accent/40 to-background">
-        <h1 className="text-[28px] md:text-4xl font-bold text-center max-w-3xl leading-tight">
+      <section className="flex flex-col items-center px-6 pt-14 pb-10 bg-gradient-to-b from-accent/40 to-background">
+        <h1 className="text-3xl md:text-5xl font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
-        <p className="mt-3 text-base text-muted-foreground text-center max-w-xl">
+        <p className="mt-4 text-lg text-muted-foreground text-center max-w-xl">
           Полные тексты кодексов и законов, поиск по статьям, AI-ассистент
         </p>
 
-        <div className="mt-5 w-full max-w-[600px]">
-          <div className="flex items-center gap-0 rounded-xl border bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring">
-            <Search className="ml-4 h-5 w-5 text-muted-foreground shrink-0" />
+        <div className="mt-7 w-full max-w-[680px]">
+          <div className="flex items-center gap-0 rounded-xl border bg-card shadow-md focus-within:ring-2 focus-within:ring-ring">
+            <Search className="ml-5 h-6 w-6 text-muted-foreground shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Найдите кодекс, закон, указ... например: 205 ук"
-              className="flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-muted-foreground"
+              className="flex-1 bg-transparent px-4 py-4 text-lg outline-none placeholder:text-muted-foreground"
             />
-            <Button onClick={handleSearch} className="m-1.5 rounded-lg px-6">Найти</Button>
+            <Button onClick={handleSearch} size="lg" className="m-2 rounded-lg px-8 text-base">Найти</Button>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap justify-center gap-2">
+        <div className="mt-5 flex flex-wrap justify-center gap-2.5">
           {quickTags.map((tag) => (
             <Link
               key={tag.label}
               to={tag.filter ? `/documents?filter=${tag.filter}` : `/documents?q=${encodeURIComponent(tag.q!)}`}
-              className="rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary hover:bg-accent transition-all duration-200"
+              className="rounded-full border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary hover:bg-accent transition-all duration-200"
             >
               {tag.label}
             </Link>
