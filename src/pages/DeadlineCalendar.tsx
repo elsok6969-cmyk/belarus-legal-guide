@@ -27,7 +27,7 @@ export default function DeadlineCalendar() {
   const [audience, setAudience] = useState('all');
   const [category, setCategory] = useState('all');
 
-  const { data: deadlines, isLoading } = useQuery({
+  const { data: deadlines, isLoading, isError } = useQuery({
     queryKey: ['deadlines', audience, category],
     queryFn: async () => {
       let q = supabase
@@ -43,6 +43,7 @@ export default function DeadlineCalendar() {
       if (error) throw error;
       return data;
     },
+    retry: 2,
   });
 
   const { data: categories } = useQuery({

@@ -181,15 +181,15 @@ export default function Landing() {
       />
 
       {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-6 pt-14 pb-10 bg-gradient-to-b from-accent/40 to-background py-[70px]">
-        <h1 className="text-3xl md:text-5xl font-bold text-center max-w-3xl leading-tight">
+      <section className="flex flex-col items-center px-6 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
+        <h1 className="text-2xl md:text-[32px] font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
-        <p className="mt-4 text-lg text-muted-foreground text-center max-w-xl">
+        <p className="mt-3 text-base text-muted-foreground text-center max-w-xl">
           Полные тексты кодексов и законов, поиск по статьям, AI-ассистент
         </p>
 
-        <div className="mt-7 w-full max-w-[680px]">
+        <div className="mt-5 w-full max-w-[680px]">
           <div className="flex items-center gap-0 rounded-xl border bg-card shadow-md focus-within:ring-2 focus-within:ring-ring">
             <Search className="ml-5 h-6 w-6 text-muted-foreground shrink-0" />
             <input
@@ -204,7 +204,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-center gap-2.5">
           {quickTags.map((tag) => (
             <Link
               key={tag.label}
@@ -218,7 +218,7 @@ export default function Landing() {
       </section>
 
       {/* ═══ THREE COLUMNS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 pt-6 pb-12">
+      <section className="mx-auto max-w-7xl px-4 mt-6 pb-12">
         <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
           <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
