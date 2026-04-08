@@ -448,6 +448,3 @@ export default function Landing() {
       </section>
     </article>
   );
-}
-  );
-}
