@@ -168,6 +168,11 @@ export default function PublicDocuments() {
         <div className="space-y-0 divide-y divide-border">
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 w-full rounded-none" />)}
         </div>
+      ) : isSearchMode && isSearchError ? (
+        <div className="text-center py-12">
+          <p className="text-foreground font-medium">Поиск занял слишком много времени</p>
+          <p className="text-sm text-muted-foreground mt-1">Попробуйте более короткий или конкретный запрос</p>
+        </div>
       ) : isSearchMode ? (
         filteredResults.length > 0 ? (
           <div>
