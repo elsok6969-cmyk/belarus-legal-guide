@@ -153,7 +153,20 @@ export default function PublicDocumentView() {
     enabled: !!user && !!id,
   });
 
-  /* ── unified sections ── */
+  // Get user plan for ContentGate
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile-plan', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_profiles')
+        .select('subscription_plan')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 300000,
+  });
+
 
   const virtualSections = useMemo(() => {
     if (dbSections && dbSections.length > 0) return null;
@@ -405,19 +418,6 @@ export default function PublicDocumentView() {
     }
   }, [id, user?.id]);
 
-  // Get user plan for ContentGate
-  const { data: userProfile } = useQuery({
-    queryKey: ['user-profile-plan', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from('user_profiles')
-        .select('subscription_plan')
-        .eq('id', user!.id)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 300000,
-  });
 
   /* ── loading / error ── */
 
