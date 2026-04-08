@@ -391,7 +391,7 @@ export default function DocumentViewer() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20 lg:pb-4">
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
         { label: 'Главная', href: '/app' },
@@ -490,7 +490,7 @@ export default function DocumentViewer() {
       )}
 
       {/* Three-column layout */}
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: TOC */}
         {!isMobile && tocContent && (
           <aside className="hidden lg:block w-64 shrink-0">
@@ -510,20 +510,20 @@ export default function DocumentViewer() {
           {/* Virtual sections (parsed from markdown) */}
           {hasVirtualSections ? (
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="max-w-[800px] mx-auto">
-                  {virtualSections.map(section => (
+          {virtualSections.map(section => (
                     <section
                       key={section.id}
                       ref={el => { sectionRefs.current[section.id] = el; }}
                       id={`section-${section.id}`}
-                      className="scroll-mt-24 relative group"
+                      className="scroll-mt-24 relative group pb-6 mb-6 border-b border-border/40 last:border-0 last:mb-0 last:pb-0"
                       onMouseEnter={() => setHoveredSection(section.id)}
                       onMouseLeave={() => setHoveredSection(null)}
                     >
                       {renderSectionHeading(section.title, section.level)}
                       {section.content && (
-                        <div className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+                        <div className="text-[15px] md:text-base leading-[1.8] font-serif text-foreground/90 whitespace-pre-line">
                           {section.content}
                         </div>
                       )}
@@ -547,49 +547,53 @@ export default function DocumentViewer() {
             </Card>
           ) : hasDbSections ? (
             <Card>
-              <CardContent className="p-6">
-                <div className="max-w-[800px] mx-auto space-y-4">
-                  {dbSections!.map(section => (
-                    <section
-                      key={section.id}
-                      ref={el => { sectionRefs.current[section.id] = el; }}
-                      id={`section-${section.id}`}
-                      className="scroll-mt-24 relative group"
-                      onMouseEnter={() => setHoveredSection(section.id)}
-                      onMouseLeave={() => setHoveredSection(null)}
-                    >
-                      {(section.number || section.title) && (
-                        <h2 className={`mb-2 ${
-                          section.level <= 1
-                            ? 'text-lg font-bold text-primary border-b border-border pb-2 mt-8 first:mt-0'
-                            : section.level === 2
-                            ? 'text-base font-semibold text-foreground mt-6'
-                            : 'text-sm font-semibold text-foreground mt-4'
-                        }`}>
-                          {section.number && <span className="font-bold">{section.number} </span>}
-                          {section.title}
-                        </h2>
-                      )}
-                      {section.content_markdown && (
-                        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-sm leading-relaxed">
-                          <ReactMarkdown>{section.content_markdown}</ReactMarkdown>
-                        </div>
-                      )}
-                      {section.section_type === 'article' && (
-                        <div className="border-b border-border/50 mt-4" />
-                      )}
-                      {hoveredSection === section.id && section.content_markdown && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-0 right-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => copySectionText(section.content_text || section.content_markdown || '')}
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </section>
-                  ))}
+              <CardContent className="p-4 md:p-6">
+                <div className="max-w-[800px] mx-auto">
+                  {dbSections!.map(section => {
+                    const sectionContent = section.content_markdown || section.content_text || '';
+                    return (
+                      <section
+                        key={section.id}
+                        ref={el => { sectionRefs.current[section.id] = el; }}
+                        id={`section-${section.id}`}
+                        className="scroll-mt-24 relative group pb-6 mb-6 border-b border-border/40 last:border-0 last:mb-0 last:pb-0"
+                        onMouseEnter={() => setHoveredSection(section.id)}
+                        onMouseLeave={() => setHoveredSection(null)}
+                      >
+                        {(section.number || section.title) && (
+                          <h2 className={`mb-3 ${
+                            section.level <= 1
+                              ? 'text-lg md:text-xl font-bold text-primary border-b border-border pb-2 mt-8 first:mt-0'
+                              : section.level === 2
+                              ? 'text-base md:text-lg font-semibold text-foreground mt-6'
+                              : 'text-sm md:text-base font-semibold text-foreground mt-4'
+                          }`}>
+                            {section.number && <span className="font-bold">{section.number} </span>}
+                            {section.title}
+                          </h2>
+                        )}
+                        {section.content_markdown ? (
+                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-primary text-[15px] md:text-base leading-[1.8] font-serif">
+                            <ReactMarkdown>{section.content_markdown}</ReactMarkdown>
+                          </div>
+                        ) : section.content_text ? (
+                          <div className="text-[15px] md:text-base leading-[1.8] font-serif text-foreground/90 whitespace-pre-line">
+                            {section.content_text}
+                          </div>
+                        ) : null}
+                        {hoveredSection === section.id && sectionContent && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-0 right-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => copySectionText(sectionContent)}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </section>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

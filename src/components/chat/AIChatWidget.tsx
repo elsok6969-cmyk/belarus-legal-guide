@@ -334,7 +334,7 @@ export function AIChatWidget() {
       {open && (
         <div
           className={`fixed z-50 bg-card border rounded-xl shadow-2xl flex flex-col overflow-hidden ${
-            isMobile ? 'inset-0 rounded-none' : 'bottom-6 right-6 w-[400px] h-[600px]'
+            isMobile ? 'inset-0 rounded-none w-full h-full' : 'bottom-6 right-6 w-[400px] h-[600px]'
           }`}
         >
           {/* Header */}

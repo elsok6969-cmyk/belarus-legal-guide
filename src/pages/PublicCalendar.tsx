@@ -323,7 +323,7 @@ export default function PublicCalendar() {
       </div>
 
       {/* Main layout */}
-      <div className="grid md:grid-cols-[1fr_340px] gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-6">
         {/* Left: Calendar */}
         <div>
           {isMobile ? (

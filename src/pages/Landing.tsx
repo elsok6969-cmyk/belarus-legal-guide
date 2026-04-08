@@ -181,8 +181,8 @@ export default function Landing() {
       />
 
       {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-6 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
-        <h1 className="text-2xl md:text-[32px] font-bold text-center max-w-3xl leading-tight">
+      <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
+        <h1 className="text-xl sm:text-2xl md:text-[32px] font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
         <p className="mt-3 text-base text-muted-foreground text-center max-w-xl">
@@ -191,16 +191,16 @@ export default function Landing() {
 
         <div className="mt-5 w-full max-w-[680px]">
           <div className="flex items-center gap-0 rounded-xl border bg-card shadow-md focus-within:ring-2 focus-within:ring-ring">
-            <Search className="ml-5 h-6 w-6 text-muted-foreground shrink-0" />
+            <Search className="ml-3 md:ml-5 h-5 w-5 md:h-6 md:w-6 text-muted-foreground shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Найдите кодекс, закон, указ... например: 205 ук"
-              className="flex-1 bg-transparent px-4 py-4 text-lg outline-none placeholder:text-muted-foreground"
+              placeholder="Найдите кодекс, закон, указ..."
+              className="flex-1 bg-transparent px-3 md:px-4 py-3 md:py-4 text-base md:text-lg outline-none placeholder:text-muted-foreground min-w-0"
             />
-            <Button onClick={handleSearch} size="lg" className="m-2 rounded-lg px-8 text-base">Найти</Button>
+            <Button onClick={handleSearch} size="lg" className="m-1.5 md:m-2 rounded-lg px-4 md:px-8 text-sm md:text-base min-h-[44px]">Найти</Button>
           </div>
         </div>
 
@@ -219,7 +219,7 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-6 pb-12">
-        <div className="grid gap-6 md:grid-cols-3 items-stretch">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
           <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
             <CardHeader className="pb-3 px-6 pt-6">
@@ -329,7 +329,7 @@ export default function Landing() {
       <section className="bg-muted/50 py-8">
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-xl font-bold text-center mb-5">Почему Бабиджон</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             <div className="rounded-xl border bg-card p-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
               <div className="text-2xl mb-2">🔍</div>
               <h3 className="font-semibold text-sm mb-1">Умный поиск</h3>
@@ -353,7 +353,7 @@ export default function Landing() {
       <section className="py-8">
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-xl font-bold text-center mb-5">Для профессионалов</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {audiences.map((a) => (
               <Link
                 key={a.label}
@@ -400,7 +400,7 @@ export default function Landing() {
       {popularDocs && popularDocs.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-8">
           <h2 className="text-xl font-bold mb-4">Популярные документы</h2>
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             {popularDocs.map((doc) => (
               <Link key={doc.id} to={`/documents/${doc.id}`} className="rounded-xl border bg-card p-3 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-border/80 transition-all duration-200 group">
                 <Badge variant="secondary" className="text-[10px] mb-1.5">{getDocTypeLabel(doc)}</Badge>
@@ -439,7 +439,7 @@ export default function Landing() {
           <h2 className="text-xl md:text-2xl font-bold">Простые и честные тарифы</h2>
           <p className="mt-1 text-sm text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
           {pricingPlans.map((plan) => (
             <Card key={plan.name} className={`rounded-xl hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
               {plan.popular && (

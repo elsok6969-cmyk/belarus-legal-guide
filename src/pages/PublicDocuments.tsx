@@ -127,7 +127,7 @@ export default function PublicDocuments() {
       </h1>
 
       {/* Search bar */}
-      <div className="mb-3 w-full max-w-[560px]">
+      <div className="mb-3 w-full max-w-full md:max-w-[560px]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -140,7 +140,7 @@ export default function PublicDocuments() {
       </div>
 
       {/* Chips */}
-      <div className="flex gap-1.5 mb-6 overflow-x-auto scrollbar-none pb-1">
+      <div className="flex flex-wrap gap-1.5 mb-6 overflow-x-auto scrollbar-none pb-1">
         {CHIPS.map(c => (
           <Button
             key={c.value}

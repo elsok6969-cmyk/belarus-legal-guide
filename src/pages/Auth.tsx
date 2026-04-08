@@ -117,8 +117,8 @@ export default function Auth() {
   return (
     <>
       <PageSEO title="Авторизация" description="Войдите или зарегистрируйтесь" path="/auth" />
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md mx-auto">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary">
               <Scale className="h-5 w-5 text-primary-foreground" />
