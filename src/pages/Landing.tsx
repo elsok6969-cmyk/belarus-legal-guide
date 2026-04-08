@@ -221,18 +221,18 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 pt-6 pb-12">
         <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Последние НПА</CardTitle>
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+            <CardHeader className="pb-3 px-6 pt-6">
+              <CardTitle className="text-xl font-bold">Последние НПА</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2.5 p-6 pt-0">
+            <CardContent className="space-y-3 px-6 pb-6 pt-0">
               {latestDocs?.map((doc) => (
-                <div key={doc.id} className="flex items-start gap-2">
-                  <Badge variant="secondary" className="shrink-0 text-[10px] mt-0.5">
+                <div key={doc.id} className="flex items-start gap-2.5">
+                  <Badge variant="secondary" className="shrink-0 text-[11px] mt-0.5">
                     {getDocTypeLabel(doc)}
                   </Badge>
                   <div className="min-w-0">
-                    <Link to={`/documents/${doc.id}`} className="text-[15px] font-medium hover:text-primary transition-colors line-clamp-2">
+                    <Link to={`/documents/${doc.id}`} className="text-[15px] leading-snug font-medium hover:text-primary transition-colors line-clamp-2">
                       {doc.title}
                     </Link>
                     <p className="text-xs text-muted-foreground mt-0.5">{formatDate(doc.doc_date)}</p>
@@ -240,7 +240,7 @@ export default function Landing() {
                 </div>
               ))}
               {(!latestDocs || latestDocs.length === 0) && <p className="text-sm text-muted-foreground">Нет документов</p>}
-              <Button asChild variant="ghost" size="sm" className="w-full mt-2">
+              <Button asChild variant="ghost" size="sm" className="w-full mt-3">
                 <Link to="/documents">Все документы <ArrowRight className="h-3 w-3 ml-1" /></Link>
               </Button>
             </CardContent>
@@ -249,16 +249,16 @@ export default function Landing() {
           {/* Rates + Deadlines */}
           <div className="space-y-6 flex flex-col">
             <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Курсы НБРБ</CardTitle>
+              <CardHeader className="pb-3 px-6 pt-6">
+                <CardTitle className="text-xl font-bold">Курсы НБРБ</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2.5 p-6 pt-0">
+              <CardContent className="space-y-3 px-6 pb-6 pt-0">
                 {rates && rates.length > 0 ? rates.map((r) => {
                   const change = Number(r.change_value) || 0;
                   const flag = CURRENCY_FLAGS[r.currency_code] || '';
                   return (
-                    <div key={r.currency_code} className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
+                    <div key={r.currency_code} className="flex items-center justify-between py-0.5">
+                      <span className="text-[15px] font-medium">
                         {flag} {r.currency_code}
                       </span>
                       <div className="flex items-center gap-2">
@@ -278,27 +278,27 @@ export default function Landing() {
                 }) : (
                   <p className="text-sm text-muted-foreground">Обновление...</p>
                 )}
-                <Button asChild variant="ghost" size="sm" className="w-full mt-2">
+                <Button asChild variant="ghost" size="sm" className="w-full mt-3">
                   <Link to="/currencies">Все курсы и конвертер <ArrowRight className="h-3 w-3 ml-1" /></Link>
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Ближайшие дедлайны</CardTitle>
+              <CardHeader className="pb-3 px-6 pt-6">
+                <CardTitle className="text-xl font-bold">Ближайшие дедлайны</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 p-6 pt-0">
+              <CardContent className="space-y-3 px-6 pb-6 pt-0">
                 {deadlines?.map((d) => (
                   <div key={d.id} className="flex items-start gap-3">
-                    <div className="rounded-lg bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground shrink-0">
+                    <div className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground shrink-0">
                       {formatDate(d.deadline_date)}
                     </div>
                     <span className="text-[15px]">{d.title}</span>
                   </div>
                 ))}
                 {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет ближайших дедлайнов</p>}
-                <Button asChild variant="ghost" size="sm" className="w-full mt-2">
+                <Button asChild variant="ghost" size="sm" className="w-full mt-3">
                   <Link to="/calendar">Календарь <ArrowRight className="h-3 w-3 ml-1" /></Link>
                 </Button>
               </CardContent>
@@ -306,15 +306,15 @@ export default function Landing() {
           </div>
 
           {/* Popular sections */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Популярные разделы</CardTitle>
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+            <CardHeader className="pb-3 px-6 pt-6">
+              <CardTitle className="text-xl font-bold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0.5 p-6 pt-0">
+            <CardContent className="space-y-1 px-6 pb-6 pt-0">
               {popularSections.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200">
+                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200">
                     <Icon className="h-5 w-5 text-primary shrink-0" />
                     {s.label}
                   </Link>
