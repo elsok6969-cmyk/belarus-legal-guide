@@ -391,7 +391,7 @@ export default function DocumentViewer() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20 lg:pb-4">
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
         { label: 'Главная', href: '/app' },
