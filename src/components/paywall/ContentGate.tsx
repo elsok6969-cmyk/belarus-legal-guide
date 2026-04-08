@@ -1,4 +1,4 @@
-import { useEffect, useRef, ReactNode } from 'react';
+import { useEffect, useRef, ReactNode, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,22 +7,25 @@ import { useVisitTracking, getSessionId } from '@/hooks/useVisitTracking';
 import { supabase } from '@/integrations/supabase/client';
 
 // Codexes that are fully free for registered users
-// These IDs will be matched against document titles
 const FREE_CODEX_PATTERNS = [
   'гражданский кодекс',
   'трудовой кодекс',
   'налоговый кодекс.*общая часть',
 ];
 
-function isFreeCodуx(title: string): boolean {
+function isFreeCodex(title: string): boolean {
   const lower = title.toLowerCase();
   return FREE_CODEX_PATTERNS.some(p => new RegExp(p, 'i').test(lower));
 }
 
 interface ContentGateProps {
+  /** The actual content — will NOT be rendered if gated */
   children: ReactNode;
   sectionIndex: number;
   sectionTitle?: string | null;
+  /** A short plain-text snippet (first ~80 chars) for the blurred boundary preview.
+   *  Must be passed explicitly so the full content never reaches the client. */
+  previewSnippet?: string;
   documentTitle: string;
   totalSections: number;
   userPlan?: string;
@@ -32,6 +35,7 @@ export function ContentGate({
   children,
   sectionIndex,
   sectionTitle,
+  previewSnippet,
   documentTitle,
   totalSections,
   userPlan,
@@ -49,7 +53,7 @@ export function ContentGate({
     limit = getFreeSectionsLimit();
   } else if (isPaid) {
     limit = Infinity;
-  } else if (isFreeCodуx(documentTitle)) {
+  } else if (isFreeCodex(documentTitle)) {
     limit = Infinity;
   } else {
     limit = 10;
@@ -83,10 +87,12 @@ export function ContentGate({
     }).then(() => {});
   };
 
+  // ── FULLY VISIBLE: render children normally ──
   if (isFullyVisible) {
     return <div className="free-content">{children}</div>;
   }
 
+  // ── HIDDEN: do NOT render children at all — just show greyed-out title ──
   if (isHidden) {
     return sectionTitle ? (
       <div className="py-2 px-4 text-sm text-muted-foreground/50 select-none">
@@ -95,13 +101,24 @@ export function ContentGate({
     ) : null;
   }
 
-  // Boundary section — show blurred preview + paywall
+  // ── BOUNDARY: show a FAKE preview snippet (not the real content) + paywall ──
+  // Children are NOT rendered — the snippet is a truncated plain-text preview
+  const snippet = previewSnippet || sectionTitle || '';
+
   return (
     <div>
-      <div className="relative max-h-[120px] overflow-hidden">
-        <div className="pointer-events-none select-none">{children}</div>
-        <div className="absolute bottom-0 left-0 right-0 h-[120px] bg-gradient-to-t from-background to-transparent" />
-      </div>
+      {/* Fake preview — just 2-3 lines of truncated text, blurred */}
+      {snippet && (
+        <div className="relative max-h-[100px] overflow-hidden select-none pointer-events-none">
+          <div className="text-sm text-muted-foreground leading-relaxed px-1">
+            {sectionTitle && (
+              <p className="font-semibold text-foreground/60 mb-1">{sectionTitle}</p>
+            )}
+            <p className="text-foreground/40">{snippet.slice(0, 120)}...</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[80px] bg-gradient-to-t from-background to-transparent" />
+        </div>
+      )}
 
       <div className="my-6 rounded-xl border-2 border-primary/20 bg-card p-6 md:p-8 text-center">
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
