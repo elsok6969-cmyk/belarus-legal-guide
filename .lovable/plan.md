@@ -1,109 +1,61 @@
 
 
-# Plan: Smart Freemium System — SEO + Monetization
+# Plan: Public Calculators + Calendar Fix
 
-## Summary
-Build a content gating system with progressive paywall, individual article SEO pages, analytics tracking, and email collection — all while maximizing Google indexing.
+## Problem
+1. `/calculator` returns 404 — calculators only exist at `/app/calculator` (behind AppLayout)
+2. `/app/calendar` (DeadlinesCalendar) shows skeletons — the `deadlines` table has data (50 rows) but the "Public read deadlines" RLS policy is restricted to `authenticated` role. If user isn't logged in or session expired, data won't load. Also the calendar dots only show a single red dot regardless of deadline type.
 
----
+## Changes
 
-## Database Changes (1 migration)
+### 1. Public Calculator Routes (App.tsx)
+Add three new public routes:
+- `/calculator` → new `PublicCalculators` page (catalog)
+- `/calculator/nds` → reuse existing `VatCalc` (update back-link to `/calculator`)
+- `/calculator/income-tax` → reuse existing `IncomeTaxCalc` (update back-link)
 
-**New tables:**
-- `content_views` — page view tracking (user_id nullable, session_id, page_url, created_at)
-- `paywall_events` — funnel analytics (event_type: impression/click_register/click_subscribe/click_login, session_id, page_url)
-- `email_subscribers` — email collection (email, source, subscribed_at, is_active)
+All wrapped in `PublicLayout`.
 
-**Update `subscription_limits`** — insert rows for the new access matrix (search: 15/day free, ai_chat: 5/day free, favorites: 5 free, etc.)
+### 2. Public Calculator Catalog (new: `src/pages/PublicCalculators.tsx`)
+- Title: "Калькуляторы", subtitle: "Онлайн-расчёты для бухгалтеров и предпринимателей"
+- 3-column grid with 6 cards (NDS, Income Tax work; 4 others show "Скоро" badge, greyed out, non-clickable)
+- Cards link to `/calculator/nds` and `/calculator/income-tax`
 
-RLS: `content_views` and `paywall_events` — public INSERT, admin SELECT. `email_subscribers` — public INSERT, admin SELECT.
+### 3. Update Calculator Back-Links
+Modify `VatCalc.tsx` and `IncomeTaxCalc.tsx`:
+- Change the back-link from `/app/calculator` to detect if current URL starts with `/app/` and link accordingly, OR simply use `window.history.back()` / a relative approach
+- Simpler: add a `basePath` prop or just update the SEO path dynamically
 
----
+Actually, the cleanest approach: create wrapper components or just add public routes that render the same components. The existing calculators already link to `/app/calculator` — we need to make them work from both `/app/calculator/vat` and `/calculator/nds`. 
 
-## Components to Create
+Better approach: Update `VatCalc` and `IncomeTaxCalc` to detect their route context and adjust back-links. Use `useLocation` to check if path starts with `/app/`.
 
-### 1. `ContentGate` component (`src/components/paywall/ContentGate.tsx`)
-Core gating logic per section index:
+### 4. Calendar Fix — RLS Policy (Migration)
+The `deadlines` table "Public read deadlines" policy is for `authenticated` only. The `/app/calendar` page is inside AppLayout so user should be authenticated. But if skeletons are showing, the query might be failing silently.
 
-- **Not logged in**: show first 5 sections, blur section 6, hide rest. Progressive decay via localStorage (`babijon_visit_count`, `babijon_articles_read`): visits 4-7 → 3 sections, visits 8+ → 1 section.
-- **Free plan**: FREE_CODEXES (`ГК РБ` id, `ТК РБ` id, `НК РБ (Общая)` id) → full access. Other codexes → 10 sections then paywall.
-- **Paid plan**: no restrictions.
+Update the `DeadlinesCalendar` component to handle errors properly and add proper error state. Also update the RLS to allow `public` role read access (same as other reference tables).
 
-Paywall blocks: two variants — registration CTA (for anonymous) and subscription CTA (for free users). Styled inline, no popups. Records `paywall_events` on impression/click.
+```sql
+DROP POLICY IF EXISTS "Public read deadlines" ON deadlines;
+CREATE POLICY "Public read deadlines" ON deadlines FOR SELECT TO public USING (true);
+```
 
-CSS blur effect: `max-height: 120px; overflow: hidden` + gradient overlay `linear-gradient(transparent, white)` on the boundary section.
+### 5. Calendar Dots — Color by Type
+Currently `DeadlinesCalendar.tsx` shows a single dot color (red for future, muted for past). Update to show color based on `deadline_type`:
+- `tax` → red dot
+- `reporting` → orange dot  
+- `general` → blue dot
 
-### 2. `ExitIntentPopup` component (`src/components/paywall/ExitIntentPopup.tsx`)
-Desktop: mouse leaves viewport top. Mobile: 60s timeout. Shows email collection form once per session (localStorage flag). Saves to `email_subscribers` with source='exit_popup'.
+Show up to 3 dots per day (one per unique type present).
 
-### 3. `InlineEmailForm` component (`src/components/paywall/InlineEmailForm.tsx`)
-Reusable email capture form for articles and calculators. Source parameter for tracking.
-
----
-
-## Page Changes
-
-### 4. Integrate `ContentGate` into `PublicDocumentView.tsx`
-Wrap each section render with `ContentGate`. Pass `sectionIndex`, document ID, total sections. TOC remains fully visible (SEO). Section titles beyond limit shown greyed out.
-
-### 5. Individual Article Pages — new route `/codex/:codexSlug/statya-:number`
-New page `src/pages/CodexArticle.tsx`:
-- Fetches single `document_section` by document short_title mapping + section number
-- Full text of ONE article (always free for everyone)
-- SEO title: "Статья {N} {CodexName} — {ArticleTitle} | Бабиджон"
-- Links to prev/next articles
-- "Читать весь кодекс →" link to `/documents/:id`
-- "Задать вопрос AI по этой статье" button
-- JSON-LD structured data per article
-
-This creates ~5000+ indexable pages from existing data.
-
-### 6. Paywalled content JSON-LD
-Add `isAccessibleForFree` schema markup to `PublicDocumentView` when paywall is active. Free sections get `.free-content` CSS class.
-
-### 7. Landing page email forms
-- Add `InlineEmailForm` after article cards on landing
-- Add `ExitIntentPopup` to `PublicLayout`
-
-### 8. Calculator email capture
-After calculation result in VatCalc and IncomeTaxCalc, show inline email form: "Получите результат на email"
-
----
-
-## Admin Analytics Page
-
-### 9. `/admin/analytics` page
-New page showing:
-- Funnel: views → paywall impressions → clicks → registrations
-- Top pages by views
-- Paywall conversion rates per document
-- Email subscriber count by source
-
-Data from `content_views`, `paywall_events`, `email_subscribers`.
-
----
-
-## Routing Updates (App.tsx)
-- Add `/codex/:codexSlug/statya-:number` → `CodexArticle` (public)
-- Add `/admin/analytics` → `AdminAnalytics` (admin guarded)
-
----
-
-## Files to create/modify
+## Files
 
 | Action | File |
 |--------|------|
-| Create | `src/components/paywall/ContentGate.tsx` |
-| Create | `src/components/paywall/ExitIntentPopup.tsx` |
-| Create | `src/components/paywall/InlineEmailForm.tsx` |
-| Create | `src/pages/CodexArticle.tsx` |
-| Create | `src/pages/AdminAnalytics.tsx` |
-| Create | `src/hooks/useVisitTracking.ts` |
-| Modify | `src/pages/PublicDocumentView.tsx` — integrate ContentGate |
-| Modify | `src/pages/Landing.tsx` — add inline email form |
-| Modify | `src/components/layout/PublicLayout.tsx` — add ExitIntentPopup |
-| Modify | `src/App.tsx` — add new routes |
-| Modify | `src/pages/calculators/VatCalc.tsx` — email capture after result |
-| Modify | `src/pages/calculators/IncomeTaxCalc.tsx` — email capture after result |
-| Migration | New tables + subscription_limits data |
+| Create | `src/pages/PublicCalculators.tsx` — catalog page |
+| Modify | `src/App.tsx` — add 3 public calculator routes |
+| Modify | `src/pages/calculators/VatCalc.tsx` — adaptive back-link |
+| Modify | `src/pages/calculators/IncomeTaxCalc.tsx` — adaptive back-link |
+| Modify | `src/pages/DeadlinesCalendar.tsx` — multi-color dots, error handling |
+| Migration | Fix deadlines RLS to `public` role |
 
