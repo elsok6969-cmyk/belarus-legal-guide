@@ -629,7 +629,7 @@ export default function PublicDocumentView() {
                       key={section.id}
                       sectionIndex={idx}
                       sectionTitle={section.title}
-                      previewSnippet={(section.content || '').replace(/[#*_`>\[\]()]/g, '').slice(0, 150)}
+                      previewSnippet={section._snippet || ''}
                       documentTitle={doc.title}
                       totalSections={sections.length}
                       userPlan={userProfile?.subscription_plan}
