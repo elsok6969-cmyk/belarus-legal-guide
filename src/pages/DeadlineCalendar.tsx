@@ -99,7 +99,11 @@ export default function DeadlineCalendar() {
           <CardTitle className="text-base">Ближайшие сроки</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">
+              Не удалось загрузить данные. Попробуйте обновить страницу.
+            </p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="p-3 rounded-md bg-muted/50">

@@ -212,7 +212,9 @@ export default function Currencies() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">Не удалось загрузить курсы. Попробуйте обновить страницу.</p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
