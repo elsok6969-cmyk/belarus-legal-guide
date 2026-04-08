@@ -118,4 +118,10 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  .search-snippet mark {
+    background: #FEF3C7;
+    color: inherit;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
 }
