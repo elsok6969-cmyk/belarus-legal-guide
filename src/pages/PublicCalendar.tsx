@@ -78,7 +78,7 @@ export default function PublicCalendar() {
   const [subTypes, setSubTypes] = useState<string[]>([]);
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
 
-  const { data: allDeadlines, isLoading } = useQuery({
+  const { data: allDeadlines, isLoading, isError } = useQuery({
     queryKey: ['tax-deadlines-2026'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,6 +88,7 @@ export default function PublicCalendar() {
       if (error) throw error;
       return (data || []) as TaxDeadline[];
     },
+    retry: 2,
   });
 
   const filtered = useMemo(() => {
