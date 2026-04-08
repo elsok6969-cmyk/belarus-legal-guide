@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ const PARAMS: Record<string, { stdDeduction: number; stdLimit: number; childDedu
 const fmt = (n: number) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 export default function IncomeTaxCalc() {
+  const location = useLocation();
   const [income, setIncome] = useState('');
   const [year, setYear] = useState('2026');
   const [useStd, setUseStd] = useState(true);
@@ -52,7 +53,7 @@ export default function IncomeTaxCalc() {
     <>
       <PageSEO title="Подоходный налог — Калькулятор" description="Расчёт подоходного налога РБ" path="/app/calculator/income-tax" />
       <div className="space-y-4">
-        <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link to={location.pathname.startsWith('/app/') ? '/app/calculator' : '/calculator'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
         </Link>
         <h1 className="text-2xl font-bold text-foreground">Подоходный налог</h1>
