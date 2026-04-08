@@ -78,7 +78,7 @@ export default function PublicCalendar() {
   const [subTypes, setSubTypes] = useState<string[]>([]);
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
 
-  const { data: allDeadlines, isLoading } = useQuery({
+  const { data: allDeadlines, isLoading, isError } = useQuery({
     queryKey: ['tax-deadlines-2026'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,6 +88,7 @@ export default function PublicCalendar() {
       if (error) throw error;
       return (data || []) as TaxDeadline[];
     },
+    retry: 2,
   });
 
   const filtered = useMemo(() => {
@@ -365,7 +366,9 @@ export default function PublicCalendar() {
             )}
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">Не удалось загрузить данные. Попробуйте обновить страницу.</p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
             </div>

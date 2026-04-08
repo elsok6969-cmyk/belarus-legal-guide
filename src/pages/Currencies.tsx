@@ -28,21 +28,39 @@ export default function Currencies() {
   const [direction, setDirection] = useState<'toByn' | 'fromByn'>('toByn');
   const [searchFilter, setSearchFilter] = useState('');
 
-  const { data: rates, isLoading } = useQuery({
+  const { data: rates, isLoading, isError } = useQuery({
     queryKey: ['currencies-all'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('currency_rates')
         .select('*')
         .order('rate_date', { ascending: false });
+      if (error) throw error;
       // Deduplicate: latest per currency_code
       const seen = new Set<string>();
-      return (data ?? []).filter(r => {
+      const deduped = (data ?? []).filter(r => {
         if (seen.has(r.currency_code)) return false;
         seen.add(r.currency_code);
         return true;
       });
+      // Fallback to NBRB API if empty
+      if (deduped.length === 0) {
+        const resp = await fetch('https://api.nbrb.by/exrates/rates?periodicity=0');
+        if (!resp.ok) return [];
+        const nbrb = await resp.json();
+        return nbrb.map((r: any) => ({
+          id: String(r.Cur_ID),
+          currency_code: r.Cur_Abbreviation,
+          currency_name: r.Cur_Name,
+          rate: r.Cur_OfficialRate / (r.Cur_Scale || 1),
+          rate_date: r.Date?.split('T')[0] || new Date().toISOString().split('T')[0],
+          change_value: 0,
+          created_at: new Date().toISOString(),
+        }));
+      }
+      return deduped;
     },
+    retry: 2,
   });
 
   const sortedRates = useMemo(() => {
@@ -194,7 +212,9 @@ export default function Currencies() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">Не удалось загрузить курсы. Попробуйте обновить страницу.</p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
             </div>

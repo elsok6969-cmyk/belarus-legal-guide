@@ -27,7 +27,7 @@ export default function DeadlineCalendar() {
   const [audience, setAudience] = useState('all');
   const [category, setCategory] = useState('all');
 
-  const { data: deadlines, isLoading } = useQuery({
+  const { data: deadlines, isLoading, isError } = useQuery({
     queryKey: ['deadlines', audience, category],
     queryFn: async () => {
       let q = supabase
@@ -43,6 +43,7 @@ export default function DeadlineCalendar() {
       if (error) throw error;
       return data;
     },
+    retry: 2,
   });
 
   const { data: categories } = useQuery({
@@ -98,7 +99,11 @@ export default function DeadlineCalendar() {
           <CardTitle className="text-base">Ближайшие сроки</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <p className="text-sm text-destructive text-center py-8">
+              Не удалось загрузить данные. Попробуйте обновить страницу.
+            </p>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="p-3 rounded-md bg-muted/50">
