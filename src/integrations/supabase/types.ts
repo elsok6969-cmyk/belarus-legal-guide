@@ -1510,6 +1510,25 @@ export type Database = {
         Returns: undefined
       }
       increment_view_count: { Args: { doc_id: string }; Returns: undefined }
+      search_all: {
+        Args: { filter_type?: string; query: string; result_limit?: number }
+        Returns: {
+          doc_date: string
+          doc_number: string
+          doc_status: string
+          doc_type_name: string
+          doc_type_slug: string
+          document_id: string
+          document_short_title: string
+          document_title: string
+          rank: number
+          result_type: string
+          section_id: string
+          section_number: string
+          section_title: string
+          snippet: string
+        }[]
+      }
       search_documents: {
         Args: {
           exact_match?: boolean
