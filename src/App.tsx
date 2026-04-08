@@ -32,6 +32,7 @@ import Currencies from './pages/Currencies';
 import PublicCalendar from './pages/PublicCalendar';
 import PublicDocuments from './pages/PublicDocuments';
 import PublicDocumentView from './pages/PublicDocumentView';
+import CodexArticle from './pages/CodexArticle';
 
 import Index from './pages/Index';
 import AppSearch from './pages/AppSearch';
@@ -45,6 +46,7 @@ import DeadlineCalendar from './pages/DeadlineCalendar';
 import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import AdminHealth from './pages/AdminHealth';
+import AdminAnalytics from './pages/AdminAnalytics';
 import NewDocuments from './pages/NewDocuments';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
@@ -98,6 +100,7 @@ const App = () => (
           <Route path="/documents" element={<PublicLayout><PublicDocuments /></PublicLayout>} />
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
           <Route path="/doc/:slug" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
+          <Route path="/codex/:codexSlug/statya-:number" element={<PublicLayout><CodexArticle /></PublicLayout>} />
 
           {/* Public subscription pages */}
           <Route path="/subscription" element={<PublicLayout><Subscription /></PublicLayout>} />
@@ -139,6 +142,7 @@ const App = () => (
           {/* Admin pages */}
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
           <Route path="/admin/health" element={<AdminGuard><AppLayout><AdminHealth /></AppLayout></AdminGuard>} />
+          <Route path="/admin/analytics" element={<AdminGuard><AppLayout><AdminAnalytics /></AppLayout></AdminGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,6 +103,14 @@ export default function VatCalc() {
             </CardContent>
           </Card>
         </div>
+
+        {parseFloat(amount) > 0 && (
+          <InlineEmailForm
+            source="calculator_vat"
+            title="Получите результат на email"
+            description="Будьте в курсе изменений ставок НДС"
+          />
+        )}
 
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно главе 14 НК РБ. Ставки НДС: 20%, 10%, 25%, 0%.

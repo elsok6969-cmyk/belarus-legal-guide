@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -125,6 +126,14 @@ export default function IncomeTaxCalc() {
             </CardContent>
           </Card>
         </div>
+
+        {parseFloat(income) > 0 && (
+          <InlineEmailForm
+            source="calculator_income_tax"
+            title="Получите результат на email"
+            description="Будьте в курсе изменений налоговых ставок и вычетов"
+          />
+        )}
 
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно НК РБ, глава 18. Ставка 13%. Вычеты актуальны на {year} год.

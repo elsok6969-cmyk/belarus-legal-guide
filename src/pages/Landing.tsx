@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -436,6 +437,17 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
+      {/* ═══ EMAIL CAPTURE ═══ */}
+      <section className="mx-auto max-w-2xl px-4 pb-16">
+        <InlineEmailForm
+          source="landing"
+          title="📧 Будьте в курсе изменений"
+          description="Получайте еженедельный обзор изменений в законодательстве Беларуси"
+        />
+      </section>
     </article>
+  );
+}
   );
 }
