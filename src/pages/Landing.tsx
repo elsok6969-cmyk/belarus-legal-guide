@@ -89,7 +89,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data } = await supabase.from('documents')
         .select('id, title, doc_date, last_updated, document_types(slug, name_ru)')
-        .order('last_updated', { ascending: false }).limit(7);
+        .order('last_updated', { ascending: false }).limit(8);
       return data ?? [];
     },
   });
@@ -181,15 +181,15 @@ export default function Landing() {
       />
 
       {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-4 pt-12 pb-8 md:pt-12 md:pb-8 bg-gradient-to-b from-accent/40 to-background">
-        <h1 className="text-[28px] md:text-[36px] font-bold text-center max-w-3xl leading-tight">
+      <section className="flex flex-col items-center px-4 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
+        <h1 className="text-[28px] md:text-[32px] font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
-        <p className="mt-3 text-[17px] text-muted-foreground text-center max-w-xl">
+        <p className="mt-2 text-[16px] text-muted-foreground text-center max-w-xl leading-snug">
           Полные тексты кодексов и законов, поиск по статьям, AI-ассистент
         </p>
 
-        <div className="mt-6 w-full max-w-[640px]">
+        <div className="mt-5 w-full max-w-[640px]">
           <div className="flex items-center gap-0 rounded-xl border bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring">
             <Search className="ml-4 h-5 w-5 text-muted-foreground shrink-0" />
             <input
@@ -218,10 +218,10 @@ export default function Landing() {
       </section>
 
       {/* ═══ THREE COLUMNS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
+      <section className="mx-auto max-w-7xl px-4 pt-6 pb-12">
         <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Последние НПА</CardTitle>
             </CardHeader>
@@ -306,7 +306,7 @@ export default function Landing() {
           </div>
 
           {/* Popular sections */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Популярные разделы</CardTitle>
             </CardHeader>
