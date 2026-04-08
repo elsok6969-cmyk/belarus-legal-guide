@@ -1,61 +1,51 @@
 
 
-# Plan: Public Calculators + Calendar Fix
+# Plan: Fix 5 Bugs on Belarus Legal Platform
 
-## Problem
-1. `/calculator` returns 404 — calculators only exist at `/app/calculator` (behind AppLayout)
-2. `/app/calendar` (DeadlinesCalendar) shows skeletons — the `deadlines` table has data (50 rows) but the "Public read deadlines" RLS policy is restricted to `authenticated` role. If user isn't logged in or session expired, data won't load. Also the calendar dots only show a single red dot regardless of deadline type.
+## Diagnosis Summary
+
+After querying the database and reviewing the code, here's the actual state of each bug:
+
+| Bug | Reported Issue | Actual Finding |
+|-----|---------------|----------------|
+| 1. Search hangs | "трудовой договор" infinite skeletons | SQL function works (returns results in <1s). Client already has 10s abort timeout. **May still hang on very large result sets or slow connections.** Will add `SET statement_timeout` inside the SQL function as extra safety. |
+| 2. "205 ук" | Doesn't find article 205 | **Already works.** SQL returns "Статья 205." correctly. The `search_all` function already handles trailing periods. No change needed. |
+| 3. /currencies | Data not loading | 46 rows exist, RLS policy "Rates readable by everyone" already in place. **Data loads fine.** Will add NBRB API fallback and error handling as defensive improvement. |
+| 4. Calendar markers | No dots on dates | `deadlines` table has 50 rows, `tax_deadlines` has 35 rows. Both have public RLS. **Data loads fine.** Will add error state handling for robustness. |
+| 5. Hero too big | Takes too much screen | Hero has `py-[70px]` (140px total padding!) plus `text-5xl` heading. **Confirmed — needs compression.** |
 
 ## Changes
 
-### 1. Public Calculator Routes (App.tsx)
-Add three new public routes:
-- `/calculator` → new `PublicCalculators` page (catalog)
-- `/calculator/nds` → reuse existing `VatCalc` (update back-link to `/calculator`)
-- `/calculator/income-tax` → reuse existing `IncomeTaxCalc` (update back-link)
+### 1. Search robustness — `search_all` SQL function + client
+**Migration**: Add `SET statement_timeout = '8000'` at the top of `search_all` to prevent runaway queries. Reset at the end.
 
-All wrapped in `PublicLayout`.
+**`src/pages/PublicDocuments.tsx`**: Already has abort controller. Will add `staleTime` and ensure error state renders properly (already does — no change needed).
 
-### 2. Public Calculator Catalog (new: `src/pages/PublicCalculators.tsx`)
-- Title: "Калькуляторы", subtitle: "Онлайн-расчёты для бухгалтеров и предпринимателей"
-- 3-column grid with 6 cards (NDS, Income Tax work; 4 others show "Скоро" badge, greyed out, non-clickable)
-- Cards link to `/calculator/nds` and `/calculator/income-tax`
+### 2. "205 ук" — No changes needed
+Already works correctly. The function matches `Статья 205.` format.
 
-### 3. Update Calculator Back-Links
-Modify `VatCalc.tsx` and `IncomeTaxCalc.tsx`:
-- Change the back-link from `/app/calculator` to detect if current URL starts with `/app/` and link accordingly, OR simply use `window.history.back()` / a relative approach
-- Simpler: add a `basePath` prop or just update the SEO path dynamically
+### 3. /currencies — Add NBRB API fallback
+**`src/pages/Currencies.tsx`**: Add error handling to the query and a fallback fetch to `https://api.nbrb.by/exrates/rates?periodicity=0` when Supabase returns empty data. Map NBRB API fields to match the component's expected format.
 
-Actually, the cleanest approach: create wrapper components or just add public routes that render the same components. The existing calculators already link to `/app/calculator` — we need to make them work from both `/app/calculator/vat` and `/calculator/nds`. 
+### 4. Calendar — Add error handling
+**`src/pages/DeadlinesCalendar.tsx`** and **`src/pages/PublicCalendar.tsx`**: Add `isError` state handling to show a message instead of infinite skeletons if the query fails.
 
-Better approach: Update `VatCalc` and `IncomeTaxCalc` to detect their route context and adjust back-links. Use `useLocation` to check if path starts with `/app/`.
+### 5. Hero compression
+**`src/pages/Landing.tsx`**: 
+- Remove `py-[70px]`, set `pt-8 pb-6` (32px top, 24px bottom)
+- Title: `text-2xl md:text-[32px]` (was text-3xl md:text-5xl), keep "бесплатно" inline
+- Subtitle: `text-base` (was text-lg)
+- Search margin: `mt-5` (20px)
+- Tags margin: `mt-3` (12px)  
+- Gap to content below: `mb-6` (24px)
 
-### 4. Calendar Fix — RLS Policy (Migration)
-The `deadlines` table "Public read deadlines" policy is for `authenticated` only. The `/app/calendar` page is inside AppLayout so user should be authenticated. But if skeletons are showing, the query might be failing silently.
-
-Update the `DeadlinesCalendar` component to handle errors properly and add proper error state. Also update the RLS to allow `public` role read access (same as other reference tables).
-
-```sql
-DROP POLICY IF EXISTS "Public read deadlines" ON deadlines;
-CREATE POLICY "Public read deadlines" ON deadlines FOR SELECT TO public USING (true);
-```
-
-### 5. Calendar Dots — Color by Type
-Currently `DeadlinesCalendar.tsx` shows a single dot color (red for future, muted for past). Update to show color based on `deadline_type`:
-- `tax` → red dot
-- `reporting` → orange dot  
-- `general` → blue dot
-
-Show up to 3 dots per day (one per unique type present).
-
-## Files
+## Files Changed
 
 | Action | File |
 |--------|------|
-| Create | `src/pages/PublicCalculators.tsx` — catalog page |
-| Modify | `src/App.tsx` — add 3 public calculator routes |
-| Modify | `src/pages/calculators/VatCalc.tsx` — adaptive back-link |
-| Modify | `src/pages/calculators/IncomeTaxCalc.tsx` — adaptive back-link |
-| Modify | `src/pages/DeadlinesCalendar.tsx` — multi-color dots, error handling |
-| Migration | Fix deadlines RLS to `public` role |
+| Migration | Add `statement_timeout` to `search_all` function |
+| Modify | `src/pages/Currencies.tsx` — NBRB API fallback |
+| Modify | `src/pages/DeadlinesCalendar.tsx` — error state |
+| Modify | `src/pages/PublicCalendar.tsx` — error state |
+| Modify | `src/pages/Landing.tsx` — hero compression |
 
