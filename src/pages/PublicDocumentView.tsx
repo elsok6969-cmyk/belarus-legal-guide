@@ -593,20 +593,16 @@ export default function PublicDocumentView() {
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 md:p-8" ref={contentRef}>
                 <div className="max-w-none">
-                  {displaySections.map((section, idx) => {
-                    // Extract a short plain-text snippet for boundary preview
-                    const snippet = (section.content || '').replace(/[#*_`>\[\]()]/g, '').slice(0, 150);
-
-                    return (
-                      <ContentGate
-                        key={section.id}
-                        sectionIndex={idx}
-                        sectionTitle={section.title}
-                        previewSnippet={snippet}
-                        documentTitle={doc.title}
-                        totalSections={sections.length}
-                        userPlan={userProfile?.subscription_plan}
-                      >
+                  {displaySections.map((section, idx) => (
+                    <ContentGate
+                      key={section.id}
+                      sectionIndex={idx}
+                      sectionTitle={section.title}
+                      previewSnippet={(section.content || '').replace(/[#*_`>\[\]()]/g, '').slice(0, 150)}
+                      documentTitle={doc.title}
+                      totalSections={sections.length}
+                      userPlan={userProfile?.subscription_plan}
+                      renderContent={() => (
                         <DocumentArticleRenderer
                           id={section.id}
                           title={section.title}
@@ -617,9 +613,9 @@ export default function PublicDocumentView() {
                           onArticleClick={handleArticleRefClick}
                           onAIExplain={handleAIExplain}
                         />
-                      </ContentGate>
-                    );
-                  })}
+                      )}
+                    />
+                  ))}
                 </div>
 
                 {/* Article navigation (focus mode) */}
