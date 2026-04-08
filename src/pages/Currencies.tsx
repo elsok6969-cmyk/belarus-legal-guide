@@ -121,7 +121,7 @@ export default function Currencies() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1 min-w-0">
               <Label className="text-xs text-muted-foreground">
                 {direction === 'toByn' ? 'Сумма в валюте' : 'Сумма в BYN'}
@@ -224,8 +224,8 @@ export default function Currencies() {
                 <thead>
                   <tr className="border-b text-left text-xs text-muted-foreground">
                     <th className="pb-2 font-medium">Валюта</th>
-                    <th className="pb-2 font-medium text-right">Курс BYN</th>
-                    <th className="pb-2 font-medium text-right">Изменение</th>
+                     <th className="pb-2 font-medium text-right">Курс BYN</th>
+                     <th className="pb-2 font-medium text-right hidden sm:table-cell">Изменение</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -247,7 +247,7 @@ export default function Currencies() {
                         <td className="py-3 text-right font-mono font-medium tabular-nums">
                           {Number(r.rate).toFixed(4)}
                         </td>
-                        <td className="py-3 text-right">
+                        <td className="py-3 text-right hidden sm:table-cell">
                           {change !== 0 ? (
                             <span className={`inline-flex items-center gap-0.5 font-mono text-xs ${isUp ? 'text-red-500' : 'text-emerald-600'}`}>
                               {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{change.toFixed(4)}

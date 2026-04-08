@@ -490,7 +490,7 @@ export default function DocumentViewer() {
       )}
 
       {/* Three-column layout */}
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: TOC */}
         {!isMobile && tocContent && (
           <aside className="hidden lg:block w-64 shrink-0">
@@ -510,20 +510,20 @@ export default function DocumentViewer() {
           {/* Virtual sections (parsed from markdown) */}
           {hasVirtualSections ? (
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="max-w-[800px] mx-auto">
-                  {virtualSections.map(section => (
+          {virtualSections.map(section => (
                     <section
                       key={section.id}
                       ref={el => { sectionRefs.current[section.id] = el; }}
                       id={`section-${section.id}`}
-                      className="scroll-mt-24 relative group"
+                      className="scroll-mt-24 relative group pb-6 mb-6 border-b border-border/40 last:border-0 last:mb-0 last:pb-0"
                       onMouseEnter={() => setHoveredSection(section.id)}
                       onMouseLeave={() => setHoveredSection(null)}
                     >
                       {renderSectionHeading(section.title, section.level)}
                       {section.content && (
-                        <div className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+                        <div className="text-[15px] md:text-base leading-[1.8] font-serif text-foreground/90 whitespace-pre-line">
                           {section.content}
                         </div>
                       )}

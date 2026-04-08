@@ -193,7 +193,7 @@ export default function DeadlinesCalendar() {
         </Select>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1fr_340px]">
         {/* Calendar grid */}
         <Card>
           <CardContent className="p-4">

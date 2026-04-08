@@ -112,18 +112,18 @@ export default function Pricing() {
         path="/pricing"
       />
 
-      <section className="bg-primary px-6 py-20">
+      <section className="bg-primary px-4 md:px-6 py-10 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">Тарифы</h1>
-          <p className="mt-4 text-lg text-primary-foreground/80">
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-primary-foreground">Тарифы</h1>
+          <p className="mt-2 md:mt-4 text-base md:text-lg text-primary-foreground/80">
             Выберите план, подходящий для ваших задач
           </p>
         </div>
       </section>
 
       {/* Pricing cards */}
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-5xl grid gap-8 md:grid-cols-3 items-start">
+      <section className="px-4 md:px-6 py-8 md:py-16">
+        <div className="mx-auto max-w-5xl grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-3 items-start">
           {tiers.map((t) => (
             <Card
               key={t.name}
