@@ -1,4 +1,4 @@
-import { useEffect, useRef, ReactNode, useMemo } from 'react';
+import { useEffect, useRef, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVisitTracking, getSessionId } from '@/hooks/useVisitTracking';
 import { supabase } from '@/integrations/supabase/client';
 
-// Codexes that are fully free for registered users
 const FREE_CODEX_PATTERNS = [
   'гражданский кодекс',
   'трудовой кодекс',
@@ -19,12 +18,11 @@ function isFreeCodex(title: string): boolean {
 }
 
 interface ContentGateProps {
-  /** The actual content — will NOT be rendered if gated */
-  children: ReactNode;
+  /** Render function — only called when section is visible. Content never reaches DOM if gated. */
+  renderContent: () => ReactNode;
   sectionIndex: number;
   sectionTitle?: string | null;
-  /** A short plain-text snippet (first ~80 chars) for the blurred boundary preview.
-   *  Must be passed explicitly so the full content never reaches the client. */
+  /** Short plain-text snippet for the blurred boundary teaser. Real content is never sent to client. */
   previewSnippet?: string;
   documentTitle: string;
   totalSections: number;
@@ -32,7 +30,7 @@ interface ContentGateProps {
 }
 
 export function ContentGate({
-  children,
+  renderContent,
   sectionIndex,
   sectionTitle,
   previewSnippet,
@@ -47,7 +45,6 @@ export function ContentGate({
   const plan = userPlan || 'free';
   const isPaid = plan === 'basic' || plan === 'professional' || plan === 'enterprise';
 
-  // Determine section limit
   let limit: number;
   if (!user) {
     limit = getFreeSectionsLimit();
@@ -63,7 +60,6 @@ export function ContentGate({
   const isBoundary = sectionIndex === limit;
   const isHidden = sectionIndex > limit;
 
-  // Track paywall impression
   useEffect(() => {
     if (isBoundary && !impressionTracked.current) {
       impressionTracked.current = true;
@@ -87,12 +83,12 @@ export function ContentGate({
     }).then(() => {});
   };
 
-  // ── FULLY VISIBLE: render children normally ──
+  // ── FULLY VISIBLE: call renderContent — real content reaches client ──
   if (isFullyVisible) {
-    return <div className="free-content">{children}</div>;
+    return <div className="free-content">{renderContent()}</div>;
   }
 
-  // ── HIDDEN: do NOT render children at all — just show greyed-out title ──
+  // ── HIDDEN: NO content rendered at all — just greyed-out title ──
   if (isHidden) {
     return sectionTitle ? (
       <div className="py-2 px-4 text-sm text-muted-foreground/50 select-none">
@@ -101,13 +97,11 @@ export function ContentGate({
     ) : null;
   }
 
-  // ── BOUNDARY: show a FAKE preview snippet (not the real content) + paywall ──
-  // Children are NOT rendered — the snippet is a truncated plain-text preview
+  // ── BOUNDARY: show fake snippet (NOT real content) + paywall CTA ──
   const snippet = previewSnippet || sectionTitle || '';
 
   return (
     <div>
-      {/* Fake preview — just 2-3 lines of truncated text, blurred */}
       {snippet && (
         <div className="relative max-h-[100px] overflow-hidden select-none pointer-events-none">
           <div className="text-sm text-muted-foreground leading-relaxed px-1">
@@ -127,9 +121,7 @@ export function ContentGate({
 
         {!user ? (
           <>
-            <h3 className="text-lg font-bold mb-2">
-              Продолжение доступно после регистрации
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Продолжение доступно после регистрации</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
               Зарегистрируйтесь бесплатно и получите доступ к 3 кодексам целиком + 5 вопросов AI в день
             </p>
@@ -150,12 +142,9 @@ export function ContentGate({
           </>
         ) : (
           <>
-            <h3 className="text-lg font-bold mb-2">
-              Полный текст доступен по подписке
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Полный текст доступен по подписке</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Вы прочитали {limit} из {totalSections} статей бесплатно.
-              Оформите подписку для полного доступа.
+              Вы прочитали {limit} из {totalSections} статей бесплатно. Оформите подписку для полного доступа.
             </p>
             <Button asChild onClick={() => trackClick('click_subscribe')}>
               <Link to="/pricing">Оформить подписку — 29 BYN/мес</Link>
