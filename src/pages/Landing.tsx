@@ -89,7 +89,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data } = await supabase.from('documents')
         .select('id, title, doc_date, last_updated, document_types(slug, name_ru)')
-        .order('last_updated', { ascending: false }).limit(7);
+        .order('last_updated', { ascending: false }).limit(8);
       return data ?? [];
     },
   });
@@ -221,7 +221,7 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 pt-6 pb-12">
         <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Последние НПА</CardTitle>
             </CardHeader>
@@ -306,7 +306,7 @@ export default function Landing() {
           </div>
 
           {/* Popular sections */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[400px]">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Популярные разделы</CardTitle>
             </CardHeader>
