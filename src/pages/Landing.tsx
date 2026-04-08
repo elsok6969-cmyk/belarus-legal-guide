@@ -218,7 +218,7 @@ export default function Landing() {
       </section>
 
       {/* ═══ THREE COLUMNS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
+      <section className="mx-auto max-w-7xl px-4 pt-6 pb-12">
         <div className="grid gap-6 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
           <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
