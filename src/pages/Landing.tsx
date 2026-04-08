@@ -181,7 +181,7 @@ export default function Landing() {
       />
 
       {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-6 pt-14 pb-10 bg-gradient-to-b from-accent/40 to-background">
+      <section className="flex flex-col items-center px-6 pt-14 pb-10 bg-gradient-to-b from-accent/40 to-background py-[70px]">
         <h1 className="text-3xl md:text-5xl font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
