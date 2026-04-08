@@ -53,24 +53,34 @@ export default function PublicDocuments() {
 
   const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : null;
 
-  const { data: searchResults, isLoading: isSearching } = useQuery({
+  const { data: searchResults, isLoading: isSearching, isError: isSearchError } = useQuery({
     queryKey: ['search-all', search, rpcFilterType],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('search_all', {
-        query: search.trim(),
-        filter_type: rpcFilterType,
-        result_limit: 50,
-      });
-      if (error) throw error;
-      const seen = new Set<string>();
-      return ((data || []) as SearchAllResult[]).filter(r => {
-        const key = r.result_type === 'section' ? `s-${r.section_id}` : `d-${r.document_id}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const { data, error } = await supabase.rpc('search_all', {
+          query: search.trim(),
+          filter_type: rpcFilterType,
+          result_limit: 50,
+        }, { signal: controller.signal } as any);
+        clearTimeout(timeout);
+        if (error) throw error;
+        const seen = new Set<string>();
+        return ((data || []) as SearchAllResult[]).filter(r => {
+          const key = r.result_type === 'section' ? `s-${r.section_id}` : `d-${r.document_id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      } catch (e: any) {
+        clearTimeout(timeout);
+        if (e?.name === 'AbortError') throw new Error('timeout');
+        throw e;
+      }
     },
     enabled: search.trim().length >= 1,
+    retry: false,
   });
 
   const { data: docs, isLoading: isListLoading } = useQuery({
