@@ -162,8 +162,9 @@ export default function PublicDocumentView() {
   }, [dbSections, doc?.content_markdown]);
 
   const sections: UnifiedSection[] = useMemo(() => {
+    let raw: UnifiedSection[] = [];
     if (dbSections && dbSections.length > 0) {
-      return dbSections.map(s => ({
+      raw = dbSections.map(s => ({
         id: s.id,
         title: s.title,
         number: s.number,
@@ -171,9 +172,8 @@ export default function PublicDocumentView() {
         level: s.level,
         sort_order: s.sort_order,
       }));
-    }
-    if (virtualSections && virtualSections.length > 0) {
-      return virtualSections.map(s => ({
+    } else if (virtualSections && virtualSections.length > 0) {
+      raw = virtualSections.map(s => ({
         id: s.id,
         title: s.title,
         number: null,
@@ -182,8 +182,36 @@ export default function PublicDocumentView() {
         sort_order: s.sort_order,
       }));
     }
-    return [];
-  }, [dbSections, virtualSections]);
+
+    // Strip full content from gated sections so it never reaches the DOM
+    // Keep only a short plain-text snippet for the boundary teaser
+    const isPaid = userProfile?.subscription_plan === 'basic' ||
+                   userProfile?.subscription_plan === 'professional';
+    const docTitle = doc?.title || '';
+    const isFreeDoc = ['гражданский кодекс', 'трудовой кодекс', 'налоговый кодекс'].some(
+      p => docTitle.toLowerCase().includes(p)
+    ) && (!!user || false);
+
+    let sectionLimit = Infinity;
+    if (!user) {
+      // Progressive limit from localStorage
+      const visits = parseInt(localStorage.getItem('babijon_visit_count') || '0', 10);
+      sectionLimit = visits >= 8 ? 1 : visits >= 4 ? 3 : 5;
+    } else if (!isPaid && !isFreeDoc) {
+      sectionLimit = 10;
+    }
+
+    return raw.map((s, idx) => {
+      if (idx < sectionLimit) return s; // Full content
+      // Gated: replace content with short snippet
+      const plainText = s.content.replace(/[#*_`>\[\]()]/g, '');
+      return {
+        ...s,
+        content: '', // Empty — no real content
+        _snippet: plainText.slice(0, 150), // Short teaser only
+      };
+    });
+  }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
 
   const tocSections: TocEntry[] = useMemo(
     () => sections.filter(s => s.level <= 3).map(s => ({
