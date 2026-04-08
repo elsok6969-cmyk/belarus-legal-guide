@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 const fmt = (n: number) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 export default function VatCalc() {
+  const location = useLocation();
   const [amount, setAmount] = useState('');
   const [direction, setDirection] = useState<'extract' | 'add'>('extract');
   const [rate, setRate] = useState('20');

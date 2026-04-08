@@ -33,7 +33,8 @@ import PublicCalendar from './pages/PublicCalendar';
 import PublicDocuments from './pages/PublicDocuments';
 import PublicDocumentView from './pages/PublicDocumentView';
 import CodexArticle from './pages/CodexArticle';
-
+import PublicCalculators from './pages/PublicCalculators';
+import PublicCalculatorRouter from './pages/PublicCalculatorRouter';
 import Index from './pages/Index';
 import AppSearch from './pages/AppSearch';
 import DocumentViewer from './pages/DocumentViewer';
@@ -101,6 +102,10 @@ const App = () => (
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
           <Route path="/doc/:slug" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
           <Route path="/codex/:codexSlug/statya-:number" element={<PublicLayout><CodexArticle /></PublicLayout>} />
+
+          {/* Public calculators */}
+          <Route path="/calculator" element={<PublicLayout><PublicCalculators /></PublicLayout>} />
+          <Route path="/calculator/:slug" element={<PublicLayout><PublicCalculatorRouter /></PublicLayout>} />
 
           {/* Public subscription pages */}
           <Route path="/subscription" element={<PublicLayout><Subscription /></PublicLayout>} />

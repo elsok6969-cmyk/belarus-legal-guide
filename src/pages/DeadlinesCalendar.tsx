@@ -114,10 +114,13 @@ export default function DeadlinesCalendar() {
     });
   }, [deadlines, typeFilter, profFilter]);
 
-  const deadlineDateSet = useMemo(() => {
-    const set = new Set<string>();
-    filtered.forEach((d) => set.add(d.deadline_date));
-    return set;
+  const deadlinesByDate = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    filtered.forEach((d) => {
+      if (!map.has(d.deadline_date)) map.set(d.deadline_date, new Set());
+      map.get(d.deadline_date)!.add(d.deadline_type);
+    });
+    return map;
   }, [filtered]);
 
   const selectedDeadlines = useMemo(
@@ -211,7 +214,8 @@ export default function DeadlinesCalendar() {
                     const ds = toDateStr(day);
                     const isToday = ds === todayStr;
                     const isSelected = ds === selectedDate;
-                    const hasDeadline = deadlineDateSet.has(ds);
+                    const hasDeadline = deadlinesByDate.has(ds);
+                    const types = deadlinesByDate.get(ds);
                     const isPast = ds < todayStr;
                     return (
                       <button
@@ -226,11 +230,18 @@ export default function DeadlinesCalendar() {
                         )}
                       >
                         {day.getDate()}
-                        {hasDeadline && (
-                          <span className={cn(
-                            'absolute bottom-1 w-1.5 h-1.5 rounded-full',
-                            isPast && !isToday ? 'bg-muted-foreground' : 'bg-destructive',
-                          )} />
+                        {hasDeadline && types && (
+                          <span className="absolute bottom-1 flex gap-0.5">
+                            {Array.from(types).slice(0, 3).map((t) => (
+                              <span
+                                key={t}
+                                className={cn(
+                                  'w-1.5 h-1.5 rounded-full',
+                                  t === 'tax' ? 'bg-red-500' : t === 'reporting' ? 'bg-amber-500' : 'bg-blue-500',
+                                )}
+                              />
+                            ))}
+                          </span>
                         )}
                       </button>
                     );

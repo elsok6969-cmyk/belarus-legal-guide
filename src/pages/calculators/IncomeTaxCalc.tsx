@@ -20,6 +20,7 @@ const PARAMS: Record<string, { stdDeduction: number; stdLimit: number; childDedu
 const fmt = (n: number) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 export default function IncomeTaxCalc() {
+  const location = useLocation();
   const [income, setIncome] = useState('');
   const [year, setYear] = useState('2026');
   const [useStd, setUseStd] = useState(true);
