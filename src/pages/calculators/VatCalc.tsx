@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +40,7 @@ export default function VatCalc() {
     <>
       <PageSEO title="Калькулятор НДС — Бабиджон" description="Выделить или начислить НДС" path="/app/calculator/vat" />
       <div className="space-y-4">
-        <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link to={location.pathname.startsWith('/app/') ? '/app/calculator' : '/calculator'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
         </Link>
         <h1 className="text-2xl font-bold text-foreground">Калькулятор НДС</h1>
