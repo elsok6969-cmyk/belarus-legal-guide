@@ -593,27 +593,33 @@ export default function PublicDocumentView() {
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6 md:p-8" ref={contentRef}>
                 <div className="max-w-none">
-                  {displaySections.map((section, idx) => (
-                    <ContentGate
-                      key={section.id}
-                      sectionIndex={idx}
-                      sectionTitle={section.title}
-                      documentTitle={doc.title}
-                      totalSections={sections.length}
-                      userPlan={userProfile?.subscription_plan}
-                    >
-                      <DocumentArticleRenderer
-                        id={section.id}
-                        title={section.title}
-                        number={section.number}
-                        content={section.content}
-                        level={section.level}
-                        searchQuery={searchQuery}
-                        onArticleClick={handleArticleRefClick}
-                        onAIExplain={handleAIExplain}
-                      />
-                    </ContentGate>
-                  ))}
+                  {displaySections.map((section, idx) => {
+                    // Extract a short plain-text snippet for boundary preview
+                    const snippet = (section.content || '').replace(/[#*_`>\[\]()]/g, '').slice(0, 150);
+
+                    return (
+                      <ContentGate
+                        key={section.id}
+                        sectionIndex={idx}
+                        sectionTitle={section.title}
+                        previewSnippet={snippet}
+                        documentTitle={doc.title}
+                        totalSections={sections.length}
+                        userPlan={userProfile?.subscription_plan}
+                      >
+                        <DocumentArticleRenderer
+                          id={section.id}
+                          title={section.title}
+                          number={section.number}
+                          content={section.content}
+                          level={section.level}
+                          searchQuery={searchQuery}
+                          onArticleClick={handleArticleRefClick}
+                          onAIExplain={handleAIExplain}
+                        />
+                      </ContentGate>
+                    );
+                  })}
                 </div>
 
                 {/* Article navigation (focus mode) */}
