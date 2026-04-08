@@ -236,6 +236,30 @@ export type Database = {
         }
         Relationships: []
       }
+      content_views: {
+        Row: {
+          created_at: string
+          id: string
+          page_url: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_url: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_url?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       currency_rates: {
         Row: {
           change_value: number | null
@@ -624,6 +648,30 @@ export type Database = {
         }
         Relationships: []
       }
+      email_subscribers: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean
+          source: string
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean
+          source?: string
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean
+          source?: string
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
       experts: {
         Row: {
           article_count: number
@@ -845,6 +893,33 @@ export type Database = {
           id?: string
           name_ru?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      paywall_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          page_url: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          page_url: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          page_url?: string
+          session_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
