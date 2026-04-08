@@ -109,9 +109,11 @@ export default function PublicDocumentView() {
   const { data: dbSections } = useQuery({
     queryKey: ['document-sections', id],
     queryFn: async () => {
+      // Only fetch metadata + truncated content preview for TOC/gating
+      // Full content is fetched separately for allowed sections
       const { data } = await supabase
         .from('document_sections')
-        .select('*')
+        .select('id, title, number, level, sort_order, section_type, parent_id, content_markdown, content_text')
         .eq('document_id', id!)
         .order('sort_order');
       return (data || []) as DocSection[];
