@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
-import { Menu, X, Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -15,7 +15,6 @@ const navLinks = [
 
 export function PublicHeader() {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const isActive = (to: string) => {
@@ -31,8 +30,8 @@ export function PublicHeader() {
           Бабиджон
         </Link>
 
-        {/* Desktop nav — centered */}
-        <nav className="hidden lg:flex items-center gap-1">
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -48,7 +47,7 @@ export function PublicHeader() {
         </nav>
 
         {/* Right side */}
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -56,61 +55,51 @@ export function PublicHeader() {
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <Button asChild variant="outline" size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/auth">Войти</Link>
-          </Button>
-          <Button asChild size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/auth">Регистрация</Link>
-          </Button>
-        </div>
 
-        {/* Mobile controls */}
-        <div className="flex lg:hidden items-center gap-1">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Переключить тему"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <button
-            className="p-2"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Меню"
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="lg:hidden border-t bg-background px-4 pb-4">
-          <nav className="flex flex-col gap-1 pt-2">
-            {navLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  isActive(l.to) ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex flex-col gap-2 mt-3 pt-3 border-t">
-            <Button asChild variant="outline" size="sm" className="w-full rounded-lg">
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Войти</Link>
+          {/* Desktop auth buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="text-xs font-medium rounded-lg">
+              <Link to="/auth">Войти</Link>
             </Button>
-            <Button asChild size="sm" className="w-full rounded-lg">
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Регистрация</Link>
+            <Button asChild size="sm" className="text-xs font-medium rounded-lg">
+              <Link to="/auth">Регистрация</Link>
             </Button>
           </div>
+
+          {/* Mobile hamburger */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <nav className="flex flex-col gap-1 mt-8">
+                {navLinks.map((l) => (
+                  <Link
+                    key={l.to}
+                    to={l.to}
+                    className={cn(
+                      'px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      isActive(l.to) ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="flex flex-col gap-2 mt-6 pt-6 border-t">
+                <Button asChild variant="outline" size="sm" className="w-full rounded-lg">
+                  <Link to="/auth">Войти</Link>
+                </Button>
+                <Button asChild size="sm" className="w-full rounded-lg">
+                  <Link to="/auth">Регистрация</Link>
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
+      </div>
     </header>
   );
 }
