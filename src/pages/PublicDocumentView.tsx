@@ -581,7 +581,7 @@ export default function PublicDocumentView() {
       </div>
 
       {/* Three-column layout */}
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* LEFT: TOC */}
         {!isMobile && tocSections.length > 0 && (
           <aside className="hidden md:block w-[280px] shrink-0">
