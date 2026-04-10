@@ -88,7 +88,7 @@ export default function Landing() {
     queryKey: ['landing-latest-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
-        .select('id, title, short_title, doc_date, doc_number, created_at, document_types(slug, name_ru)')
+        .select('id, title, doc_date, doc_number, created_at, content_text, document_types(slug, name_ru)')
         .order('created_at', { ascending: false }).limit(8);
       return data ?? [];
     },
@@ -223,7 +223,7 @@ export default function Landing() {
           {/* Latest docs — changelog feed */}
           <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
             <CardHeader className="pb-3 px-0 pt-0">
-              <CardTitle className="text-xl md:text-2xl font-semibold">Обновления законодательства</CardTitle>
+              <CardTitle className="text-lg font-semibold">Новые НПА</CardTitle>
             </CardHeader>
             <CardContent className="px-0 pb-0 pt-0">
               <div className="divide-y divide-border/50">
@@ -260,8 +260,13 @@ export default function Landing() {
                           )}
                         </div>
                         <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                          {doc.short_title || doc.title}
+                          {doc.title && doc.title.length > 65 ? doc.title.substring(0, 65) + '...' : doc.title}
                         </p>
+                        {((doc as any).content_text ? (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                            {(doc as any).content_text.substring(0, 80)}
+                          </p>
+                        ) : doc.doc_number ? null : null)}
                       </div>
                       {/* Arrow */}
                       <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
