@@ -141,7 +141,7 @@ const App = () => (
           <Route path="/app/calculator/:slug" element={<AppLayout><CalculatorRouter /></AppLayout>} />
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
           <Route path="/app/guide" element={<AppLayout><Guide /></AppLayout>} />
-          <Route path="/app/forms" element={<AppLayout><Forms /></AppLayout>} />
+          {/* Forms page hidden — content is placeholder */}
           <Route path="/app/new-documents" element={<AppLayout><NewDocuments /></AppLayout>} />
 
           {/* Admin pages */}
