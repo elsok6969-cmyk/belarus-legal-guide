@@ -34,6 +34,27 @@ function highlightSearch(text: string, query: string): React.ReactNode {
   );
 }
 
+/** Wrap inline amendment notes like "(в ред. ...)" in a styled span */
+function wrapAmendments(node: React.ReactNode, keyPrefix: string): React.ReactNode {
+  if (typeof node !== 'string') return node;
+  const regex = new RegExp(INLINE_AMENDMENT_RE.source, 'gi');
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let m;
+  while ((m = regex.exec(node)) !== null) {
+    if (m.index > last) parts.push(node.slice(last, m.index));
+    parts.push(
+      <span key={`${keyPrefix}-am-${m.index}`} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded">
+        {m[0]}
+      </span>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last === 0) return node;
+  if (last < node.length) parts.push(node.slice(last));
+  return <>{parts}</>;
+}
+
 function processContent(
   content: string,
   searchQuery?: string,
