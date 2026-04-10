@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, ArrowRight, TrendingUp, TrendingDown, Minus,
-  BookOpen, Scale, FileText, Building2, Calculator, Users,
-  HardHat, CalendarDays, Check, Star, Briefcase, ShoppingCart,
+  Check, Star,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -27,16 +26,16 @@ const quickTags = [
 ];
 
 const popularSections = [
-  { icon: BookOpen, label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
-  { icon: Calculator, label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
-  { icon: Scale, label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
-  { icon: FileText, label: 'Уголовный кодекс', to: '/documents?q=Уголовный кодекс' },
-  { icon: Building2, label: 'Закон об ООО', to: '/documents?q=ООО' },
-  { icon: Users, label: 'УСН для ИП', to: '/documents?q=УСН' },
-  { icon: HardHat, label: 'Охрана труда', to: '/documents?q=охрана труда' },
-  { icon: CalendarDays, label: 'Налоговый календарь', to: '/calendar' },
-  { icon: Briefcase, label: 'КоАП', to: '/documents?q=КоАП' },
-  { icon: ShoppingCart, label: 'Закупки', to: '/documents?q=закупки' },
+  { label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
+  { label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
+  { label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
+  { label: 'Уголовный кодекс', to: '/documents?q=Уголовный кодекс' },
+  { label: 'Закон об ООО', to: '/documents?q=ООО' },
+  { label: 'УСН для ИП', to: '/documents?q=УСН' },
+  { label: 'Охрана труда', to: '/documents?q=охрана труда' },
+  { label: 'Налоговый календарь', to: '/calendar' },
+  { label: 'КоАП', to: '/documents?q=КоАП' },
+  { label: 'Закупки', to: '/documents?q=закупки' },
 ];
 
 const audienceTags = [
@@ -206,7 +205,7 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
-        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-start">
 
           {/* Новые НПА */}
           <Card className="border border-border rounded-xl p-4 md:p-6 min-h-[420px]">
@@ -275,8 +274,8 @@ export default function Landing() {
           </Card>
 
           {/* Курсы + Дедлайны */}
-          <div className="space-y-4 md:space-y-6 flex flex-col">
-            <Card className="border border-border rounded-xl p-4 md:p-6 flex-1">
+          <div className="space-y-4 flex flex-col">
+            <Card className="border border-border rounded-xl p-4 md:p-6">
               <CardHeader className="pb-3 px-0 pt-0">
                 <CardTitle className="text-lg font-semibold">Курсы НБРБ</CardTitle>
               </CardHeader>
@@ -312,7 +311,7 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            <Card className="border border-border rounded-xl p-4 md:p-6 flex-1">
+            <Card className="border border-border rounded-xl p-4 md:p-6">
               <CardHeader className="pb-3 px-0 pt-0">
                 <CardTitle className="text-lg font-semibold">Ближайшие сроки</CardTitle>
               </CardHeader>
@@ -334,20 +333,23 @@ export default function Landing() {
           </div>
 
           {/* Популярные разделы */}
-          <Card className="border border-border rounded-xl p-4 md:p-6 min-h-[420px]">
+          <Card className="border border-border rounded-xl p-4 md:p-6">
             <CardHeader className="pb-3 px-0 pt-0">
               <CardTitle className="text-lg font-semibold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0 px-0 pb-0 pt-0">
-              {popularSections.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {s.label}
+            <CardContent className="px-0 pb-0 pt-0">
+              <div className="divide-y divide-border/50">
+                {popularSections.map((s) => (
+                  <Link
+                    key={s.label}
+                    to={s.to}
+                    className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors group"
+                  >
+                    <span className="text-sm font-medium">{s.label}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
                   </Link>
-                );
-              })}
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
