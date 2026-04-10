@@ -85,7 +85,7 @@ export default function NotificationsPage() {
       <PageSEO title="Уведомления" description="Ваши уведомления" path="/app/account/notifications" noindex />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
           <Bell className="h-6 w-6 text-primary" /> Уведомления
         </h1>
         {unreadCount > 0 && (

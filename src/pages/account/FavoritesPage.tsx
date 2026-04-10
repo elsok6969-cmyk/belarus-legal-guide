@@ -73,7 +73,7 @@ export default function FavoritesPage() {
       <PageSEO title="Избранное" description="Сохранённые документы" path="/app/account/favorites" noindex />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
           <Star className="h-6 w-6 text-primary" /> Избранное
         </h1>
         <Badge variant="outline">{watchedCount}/5 на контроле</Badge>

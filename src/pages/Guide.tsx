@@ -99,7 +99,7 @@ export default function Guide() {
     <>
       <PageSEO title="Проводник — Бабиджон" description="Навигатор по документам для профессионалов" path="/app/guide" />
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-foreground">Проводник по документам</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Проводник по документам</h1>
 
         {/* Profession tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">

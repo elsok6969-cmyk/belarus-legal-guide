@@ -98,7 +98,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <PageSEO title="Профиль" description="Управление профилем" path="/app/account/profile" noindex />
-      <h1 className="text-2xl font-bold flex items-center gap-2">
+      <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
         <User className="h-6 w-6 text-primary" /> Профиль
       </h1>
 

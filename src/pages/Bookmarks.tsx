@@ -56,7 +56,7 @@ export default function Bookmarks() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Bookmark className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Закладки</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Закладки</h1>
       </div>
 
       {isLoading ? (

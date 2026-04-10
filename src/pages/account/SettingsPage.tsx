@@ -104,7 +104,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageSEO title="Настройки" description="Настройки приложения" path="/app/account/settings" noindex />
-      <h1 className="text-2xl font-bold flex items-center gap-2">
+      <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
         <Settings className="h-6 w-6 text-primary" /> Настройки
       </h1>
 

@@ -29,7 +29,7 @@ export default function PublicRates() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <PageSEO title="Курсы валют НБРБ" description="Актуальные курсы валют Национального банка Республики Беларусь." path="/rates" />
-      <h1 className="text-2xl font-bold mb-6">Курсы валют НБРБ</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Курсы валют НБРБ</h1>
 
       {isLoading ? (
         <div className="space-y-4">{[1,2,3].map(i => <Skeleton key={i} className="h-40 w-full" />)}</div>

@@ -106,7 +106,7 @@ export default function Subscribe() {
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
           <CheckCircle className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground">Спасибо, заявка отправлена!</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Спасибо, заявка отправлена!</h1>
         <p className="text-muted-foreground">
           Мы свяжемся с вами в ближайшее время для оформления подписки.
         </p>
@@ -126,7 +126,7 @@ export default function Subscribe() {
         {/* Plan summary */}
         <div className="border border-border rounded-xl p-5 space-y-3">
           <div className="flex items-baseline justify-between">
-            <h1 className="text-xl font-bold text-foreground">{info.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{info.name}</h1>
             <span className="text-lg font-semibold text-primary">{info.price}</span>
           </div>
           <ul className="space-y-1.5">

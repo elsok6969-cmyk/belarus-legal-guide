@@ -63,7 +63,7 @@ export default function SubscriptionPage() {
     <div className="space-y-6">
       <PageSEO title="Подписка" description="Управление подпиской" path="/app/account/subscription" noindex />
 
-      <h1 className="text-2xl font-bold flex items-center gap-2">
+      <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
         <Crown className="h-6 w-6 text-primary" /> Подписка
       </h1>
 

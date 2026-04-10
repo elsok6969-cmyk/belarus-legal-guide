@@ -30,7 +30,7 @@ export default function HowItWorks() {
       <PageSEO title="Как это работает" description="Узнайте, как платформа помогает искать, читать и отслеживать изменения в законодательстве Беларуси." path="/how-it-works" />
       <section className="bg-primary px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">Как это работает</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary-foreground">Как это работает</h1>
           <p className="mt-4 text-lg text-primary-foreground/80">
             Четыре шага от вопроса до ответа со ссылкой на источник.
           </p>

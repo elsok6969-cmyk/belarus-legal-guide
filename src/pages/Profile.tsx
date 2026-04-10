@@ -170,7 +170,7 @@ export default function Profile() {
     <>
       <PageSEO title="Профиль" description="Управление аккаунтом" path="/profile" noindex />
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold">Профиль</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">Профиль</h1>
 
         <Card className="bg-accent/30 border-primary/20">
           <CardContent className="p-6">

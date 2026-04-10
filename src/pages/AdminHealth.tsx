@@ -174,7 +174,7 @@ export default function AdminHealth() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
           <Activity className="h-6 w-6 text-primary" />
           Мониторинг системы
         </h1>

@@ -12,7 +12,7 @@ export default function PublicCalculators() {
       />
       <div className="container max-w-5xl mx-auto px-4 py-10 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Калькуляторы</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Калькуляторы</h1>
           <p className="text-muted-foreground mt-1">{allCalculators.length} онлайн-расчётов для бухгалтеров и предпринимателей</p>
         </div>
 

@@ -324,7 +324,7 @@ export default function AdminImport() {
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-8 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-foreground">Панель импорта данных</h1>
+      <h1 className="text-2xl md:text-3xl font-bold text-foreground">Панель импорта данных</h1>
 
       {/* Section 1: Database Status */}
       <Card>

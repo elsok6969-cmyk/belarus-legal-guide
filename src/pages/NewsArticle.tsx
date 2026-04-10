@@ -53,7 +53,7 @@ export default function NewsArticle() {
   if (!article) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Статья не найдена</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-4">Статья не найдена</h1>
         <Button asChild variant="outline">
           <Link to="/news">Вернуться к новостям</Link>
         </Button>
@@ -77,7 +77,7 @@ export default function NewsArticle() {
         </Button>
 
         <Badge variant="outline" className="mb-3">{audienceLabel(article.audience)}</Badge>
-        <h1 className="text-3xl font-bold tracking-tight mb-4">{article.title}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">{article.title}</h1>
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8 flex-wrap">
           {article.experts && (

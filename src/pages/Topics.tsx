@@ -29,7 +29,7 @@ export default function Topics() {
       <section className="mx-auto max-w-6xl px-4 lg:px-8 py-12">
         <div className="flex items-center gap-3 mb-2">
           <Tag className="h-7 w-7 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight">Темы</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Темы</h1>
         </div>
         <p className="text-muted-foreground mb-8">Навигация по отраслям законодательства Республики Беларусь</p>
 

@@ -5,7 +5,6 @@ export default function NotFound() {
   const location = useLocation();
 
   useEffect(() => {
-    console.error('404 Error:', location.pathname);
   }, [location.pathname]);
 
   return (

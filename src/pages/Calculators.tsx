@@ -20,7 +20,7 @@ export default function Calculators() {
       <PageSEO title="Калькуляторы — Бабиджон" description="Профессиональные калькуляторы для бухгалтеров и юристов" path="/app/calculator" />
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Калькуляторы</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Калькуляторы</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {allCalculators.length} калькуляторов для профессиональной работы
           </p>

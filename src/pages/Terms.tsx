@@ -4,7 +4,7 @@ export default function Terms() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <PageSEO title="Условия использования" description="Условия использования сервиса Бабиджон" path="/terms" />
-      <h1 className="text-2xl font-bold mb-6">Условия использования</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Условия использования</h1>
       
       <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
         <section>

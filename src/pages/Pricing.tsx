@@ -111,7 +111,7 @@ export default function Pricing() {
 
       <section className="bg-primary px-4 md:px-6 py-10 md:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-primary-foreground">Тарифы</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary-foreground">Тарифы</h1>
           <p className="mt-2 md:mt-4 text-base md:text-lg text-primary-foreground/80">
             Выберите план, подходящий для ваших задач
           </p>

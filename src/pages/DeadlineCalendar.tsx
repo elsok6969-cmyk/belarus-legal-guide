@@ -64,7 +64,7 @@ export default function DeadlineCalendar() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <CalendarDays className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Календарь сроков</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Календарь сроков</h1>
       </div>
 
       <div className="flex gap-3 flex-wrap">

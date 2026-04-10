@@ -17,7 +17,7 @@ export default function About() {
       <PageSEO title="О платформе" description="Независимая платформа для поиска и работы с нормативными правовыми актами Республики Беларусь." path="/about" />
       <section className="bg-primary px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">О платформе</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary-foreground">О платформе</h1>
           <p className="mt-4 text-lg text-primary-foreground/80">
             Инструмент для работы с нормативными правовыми актами 
             Республики Беларусь. Современный интерфейс, умный поиск и AI-ассистент 
