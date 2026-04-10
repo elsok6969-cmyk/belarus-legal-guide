@@ -16,9 +16,11 @@ interface ArticleRendererProps {
   onAIExplain?: (title: string, content: string) => void;
 }
 
-/** Detect amendment notes like "(в ред. Закона от ...)" */
-const AMENDMENT_RE = /\(в\s+ред\.\s+.+?\)/gi;
+/** Detect amendment notes like "(в ред. Закона от ...)", "(см. текст ...)", "(п. 2 статьи 5 в ред. ...)" */
+const AMENDMENT_RE = /\((?:в\s+ред\.|см\.\s+текст|п\.\s+\d+\s+стать[ийею]\s+\d+\s+в\s+ред\.).*?\)/gi;
 
+/** Inline amendment note regex for highlighting within a line */
+const INLINE_AMENDMENT_RE = /\((?:в\s+ред\.|см\.\s+текст|п\.\s+\d+\s+стать[ийею]\s+\d+\s+в\s+ред\.).*?\)/gi;
 /** Detect cross-references like "статья 45", "ст. 102" */
 const ARTICLE_REF_RE = /(?:стать[яиейю]|ст\.)\s*(\d+(?:[.-]\d+)?)/gi;
 
@@ -30,6 +32,27 @@ function highlightSearch(text: string, query: string): React.ReactNode {
   return parts.map((part, i) =>
     regex.test(part) ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">{part}</mark> : part
   );
+}
+
+/** Wrap inline amendment notes like "(в ред. ...)" in a styled span */
+function wrapAmendments(node: React.ReactNode, keyPrefix: string): React.ReactNode {
+  if (typeof node !== 'string') return node;
+  const regex = new RegExp(INLINE_AMENDMENT_RE.source, 'gi');
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let m;
+  while ((m = regex.exec(node)) !== null) {
+    if (m.index > last) parts.push(node.slice(last, m.index));
+    parts.push(
+      <span key={`${keyPrefix}-am-${m.index}`} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded">
+        {m[0]}
+      </span>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last === 0) return node;
+  if (last < node.length) parts.push(node.slice(last));
+  return <>{parts}</>;
 }
 
 function processContent(
@@ -47,13 +70,14 @@ function processContent(
       continue;
     }
 
-    // Check if this is an amendment note
-    const isAmendment = AMENDMENT_RE.test(line);
+    // Check if this entire line is an amendment note (standalone)
+    AMENDMENT_RE.lastIndex = 0;
+    const isFullAmendment = AMENDMENT_RE.test(line) && line.replace(AMENDMENT_RE, '').trim().length === 0;
     AMENDMENT_RE.lastIndex = 0;
 
-    if (isAmendment) {
+    if (isFullAmendment) {
       result.push(
-        <div key={i} className="text-sm text-muted-foreground italic border-l-[3px] border-muted-foreground/30 pl-3 my-2">
+        <div key={i} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded inline-block my-2">
           {highlightSearch(line, searchQuery || '')}
         </div>
       );
@@ -68,7 +92,7 @@ function processContent(
 
     while ((match = refRegex.exec(line)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(highlightSearch(line.slice(lastIndex, match.index), searchQuery || ''));
+        parts.push(wrapAmendments(highlightSearch(line.slice(lastIndex, match.index), searchQuery || ''), `${i}-${lastIndex}`));
       }
       const artNum = match[1];
       parts.push(
@@ -84,7 +108,7 @@ function processContent(
     }
 
     if (lastIndex < line.length) {
-      parts.push(highlightSearch(line.slice(lastIndex), searchQuery || ''));
+      parts.push(wrapAmendments(highlightSearch(line.slice(lastIndex), searchQuery || ''), `${i}-${lastIndex}`));
     }
 
     result.push(
