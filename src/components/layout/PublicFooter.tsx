@@ -6,7 +6,7 @@ const sections = [
   { label: 'Кодексы', to: '/documents?filter=codex' },
   { label: 'Курсы валют', to: '/currencies' },
   { label: 'Календарь', to: '/calendar' },
-  { label: 'Помощник', to: '/app/assistant' },
+  { label: 'AI-помощник', to: '/app/assistant' },
   { label: 'Тарифы', to: '/pricing' },
 ];
 
