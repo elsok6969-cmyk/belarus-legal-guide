@@ -127,6 +127,17 @@ export default function Landing() {
     },
   });
 
+  const { data: latestNews } = useQuery({
+    queryKey: ['landing-news'],
+    queryFn: async () => {
+      const { data } = await supabase.from('articles')
+        .select('id, title, slug, excerpt, published_at')
+        .not('published_at', 'is', null)
+        .order('published_at', { ascending: false }).limit(5);
+      return data ?? [];
+    },
+  });
+
   const { data: indicators } = useQuery({
     queryKey: ['landing-indicators'],
     queryFn: async () => {
