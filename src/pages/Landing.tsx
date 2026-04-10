@@ -139,16 +139,6 @@ export default function Landing() {
     },
   });
 
-  const { data: popularDocs } = useQuery({
-    queryKey: ['landing-popular-docs'],
-    queryFn: async () => {
-      const { data } = await supabase.from('documents')
-        .select('id, title, doc_date, document_types(slug, name_ru)')
-        .order('created_at', { ascending: false }).limit(10);
-      return data ?? [];
-    },
-  });
-
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
