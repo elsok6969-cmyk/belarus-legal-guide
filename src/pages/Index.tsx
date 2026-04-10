@@ -192,12 +192,12 @@ export default function Index() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px] items-start">
         {/* Left column */}
         <div className="space-y-6 min-w-0">
           {/* Recommendations */}
           {userProfile?.profession && (
-            <Card>
+            <Card className="h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">
                   Рекомендации для вас
@@ -215,7 +215,7 @@ export default function Index() {
           )}
 
           {/* New documents */}
-          <Card>
+          <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Новые документы</CardTitle>
               <Button asChild variant="ghost" size="sm" className="text-xs">
@@ -226,7 +226,7 @@ export default function Index() {
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mb-3 h-8">
+                <TabsList className="mb-4 h-8">
                   <TabsTrigger value="all" className="text-xs px-3 h-7">Все</TabsTrigger>
                   {tabSlugs.map((t) => (
                     <TabsTrigger key={t.slug} value={t.slug} className="text-xs px-3 h-7">
@@ -237,33 +237,40 @@ export default function Index() {
               </Tabs>
 
               {loadingDocs ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
+                    <Skeleton key={i} className="h-14 w-full" />
                   ))}
                 </div>
               ) : newDocs && newDocs.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {newDocs.map((doc: any) => (
                     <Link
                       key={doc.id}
                       to={`/app/documents/${doc.id}`}
-                      className="flex items-center gap-3 p-3 rounded-md hover:bg-accent transition-colors group"
+                      className="flex items-start gap-3 p-4 rounded-lg hover:bg-accent transition-colors group"
                     >
                       <Badge
                         variant="secondary"
-                        className={`text-[11px] shrink-0 ${typeColors[doc.document_types?.slug] || ''}`}
+                        className={`text-[11px] shrink-0 mt-0.5 ${typeColors[doc.document_types?.slug] || ''}`}
                       >
                         {doc.document_types?.name_ru || 'Документ'}
                       </Badge>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm line-clamp-2">{doc.short_title || doc.title}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatDate(doc.doc_date)}
-                          {doc.issuing_bodies?.name_ru && ` • ${doc.issuing_bodies.name_ru}`}
-                        </p>
+                        <p className="text-sm font-medium line-clamp-2 leading-snug">{doc.short_title || doc.title}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                            {formatDate(doc.doc_date)}
+                          </span>
+                          {doc.issuing_bodies?.name_ru && (
+                            <>
+                              <span className="text-[11px] text-muted-foreground">•</span>
+                              <span className="text-[11px] text-muted-foreground truncate">{doc.issuing_bodies.name_ru}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0 mt-1" />
                     </Link>
                   ))}
                 </div>
@@ -274,7 +281,7 @@ export default function Index() {
           </Card>
 
           {/* Articles */}
-          <Card>
+          <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Статьи и обзоры</CardTitle>
               <Button asChild variant="ghost" size="sm" className="text-xs">
@@ -285,20 +292,20 @@ export default function Index() {
             </CardHeader>
             <CardContent>
               {articles && articles.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {articles.map((a) => (
                     <Link
                       key={a.id}
                       to={`/news/${a.slug}`}
-                      className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+                      className="block p-4 rounded-lg border hover:bg-accent transition-colors h-full"
                     >
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <Newspaper className="h-3.5 w-3.5 text-primary shrink-0" />
                         <span className="text-[11px] text-muted-foreground">{formatDate(a.published_at)}</span>
                       </div>
                       <p className="text-sm font-medium leading-tight line-clamp-2">{a.title}</p>
                       {a.excerpt && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{a.excerpt}</p>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{a.excerpt}</p>
                       )}
                     </Link>
                   ))}
@@ -313,19 +320,19 @@ export default function Index() {
         {/* Right column */}
         <div className="space-y-6">
           {/* Key documents */}
-          <Card>
+          <Card className="h-full">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Важнейшие НПА</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1">
+            <CardContent className="space-y-2">
               {keyDocuments.map((doc) => (
                 <Link
                   key={doc.query}
                   to={`/app/search?q=${encodeURIComponent(doc.query)}`}
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors text-sm group"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm group"
                 >
                   <BookOpen className="h-4 w-4 text-primary shrink-0" />
-                  <span className="truncate">{doc.title}</span>
+                  <span className="truncate font-medium">{doc.title}</span>
                   <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 shrink-0" />
                 </Link>
               ))}
@@ -334,7 +341,7 @@ export default function Index() {
 
           {/* Favorites */}
           {user && (
-            <Card>
+            <Card className="h-full">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Star className="h-4 w-4 text-amber-500" /> Избранные
@@ -345,12 +352,12 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {favorites && favorites.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {favorites.map((f: any) => (
                       <Link
                         key={f.id}
                         to={`/app/documents/${f.document_id}`}
-                        className="block p-2 rounded-md hover:bg-accent text-sm truncate transition-colors"
+                        className="block p-3 rounded-lg hover:bg-accent text-sm truncate transition-colors font-medium"
                       >
                         {f.documents?.short_title || f.documents?.title || 'Документ'}
                       </Link>
@@ -365,7 +372,7 @@ export default function Index() {
 
           {/* View history */}
           {user && (
-            <Card>
+            <Card className="h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Clock className="h-4 w-4" /> Последние просмотренные
@@ -373,12 +380,12 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {history && history.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {history.map((h: any) => (
                       <Link
                         key={h.id}
                         to={`/app/documents/${h.document_id}`}
-                        className="block p-2 rounded-md hover:bg-accent text-sm truncate transition-colors"
+                        className="block p-3 rounded-lg hover:bg-accent text-sm truncate transition-colors font-medium"
                       >
                         {h.documents?.short_title || h.documents?.title || 'Документ'}
                       </Link>
@@ -392,7 +399,7 @@ export default function Index() {
           )}
 
           {/* Mini calendar */}
-          <Card>
+          <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Календарь дедлайнов</CardTitle>
               <Button asChild variant="ghost" size="sm" className="text-xs">
@@ -411,9 +418,9 @@ export default function Index() {
                 }}
               />
               {selectedDayDeadlines.length > 0 && (
-                <div className="w-full mt-3 space-y-1">
+                <div className="w-full mt-4 space-y-2">
                   {selectedDayDeadlines.map((d) => (
-                    <div key={d.id} className="text-xs p-2 rounded-md bg-muted">
+                    <div key={d.id} className="text-xs p-3 rounded-lg bg-muted">
                       <p className="font-medium">{d.title}</p>
                       <p className="text-muted-foreground">{d.category}</p>
                     </div>
