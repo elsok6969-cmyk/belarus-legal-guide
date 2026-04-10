@@ -52,7 +52,7 @@ export default function PublicDocuments() {
     setSearchParams(params, { replace: true });
   }, [search, chipFilter, setSearchParams]);
 
-  const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : null;
+  const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : undefined;
 
   const { data: searchResults, isLoading: isSearching, isError: isSearchError } = useQuery({
     queryKey: ['search-all', search, rpcFilterType],
@@ -85,20 +85,27 @@ export default function PublicDocuments() {
   });
 
   const { data: docs, isLoading: isListLoading, isError: isListError } = useQuery({
-    queryKey: ['public-documents-list'],
+    queryKey: ['public-documents-list', chipFilter],
     queryFn: async () => {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
       try {
-        const { data, error } = await supabase
+        let q = supabase
           .from('documents')
           .select('id, title, doc_number, doc_date, status, document_types(slug, name_ru)')
           .order('doc_date', { ascending: false, nullsFirst: false })
-          .limit(50)
-          .abortSignal(controller.signal);
+          .limit(50);
+        if (chipFilter && chipFilter !== 'sections') {
+          q = q.eq('document_types.slug', chipFilter);
+        }
+        const { data, error } = await q.abortSignal(controller.signal);
         clearTimeout(timeout);
         if (error) throw error;
-        return data || [];
+        let results = data || [];
+        if (chipFilter && chipFilter !== 'sections') {
+          results = results.filter(d => (d.document_types as any)?.slug === chipFilter);
+        }
+        return results;
       } catch (e: any) {
         clearTimeout(timeout);
         if (e?.name === 'AbortError') throw new Error('timeout');
