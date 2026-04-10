@@ -77,7 +77,7 @@ export default function Forms() {
       <PageSEO title="Формы и образцы документов" description="Каталог форм, бланков и образцов документов для бизнеса в Беларуси" path="/app/forms" />
 
       <div>
-        <h1 className="text-2xl font-bold">Формы и образцы документов</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">Формы и образцы документов</h1>
         <p className="text-muted-foreground mt-1">Скачивайте бланки и заполняйте формы онлайн</p>
       </div>
 

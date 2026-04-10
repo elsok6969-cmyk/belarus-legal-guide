@@ -90,7 +90,7 @@ export default function Settings() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-3">
         <SettingsIcon className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Настройки</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Настройки</h1>
       </div>
 
       {/* Profile */}

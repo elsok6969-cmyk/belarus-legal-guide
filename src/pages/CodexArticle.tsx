@@ -137,7 +137,7 @@ export default function CodexArticle() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Статья не найдена</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Статья не найдена</h1>
         <p className="text-muted-foreground mb-4">
           Статья {artNum} не найдена в кодексе «{codexSlug}»
         </p>
@@ -170,7 +170,7 @@ export default function CodexArticle() {
         <Badge variant="secondary" className="mb-2">
           {codexTitle}
         </Badge>
-        <h1 className="text-2xl font-bold leading-snug">{articleTitle}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold leading-snug">{articleTitle}</h1>
       </div>
 
       {/* Article content — always fully free */}

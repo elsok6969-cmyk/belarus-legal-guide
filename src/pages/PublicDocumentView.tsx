@@ -442,7 +442,7 @@ export default function PublicDocumentView() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Документ не найден</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Документ не найден</h1>
         <Link to="/documents" className="text-primary hover:underline">← К списку документов</Link>
       </div>
     );
@@ -524,7 +524,7 @@ export default function PublicDocumentView() {
           </span>
         </div>
 
-        <h1 className="text-2xl font-bold leading-snug mb-3">{doc.title}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold leading-snug mb-3">{doc.title}</h1>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-4">
           {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {formatDate(doc.doc_date)}</span>}

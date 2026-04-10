@@ -88,7 +88,7 @@ export default function Subscription() {
       <PageSEO title="Тарифы" description="Выберите подходящий тариф для работы с правовой базой Беларуси" path="/subscription" />
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold mb-2">Выберите тариф</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Выберите тариф</h1>
           <p className="text-muted-foreground text-lg">Выберите план, подходящий для ваших задач</p>
         </div>
 

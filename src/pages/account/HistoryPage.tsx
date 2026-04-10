@@ -44,7 +44,7 @@ export default function HistoryPage() {
       <PageSEO title="История просмотров" description="Просмотренные документы" path="/app/account/history" noindex />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
           <History className="h-6 w-6 text-primary" /> История просмотров
         </h1>
         {history && history.length > 0 && (

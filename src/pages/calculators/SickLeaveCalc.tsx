@@ -51,7 +51,7 @@ export default function SickLeaveCalc() {
         >
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Калькулятор больничного</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Калькулятор больничного</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>

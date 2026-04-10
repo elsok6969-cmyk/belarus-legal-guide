@@ -57,7 +57,7 @@ export default function WorkExperienceCalc() {
         <Link to="/app/calculator" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Трудовой стаж</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Трудовой стаж</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>

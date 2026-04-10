@@ -141,7 +141,7 @@ export default function PublicDocuments() {
         { label: 'Документы' },
       ]} />
 
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2">
         <FileText className="h-6 w-6 text-primary" />
         Документы
       </h1>

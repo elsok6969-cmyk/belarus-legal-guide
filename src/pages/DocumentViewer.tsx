@@ -413,7 +413,7 @@ export default function DocumentViewer() {
           {doc.doc_number && <span className="text-sm text-muted-foreground">№ {doc.doc_number}</span>}
         </div>
 
-        <h1 className="text-xl font-bold tracking-tight leading-tight mb-3">{doc.title}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight mb-3">{doc.title}</h1>
 
         <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground mb-4">
           {doc.doc_date && (

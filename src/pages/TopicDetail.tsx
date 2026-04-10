@@ -66,14 +66,14 @@ export default function TopicDetail() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Tag className="h-5 w-5 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">{topic.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{topic.name}</h1>
             </div>
             {topic.description && (
               <p className="text-muted-foreground mb-8">{topic.description}</p>
             )}
           </>
         ) : (
-          <h1 className="text-2xl font-bold mb-4">Тема не найдена</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-4">Тема не найдена</h1>
         )}
 
         <h2 className="text-lg font-semibold mb-4">Статьи по теме</h2>

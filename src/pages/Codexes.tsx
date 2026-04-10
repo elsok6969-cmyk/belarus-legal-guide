@@ -79,7 +79,7 @@ export default function Codexes() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Кодексы Республики Беларусь</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Кодексы Республики Беларусь</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {codexes ? `${codexes.length} кодексов в актуальных редакциях` : 'Загрузка...'}
         </p>

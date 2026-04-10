@@ -155,7 +155,7 @@ export default function AppSearch() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Поиск по законодательству</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Поиск по законодательству</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Найдите нужный нормативный правовой акт по названию, номеру или содержанию
         </p>

@@ -70,7 +70,7 @@ export default function AdminAnalytics() {
   return (
     <div className="space-y-6">
       <PageSEO title="Аналитика — Админ" description="" path="/admin/analytics" />
-      <h1 className="text-2xl font-bold">Аналитика и конверсии</h1>
+      <h1 className="text-2xl md:text-3xl font-bold">Аналитика и конверсии</h1>
       <p className="text-sm text-muted-foreground">Данные за последние 7 дней</p>
 
       {/* Funnel cards */}
