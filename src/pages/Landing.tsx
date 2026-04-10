@@ -32,8 +32,14 @@ const popularSections = [
   { label: 'Уголовный кодекс', desc: '466 статей · Преступления и наказания', to: '/documents?q=Уголовный кодекс' },
   { label: 'КоАП', desc: '466 статей · Административные правонарушения', to: '/documents?q=КоАП' },
   { label: 'Жилищный кодекс', desc: '224 статьи · Жилищные отношения', to: '/documents?q=Жилищный кодекс' },
+  { label: 'Банковский кодекс', desc: '312 статей · Банковская деятельность', to: '/documents?q=Банковский кодекс' },
+  { label: 'Кодекс о браке и семье', desc: '241 статья · Семейные отношения', to: '/documents?q=Кодекс о браке и семье' },
+  { label: 'Бюджетный кодекс', desc: '149 статей · Бюджетное регулирование', to: '/documents?q=Бюджетный кодекс' },
   { label: 'Закон об ООО', desc: 'Хозяйственные общества', to: '/documents?q=ООО' },
-  { label: 'УСН для ИП', desc: 'Упрощённая система налогообложения', to: '/documents?q=УСН' },
+  { label: 'УСН для ИП', desc: 'Упрощённая система', to: '/documents?q=УСН' },
+  { label: 'Охрана труда', desc: 'Безопасность на рабочем месте', to: '/documents?q=охрана труда' },
+  { label: 'Налоговый календарь', desc: 'Сроки сдачи отчётности', to: '/calendar' },
+  { label: 'Закупки', desc: 'Государственные закупки', to: '/documents?q=закупки' },
 ];
 
 const audienceTags = [
@@ -91,7 +97,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data } = await supabase.from('documents')
         .select('id, title, doc_date, doc_number, created_at, content_text, document_types(slug, name_ru)')
-        .order('created_at', { ascending: false }).limit(7);
+        .order('created_at', { ascending: false }).limit(6);
       return data ?? [];
     },
   });
@@ -365,7 +371,7 @@ export default function Landing() {
                   <Link
                     key={s.label}
                     to={s.to}
-                    className="flex items-center justify-between py-2.5 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
+                    className="flex items-center justify-between py-2 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
                   >
                     <div className="min-w-0">
                       <span className="text-base font-medium text-foreground">{s.label}</span>
