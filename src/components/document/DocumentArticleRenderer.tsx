@@ -16,9 +16,11 @@ interface ArticleRendererProps {
   onAIExplain?: (title: string, content: string) => void;
 }
 
-/** Detect amendment notes like "(в ред. Закона от ...)" */
-const AMENDMENT_RE = /\(в\s+ред\.\s+.+?\)/gi;
+/** Detect amendment notes like "(в ред. Закона от ...)", "(см. текст ...)", "(п. 2 статьи 5 в ред. ...)" */
+const AMENDMENT_RE = /\((?:в\s+ред\.|см\.\s+текст|п\.\s+\d+\s+стать[ийею]\s+\d+\s+в\s+ред\.).*?\)/gi;
 
+/** Inline amendment note regex for highlighting within a line */
+const INLINE_AMENDMENT_RE = /\((?:в\s+ред\.|см\.\s+текст|п\.\s+\d+\s+стать[ийею]\s+\d+\s+в\s+ред\.).*?\)/gi;
 /** Detect cross-references like "статья 45", "ст. 102" */
 const ARTICLE_REF_RE = /(?:стать[яиейю]|ст\.)\s*(\d+(?:[.-]\d+)?)/gi;
 
