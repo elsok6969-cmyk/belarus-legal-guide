@@ -54,7 +54,6 @@ export default function Currencies() {
           return mapped;
         }
       } catch (e) {
-        console.warn('NBRB API failed, trying fallback:', e);
       }
 
       // Fallback 1: Supabase cached data
@@ -82,7 +81,6 @@ export default function Currencies() {
             return parsed.data;
           }
         } catch (e) {
-          console.warn('Failed to parse cached rates:', e);
         }
       }
 
