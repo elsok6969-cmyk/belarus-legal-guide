@@ -8,7 +8,7 @@ export default function Legal() {
       <PageSEO title="Правовая информация — Бабиджон" description="Условия использования, политика конфиденциальности и отказ от ответственности" path="/legal" />
       <section className="bg-primary px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-primary-foreground">Правовая информация</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary-foreground">Правовая информация</h1>
           <p className="mt-4 text-lg text-primary-foreground/80">
             Условия использования платформы и ограничение ответственности
           </p>
