@@ -88,8 +88,8 @@ export default function Landing() {
     queryKey: ['landing-latest-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
-        .select('id, title, doc_date, last_updated, document_types(slug, name_ru)')
-        .order('last_updated', { ascending: false }).limit(8);
+        .select('id, title, short_title, doc_date, doc_number, created_at, document_types(slug, name_ru)')
+        .order('created_at', { ascending: false }).limit(8);
       return data ?? [];
     },
   });
@@ -220,28 +220,65 @@ export default function Landing() {
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-6 pb-12">
         <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
-          {/* Latest docs */}
+          {/* Latest docs — changelog feed */}
           <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
             <CardHeader className="pb-3 px-0 pt-0">
-              <CardTitle className="text-xl md:text-2xl font-semibold">Последние НПА</CardTitle>
+              <CardTitle className="text-xl md:text-2xl font-semibold">Обновления законодательства</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 px-0 pb-0 pt-0">
-              {latestDocs?.map((doc) => (
-                <div key={doc.id} className="flex items-start gap-2.5">
-                  <Badge variant="secondary" className="shrink-0 text-[11px] mt-0.5">
-                    {getDocTypeLabel(doc)}
-                  </Badge>
-                  <div className="min-w-0">
-                    <Link to={`/documents/${doc.id}`} className="text-[15px] leading-snug font-medium hover:text-primary transition-colors line-clamp-2">
-                      {doc.title}
+            <CardContent className="px-0 pb-0 pt-0">
+              <div className="divide-y divide-border/50">
+                {latestDocs?.map((doc) => {
+                  const dt = doc.document_types as any;
+                  const dateObj = doc.created_at ? new Date(doc.created_at) : null;
+                  return (
+                    <Link
+                      key={doc.id}
+                      to={`/documents/${doc.id}`}
+                      className="flex items-center gap-3 py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
+                    >
+                      {/* Date column */}
+                      <div className="w-[60px] shrink-0 text-center">
+                        {dateObj && (
+                          <>
+                            <div className="text-sm font-semibold leading-tight">
+                              {format(dateObj, 'd MMM', { locale: ru })}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {format(dateObj, 'yyyy')}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                            {dt?.name_ru || 'Документ'}
+                          </Badge>
+                          {doc.doc_number && (
+                            <span className="text-[11px] text-muted-foreground">№ {doc.doc_number}</span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                          {doc.short_title || doc.title}
+                        </p>
+                      </div>
+                      {/* Arrow */}
+                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(doc.doc_date)}</p>
-                  </div>
-                </div>
-              ))}
-              {(!latestDocs || latestDocs.length === 0) && <p className="text-sm text-muted-foreground">Нет документов</p>}
+                  );
+                })}
+              </div>
+              {(!latestDocs || latestDocs.length === 0) && (
+                <p className="text-sm text-muted-foreground py-4">Нет документов</p>
+              )}
+              {latestDocs && latestDocs.length > 0 && latestDocs.length < 3 && (
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  Мониторинг pravo.by проверяет обновления каждые 6 часов
+                </p>
+              )}
               <Button asChild variant="ghost" size="sm" className="w-full mt-3">
-                <Link to="/documents">Все документы <ArrowRight className="h-3 w-3 ml-1" /></Link>
+                <Link to="/documents?sort=newest">Все обновления <ArrowRight className="h-3 w-3 ml-1" /></Link>
               </Button>
             </CardContent>
           </Card>
