@@ -509,6 +509,31 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ═══ ПОЛЕЗНОЕ ═══ */}
+      <section className="mx-auto max-w-5xl px-4 pb-12">
+        <h2 className="text-xl font-bold mb-6">Полезное</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { icon: Calendar, title: 'Производственный календарь 2026', sub: 'Рабочие дни, часы, праздники', to: '/calendar' },
+            { icon: Banknote, title: 'Курсы валют НБРБ', sub: 'Официальные курсы + конвертер', to: '/currencies' },
+            { icon: Calculator, title: 'Калькулятор НДС', sub: 'Выделить или начислить НДС онлайн', to: '/calculator/nds' },
+            { icon: Receipt, title: 'Калькулятор подоходного налога', sub: 'Расчёт с учётом вычетов', to: '/calculator/income-tax' },
+          ].map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="flex items-start gap-4 border rounded-xl p-5 hover:shadow-md transition-shadow group"
+            >
+              <item.icon className="h-5 w-5 text-muted-foreground/60 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold group-hover:text-primary transition-colors">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ═══ EMAIL CAPTURE ═══ */}
       <section className="mx-auto max-w-2xl px-4 pb-12">
         <InlineEmailForm source="landing" />
