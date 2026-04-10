@@ -92,7 +92,7 @@ function processContent(
 
     while ((match = refRegex.exec(line)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(highlightSearch(line.slice(lastIndex, match.index), searchQuery || ''));
+        parts.push(wrapAmendments(highlightSearch(line.slice(lastIndex, match.index), searchQuery || ''), `${i}-${lastIndex}`));
       }
       const artNum = match[1];
       parts.push(
@@ -108,7 +108,7 @@ function processContent(
     }
 
     if (lastIndex < line.length) {
-      parts.push(highlightSearch(line.slice(lastIndex), searchQuery || ''));
+      parts.push(wrapAmendments(highlightSearch(line.slice(lastIndex), searchQuery || ''), `${i}-${lastIndex}`));
     }
 
     result.push(
