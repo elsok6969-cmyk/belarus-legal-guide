@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -133,6 +134,7 @@ export default function AlimonyCalc() {
           </a>
           . Минимальные размеры алиментов: 1 ребёнок — 25%, 2 детей — 33%, 3 и более — 50% заработка.
         </p>
+        <OtherCalculators currentSlug="alimony" />
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -114,6 +115,7 @@ export default function TaxPenaltyCalc() {
         <p className="text-xs text-muted-foreground">
           Формула: Сумма × (Ставка рефинансирования / 360) × Дни просрочки. Ст. 55 НК РБ.
         </p>
+        <OtherCalculators currentSlug="tax-penalty" />
       </div>
     </>
   );

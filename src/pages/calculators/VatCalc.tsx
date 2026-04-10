@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -116,6 +117,7 @@ export default function VatCalc() {
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно главе 14 НК РБ. Ставки НДС: 20%, 10%, 25%, 0%.
         </p>
+        <OtherCalculators currentSlug="nds" />
       </div>
     </>
   );

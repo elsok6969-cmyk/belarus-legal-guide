@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -110,6 +111,7 @@ export default function SickLeaveCalc() {
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно Закону РБ «О социальном страховании». Первые 12 календарных дней — 80% среднедневного заработка, с 13-го дня — 100%.
         </p>
+        <OtherCalculators currentSlug="sick-leave" />
       </div>
     </>
   );
