@@ -44,7 +44,7 @@ const personalItems = [
 ];
 
 const bottomNav = [
-  { title: 'AI-', url: '/app/assistant', icon: Bot },
+  { title: 'Помощник', url: '/app/assistant', icon: Bot },
   { title: '', url: '/app/account/settings', icon: Settings },
 ];
 
