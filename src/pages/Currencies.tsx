@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useLoadingTimeout } from '@/hooks/useLoadingTimeout';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightLeft, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -256,9 +257,16 @@ export default function Currencies() {
           {isError ? (
             <p className="text-sm text-destructive text-center py-8">Не удалось загрузить курсы. Попробуйте обновить страницу.</p>
           ) : isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
-            </div>
+            useLoadingTimeout(isLoading) ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">Не удалось загрузить данные.</p>
+                <button onClick={() => window.location.reload()} className="mt-2 text-sm text-primary hover:underline">Обновить страницу</button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+              </div>
+            )
           ) : filteredRates.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
