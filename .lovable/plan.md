@@ -1,51 +1,56 @@
 
 
-# Plan: Fix 5 Bugs on Belarus Legal Platform
+## Plan: Rebuild Landing.tsx to exact specification
 
-## Diagnosis Summary
+### Header (PublicHeader.tsx)
+Add "Калькуляторы" (`/calculators`) between "Календарь" and "Новости" in `navLinks`. "Новости" already present.
 
-After querying the database and reviewing the code, here's the actual state of each bug:
+### Landing.tsx — Full rewrite
 
-| Bug | Reported Issue | Actual Finding |
-|-----|---------------|----------------|
-| 1. Search hangs | "трудовой договор" infinite skeletons | SQL function works (returns results in <1s). Client already has 10s abort timeout. **May still hang on very large result sets or slow connections.** Will add `SET statement_timeout` inside the SQL function as extra safety. |
-| 2. "205 ук" | Doesn't find article 205 | **Already works.** SQL returns "Статья 205." correctly. The `search_all` function already handles trailing periods. No change needed. |
-| 3. /currencies | Data not loading | 46 rows exist, RLS policy "Rates readable by everyone" already in place. **Data loads fine.** Will add NBRB API fallback and error handling as defensive improvement. |
-| 4. Calendar markers | No dots on dates | `deadlines` table has 50 rows, `tax_deadlines` has 35 rows. Both have public RLS. **Data loads fine.** Will add error state handling for robustness. |
-| 5. Hero too big | Takes too much screen | Hero has `py-[70px]` (140px total padding!) plus `text-5xl` heading. **Confirmed — needs compression.** |
+**Remove** the following blocks entirely:
+- Audience pills section
+- Pricing section  
+- "Полезное" 2x2 grid section
+- Email capture (InlineEmailForm) section
+- NPA/News tab switcher (replace with simple "Новые НПА" list)
 
-## Changes
+**Keep**: PageSEO, JSON-LD, all data queries (latestDocs, rates, deadlines, indicators). Remove `latestNews` query and `npaTab` state.
 
-### 1. Search robustness — `search_all` SQL function + client
-**Migration**: Add `SET statement_timeout = '8000'` at the top of `search_all` to prevent runaway queries. Reset at the end.
+#### Block 1: Hero
+- White bg, no gradients. `pt-8 pb-6`, centered.
+- H1: `text-2xl md:text-3xl font-bold` centered, plain text (remove `<span className="text-primary">`)
+- Subtitle: exact text as specified, `text-base text-muted-foreground max-w-lg mx-auto`
+- Search bar: `max-w-xl`, input height 48px, "Найти" button inside right
+- Quick tags below: `border rounded-full px-3 py-1.5 text-xs hover:bg-muted cursor-pointer`
 
-**`src/pages/PublicDocuments.tsx`**: Already has abort controller. Will add `staleTime` and ensure error state renders properly (already does — no change needed).
+#### Block 2: Three columns
+`md:grid-cols-3 grid-cols-1 gap-4`. Cards: `border rounded-xl p-4 max-h-[550px] flex flex-col`.
 
-### 2. "205 ук" — No changes needed
-Already works correctly. The function matches `Статья 205.` format.
+**Column 1 — "Новые НПА":**
+- Title: `text-base font-semibold`
+- 7 docs (change limit from 6 to 7)
+- Each row: date (text-xs, 50px width), badge + title (line-clamp-2) + 60 chars content_text, arrow →
+- `py-2 border-b border-border/30`
+- Bottom link: "Все обновления →"
 
-### 3. /currencies — Add NBRB API fallback
-**`src/pages/Currencies.tsx`**: Add error handling to the query and a fallback fetch to `https://api.nbrb.by/exrates/rates?periodicity=0` when Supabase returns empty data. Map NBRB API fields to match the component's expected format.
+**Column 2 — Combined card:**
+- "Курсы НБРБ" header + 5 currencies (USD/EUR/RUB/CNY/PLN) with flag, code, rate, change. `py-1.5` between rows.
+- Link: "Все курсы →"
+- `border-t my-3` separator
+- "Показатели": ref rate 9.75%, МЗП 858 BYN, базовая величина 45 BYN, production calendar current month. Each row: `flex justify-between py-1`, name `text-xs text-muted-foreground`, value `text-sm font-semibold`
+- `border-t my-3` separator  
+- "Ближайшие сроки": 3 deadlines. Date `text-xs font-medium text-primary` + title `text-sm`.
+- Link: "Календарь →"
 
-### 4. Calendar — Add error handling
-**`src/pages/DeadlinesCalendar.tsx`** and **`src/pages/PublicCalendar.tsx`**: Add `isError` state handling to show a message instead of infinite skeletons if the query fails.
+**Column 3 — "Популярные разделы":**
+- Title: `text-base font-semibold`
+- 12 items (updated list per spec — remove Бюджетный кодекс, Охрана труда, Закупки; add Калькуляторы)
+- Each: `py-2 border-b border-border/30`, name `text-sm font-medium`, desc `text-xs text-muted-foreground`, arrow →, `hover:bg-muted/50 rounded`
+- No bottom link
 
-### 5. Hero compression
-**`src/pages/Landing.tsx`**: 
-- Remove `py-[70px]`, set `pt-8 pb-6` (32px top, 24px bottom)
-- Title: `text-2xl md:text-[32px]` (was text-3xl md:text-5xl), keep "бесплатно" inline
-- Subtitle: `text-base` (was text-lg)
-- Search margin: `mt-5` (20px)
-- Tags margin: `mt-3` (12px)  
-- Gap to content below: `mb-6` (24px)
-
-## Files Changed
-
-| Action | File |
-|--------|------|
-| Migration | Add `statement_timeout` to `search_all` function |
-| Modify | `src/pages/Currencies.tsx` — NBRB API fallback |
-| Modify | `src/pages/DeadlinesCalendar.tsx` — error state |
-| Modify | `src/pages/PublicCalendar.tsx` — error state |
-| Modify | `src/pages/Landing.tsx` — hero compression |
+### Technical details
+- Single file edit: `src/pages/Landing.tsx` — full rewrite
+- Single file edit: `src/components/layout/PublicHeader.tsx` — add "Калькуляторы" to navLinks
+- No DB changes needed
+- All existing imports stay except remove unused ones (Star, Check, Calendar, Banknote, Calculator, Receipt, InlineEmailForm)
 
