@@ -4,6 +4,7 @@ import VacationPayCalc from './calculators/VacationPayCalc';
 import TaxPenaltyCalc from './calculators/TaxPenaltyCalc';
 import VatCalc from './calculators/VatCalc';
 import WorkExperienceCalc from './calculators/WorkExperienceCalc';
+import StatuteOfLimitationsCalc from './calculators/StatuteOfLimitationsCalc';
 
 const calcMap: Record<string, React.ComponentType> = {
   'income-tax': IncomeTaxCalc,
@@ -11,6 +12,7 @@ const calcMap: Record<string, React.ComponentType> = {
   'tax-penalty': TaxPenaltyCalc,
   'vat': VatCalc,
   'work-experience': WorkExperienceCalc,
+  'statute-of-limitations': StatuteOfLimitationsCalc,
 };
 
 export default function CalculatorRouter() {
