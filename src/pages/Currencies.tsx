@@ -307,6 +307,5 @@ export default function Currencies() {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }
