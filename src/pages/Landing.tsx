@@ -322,6 +322,16 @@ export default function Landing() {
                         <span className="text-sm font-semibold">{baseValue.current_value}</span>
                       </div>
                     )}
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-muted-foreground">Произв. календарь</span>
+                      <span className="text-sm font-semibold">{(() => {
+                        const cal: Record<number,{h:number,d:number}> = {1:{h:151,d:20},2:{h:160,d:20},3:{h:175,d:22},4:{h:166,d:21},5:{h:159,d:20},6:{h:168,d:21},7:{h:184,d:23},8:{h:168,d:21},9:{h:176,d:22},10:{h:176,d:22},11:{h:160,d:20},12:{h:175,d:22}};
+                        const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                        const m = new Date().getMonth() + 1;
+                        const c = cal[m];
+                        return `${months[m-1]}: ${c.h} ч / ${c.d} дн.`;
+                      })()}</span>
+                    </div>
                   </div>
                 </div>
 
