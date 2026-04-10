@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, Calculator, Percent, Palmtree, AlertTriangle,
-  Receipt, Briefcase, Heart, Stethoscope,
+  Receipt, Briefcase, Heart, Stethoscope, Plane,
 } from 'lucide-react';
 
 interface CalcItem {
@@ -65,6 +65,13 @@ const calculators: CalcItem[] = [
     title: 'Больничный лист',
     description: 'Расчёт пособия по временной нетрудоспособности',
     icon: <Stethoscope className="h-6 w-6" />,
+    category: 'Зарплата',
+  },
+  {
+    slug: 'business-trip',
+    title: 'Командировочные',
+    description: 'Суточные и аванс для командировки',
+    icon: <Plane className="h-6 w-6" />,
     category: 'Зарплата',
   },
 ];
