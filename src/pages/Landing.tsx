@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, ArrowRight, TrendingUp, TrendingDown, Minus,
-  Check, Star,
+  Check, Star, Calendar, Banknote, Calculator, Receipt,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -505,6 +505,31 @@ export default function Landing() {
                 </Button>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ ПОЛЕЗНОЕ ═══ */}
+      <section className="mx-auto max-w-5xl px-4 pb-12">
+        <h2 className="text-xl font-bold mb-6">Полезное</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { icon: Calendar, title: 'Производственный календарь 2026', sub: 'Рабочие дни, часы, праздники', to: '/calendar' },
+            { icon: Banknote, title: 'Курсы валют НБРБ', sub: 'Официальные курсы + конвертер', to: '/currencies' },
+            { icon: Calculator, title: 'Калькулятор НДС', sub: 'Выделить или начислить НДС онлайн', to: '/calculator/nds' },
+            { icon: Receipt, title: 'Калькулятор подоходного налога', sub: 'Расчёт с учётом вычетов', to: '/calculator/income-tax' },
+          ].map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="flex items-start gap-4 border rounded-xl p-5 hover:shadow-md transition-shadow group"
+            >
+              <item.icon className="h-5 w-5 text-muted-foreground/60 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold group-hover:text-primary transition-colors">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
