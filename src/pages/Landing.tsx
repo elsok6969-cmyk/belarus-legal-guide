@@ -474,7 +474,7 @@ export default function Landing() {
 
       {/* ═══ EMAIL CAPTURE ═══ */}
       <section className="mx-auto max-w-2xl px-4 pb-12">
-        <InlineEmailForm />
+        <InlineEmailForm source="landing" />
       </section>
     </article>
   );

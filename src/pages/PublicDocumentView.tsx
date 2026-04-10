@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -791,7 +792,7 @@ export default function PublicDocumentView() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      )}
     </div>
   );
 }

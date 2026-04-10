@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightLeft, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -303,9 +304,11 @@ export default function Currencies() {
                 </tbody>
               </table>
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">Валюты не найдены</p>
+          )}
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

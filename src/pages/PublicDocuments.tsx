@@ -213,7 +213,7 @@ export default function PublicDocuments() {
                 </p>
                 <div className="divide-y divide-border border-t border-b border-border">
                   {sectionResults.map((r, idx) => (
-                    <SectionResultRow key={`s-${r.section_id}-${idx}`} result={r} />
+                    <DocumentResultRow key={`s-${r.section_id}-${idx}`} result={r} />
                   ))}
                 </div>
               </>
