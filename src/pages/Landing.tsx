@@ -143,7 +143,7 @@ export default function Landing() {
   const baseValue = indicators?.find(i => i.slug === 'base-value');
 
   return (
-    <article>
+    <article className="overflow-x-hidden">
       <PageSEO
         title="Законодательство Беларуси онлайн"
         description="Полные тексты 26 кодексов и 200+ законов Беларуси. Поиск по НПА, налоговый календарь, помощник для бухгалтеров и юристов."
@@ -152,15 +152,15 @@ export default function Landing() {
       />
 
       {/* ═══ HERO ═══ */}
-      <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-center max-w-3xl leading-tight">
+      <section className="flex flex-col items-center px-4 pt-6 md:pt-8 pb-4 md:pb-6">
+        <h1 className="text-xl md:text-3xl font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">удобно</span>
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-muted-foreground text-center max-w-xl">
+        <p className="mt-3 text-sm md:text-base leading-relaxed text-muted-foreground text-center max-w-xl">
           Все кодексы и законы с навигацией по статьям. Поиск, калькуляторы, налоговый календарь.
         </p>
 
-        <div className="mt-5 w-full max-w-[680px]">
+        <div className="mt-5 w-full max-w-xl">
           <div className="flex items-center gap-0 rounded-xl border bg-card focus-within:ring-2 focus-within:ring-ring">
             <Search className="ml-3 md:ml-5 h-5 w-5 md:h-6 md:w-6 text-muted-foreground shrink-0" />
             <input
@@ -175,12 +175,12 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-center gap-1.5 md:gap-2.5">
           {quickTags.map((tag) => (
             <Link
               key={tag.label}
               to={tag.filter ? `/documents?filter=${tag.filter}` : `/documents?q=${encodeURIComponent(tag.q!)}`}
-              className="rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              className="rounded-full border border-border px-2 md:px-4 py-1 md:py-1.5 text-[11px] md:text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               {tag.label}
             </Link>
@@ -189,11 +189,11 @@ export default function Landing() {
       </section>
 
       {/* ═══ THREE COLUMNS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="mx-auto max-w-7xl px-4 mt-4 pb-6 md:pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
 
           {/* Новые НПА */}
-          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+          <Card className="border border-border rounded-xl p-4 max-h-none md:max-h-[550px] flex flex-col">
             <h2 className="text-base font-semibold mb-2">Новые НПА</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
               <div className="divide-y divide-border/30">
@@ -244,7 +244,7 @@ export default function Landing() {
           </Card>
 
           {/* Курсы + Показатели + Сроки */}
-          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+          <Card className="border border-border rounded-xl p-4 max-h-none md:max-h-[550px] flex flex-col">
             <h2 className="text-base font-semibold mb-2">Курсы НБРБ</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
               {rates && rates.length > 0 ? rates.map((r) => {
@@ -304,7 +304,7 @@ export default function Landing() {
           </Card>
 
           {/* Популярные разделы */}
-          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+          <Card className="border border-border rounded-xl p-4 max-h-none md:max-h-[550px] flex flex-col">
             <h2 className="text-base font-semibold mb-2">Популярные разделы</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
               {popularSections.map((s) => (
@@ -326,14 +326,14 @@ export default function Landing() {
       </section>
 
       {/* ═══ BLOCK 3: ИНСТРУМЕНТЫ ═══ */}
-      <section className="bg-muted/30 py-10">
+      <section className="bg-muted/30 py-6 md:py-10">
         <div className="mx-auto max-w-5xl px-4">
-          <h2 className="text-xl font-semibold text-center mb-6">Инструменты</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h2 className="text-lg md:text-xl font-semibold text-center mb-4 md:mb-6">Инструменты</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
             {toolCards.map((t) => (
-              <Link key={t.to} to={t.to} className="bg-background border rounded-lg p-4 hover:shadow-sm hover:border-foreground/20 transition-all text-center">
-                <p className="text-sm font-medium">{t.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+              <Link key={t.to} to={t.to} className="bg-background border rounded-lg p-3 md:p-4 hover:shadow-sm hover:border-foreground/20 transition-all text-center">
+                <p className="text-xs md:text-sm font-medium">{t.title}</p>
+                <p className="text-[11px] md:text-xs text-muted-foreground mt-1">{t.desc}</p>
               </Link>
             ))}
           </div>
@@ -341,14 +341,14 @@ export default function Landing() {
       </section>
 
       {/* ═══ BLOCK 4: ПРОФЕССИИ ═══ */}
-      <section className="py-8">
+      <section className="py-5 md:py-8">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
             {audienceTags.map((a) => (
               <Link
                 key={a.label}
                 to={`/documents?profession=${a.profession}`}
-                className="border rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                className="border rounded-full px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
               >
                 {a.label}
               </Link>
@@ -359,9 +359,9 @@ export default function Landing() {
 
       {/* ═══ BLOCK 5: НОВОСТИ ═══ */}
       {latestNews && latestNews.length > 0 && (
-        <section className="py-10">
+        <section className="py-6 md:py-10">
           <div className="mx-auto max-w-5xl px-4">
-            <h2 className="text-xl font-semibold mb-6">Новости законодательства</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Новости законодательства</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {latestNews.map((article) => {
                 const excerpt = article.excerpt || (article.body ? article.body.replace(/[#*_\[\]]/g, '').substring(0, 80) : '');
@@ -387,13 +387,13 @@ export default function Landing() {
       )}
 
       {/* ═══ BLOCK 6: CTA ═══ */}
-      <section className="bg-muted/30 py-10 text-center">
+      <section className="bg-muted/30 py-8 md:py-10 text-center">
         <div className="mx-auto max-w-2xl px-4">
-          <h2 className="text-xl font-semibold">Полный доступ к законодательству</h2>
+          <h2 className="text-lg md:text-xl font-semibold">Полный доступ к законодательству</h2>
           <p className="text-sm text-muted-foreground mt-2">Все кодексы, законы и указы с навигацией по статьям</p>
-          <div className="flex justify-center gap-3 mt-4">
-            <Button asChild><Link to="/pricing">Оформить подписку</Link></Button>
-            <Button asChild variant="outline"><Link to="/auth">Попробовать</Link></Button>
+          <div className="flex flex-col md:flex-row justify-center gap-2 md:gap-3 mt-4">
+            <Button asChild className="w-full md:w-auto"><Link to="/pricing">Оформить подписку</Link></Button>
+            <Button asChild variant="outline" className="w-full md:w-auto"><Link to="/auth">Попробовать</Link></Button>
           </div>
         </div>
       </section>
