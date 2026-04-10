@@ -70,13 +70,14 @@ function processContent(
       continue;
     }
 
-    // Check if this is an amendment note
-    const isAmendment = AMENDMENT_RE.test(line);
+    // Check if this entire line is an amendment note (standalone)
+    AMENDMENT_RE.lastIndex = 0;
+    const isFullAmendment = AMENDMENT_RE.test(line) && line.replace(AMENDMENT_RE, '').trim().length === 0;
     AMENDMENT_RE.lastIndex = 0;
 
-    if (isAmendment) {
+    if (isFullAmendment) {
       result.push(
-        <div key={i} className="text-sm text-muted-foreground italic border-l-[3px] border-muted-foreground/30 pl-3 my-2">
+        <div key={i} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded inline-block my-2">
           {highlightSearch(line, searchQuery || '')}
         </div>
       );
