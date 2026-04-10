@@ -82,6 +82,7 @@ function formatDate(d: string | null) {
 export default function Landing() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [npaTab, setNpaTab] = useState<'npa' | 'news'>('npa');
 
   const handleSearch = () => {
     if (searchQuery.trim()) navigate(`/documents?q=${encodeURIComponent(searchQuery.trim())}`);
