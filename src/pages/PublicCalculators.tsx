@@ -7,6 +7,7 @@ const calculators = [
   { emoji: '👨‍👧', title: 'Калькулятор алиментов', desc: 'Расчёт алиментов на детей', slug: 'alimony', ready: true },
   { emoji: '🏥', title: 'Больничный лист', desc: 'Расчёт пособия по нетрудоспособности', slug: 'sick-leave', ready: true },
   { emoji: '✈️', title: 'Командировочные', desc: 'Суточные и аванс для командировки', slug: 'business-trip', ready: true },
+  { emoji: '🏢', title: 'Арендная плата', desc: 'Расчёт аренды по базовой арендной величине', slug: 'rent', ready: true },
 ];
 
 export default function PublicCalculators() {

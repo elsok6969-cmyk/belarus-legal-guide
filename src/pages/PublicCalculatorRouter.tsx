@@ -4,6 +4,7 @@ import VatCalc from './calculators/VatCalc';
 import AlimonyCalc from './calculators/AlimonyCalc';
 import SickLeaveCalc from './calculators/SickLeaveCalc';
 import BusinessTripCalc from './calculators/BusinessTripCalc';
+import RentCalc from './calculators/RentCalc';
 
 const calcMap: Record<string, React.ComponentType> = {
   'income-tax': IncomeTaxCalc,
@@ -11,6 +12,7 @@ const calcMap: Record<string, React.ComponentType> = {
   'alimony': AlimonyCalc,
   'sick-leave': SickLeaveCalc,
   'business-trip': BusinessTripCalc,
+  'rent': RentCalc,
 };
 
 export default function PublicCalculatorRouter() {
