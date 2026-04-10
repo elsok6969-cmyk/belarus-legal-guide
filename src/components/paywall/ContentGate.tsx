@@ -18,11 +18,9 @@ function isFreeCodex(title: string): boolean {
 }
 
 interface ContentGateProps {
-  /** Render function — only called when section is visible. Content never reaches DOM if gated. */
   renderContent: () => ReactNode;
   sectionIndex: number;
   sectionTitle?: string | null;
-  /** Short plain-text snippet for the blurred boundary teaser. Real content is never sent to client. */
   previewSnippet?: string;
   documentTitle: string;
   totalSections: number;
@@ -43,7 +41,7 @@ export function ContentGate({
   const impressionTracked = useRef(false);
 
   const plan = userPlan || 'free';
-  const isPaid = plan === 'basic' || plan === 'professional' || plan === 'enterprise';
+  const isPaid = plan === 'personal' || plan === 'corporate' || plan === 'basic' || plan === 'professional' || plan === 'enterprise';
 
   let limit: number;
   if (!user) {
@@ -83,12 +81,10 @@ export function ContentGate({
     }).then(() => {});
   };
 
-  // ── FULLY VISIBLE: call renderContent — real content reaches client ──
   if (isFullyVisible) {
     return <div className="free-content">{renderContent()}</div>;
   }
 
-  // ── HIDDEN: NO content rendered at all — just greyed-out title ──
   if (isHidden) {
     return sectionTitle ? (
       <div className="py-2 px-4 text-sm text-muted-foreground/50 select-none">
@@ -97,7 +93,6 @@ export function ContentGate({
     ) : null;
   }
 
-  // ── BOUNDARY: show fake snippet (NOT real content) + paywall CTA ──
   const snippet = previewSnippet || sectionTitle || '';
 
   return (
@@ -123,20 +118,20 @@ export function ContentGate({
           <>
             <h3 className="text-lg font-bold mb-2">Продолжение доступно после регистрации</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Зарегистрируйтесь бесплатно и получите доступ к 3 кодексам целиком + 5 вопросов AI в день
+              Зарегистрируйтесь и получите доступ к основным разделам сервиса
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button asChild onClick={() => trackClick('click_register')}>
-                <Link to="/auth">Зарегистрироваться бесплатно</Link>
+                <Link to="/auth">Зарегистрироваться</Link>
               </Button>
               <Button asChild variant="outline" onClick={() => trackClick('click_login')}>
                 <Link to="/auth">Войти</Link>
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              Полный доступ ко всем документам — от 29 BYN/мес.{' '}
+              Полный текст доступен по подписке.{' '}
               <Link to="/pricing" className="text-primary hover:underline" onClick={() => trackClick('click_subscribe')}>
-                Посмотреть тарифы
+                Тарифы
               </Link>
             </p>
           </>
@@ -144,15 +139,15 @@ export function ContentGate({
           <>
             <h3 className="text-lg font-bold mb-2">Полный текст доступен по подписке</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Вы прочитали {limit} из {totalSections} статей бесплатно. Оформите подписку для полного доступа.
+              Персональный — 69 BYN/мес, Корпоративный — 99 BYN/мес.
             </p>
-            <Button asChild onClick={() => trackClick('click_subscribe')}>
-              <Link to="/pricing">Оформить подписку — 29 BYN/мес</Link>
-            </Button>
-            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-primary" />Все документы</span>
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-primary" />AI безлимит</span>
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-primary" />Экспорт PDF</span>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <Button asChild onClick={() => trackClick('click_subscribe')}>
+                <Link to="/subscribe/personal">Оформить подписку</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/pricing">Тарифы</Link>
+              </Button>
             </div>
           </>
         )}

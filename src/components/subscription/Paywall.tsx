@@ -7,15 +7,16 @@ import { useAuth } from '@/hooks/useAuth';
 
 const featureLabels: Record<string, string> = {
   search: 'поисковых запросов',
-  ai_chat: 'вопросов AI-ассистенту',
+  ai_chat: 'вопросов помощнику',
   calculator: 'расчётов',
   favorites: 'документов в избранном',
   watch: 'документов на контроле',
 };
 
 const planUpgrade: Record<string, { name: string; limit: string }> = {
-  free: { name: 'Basic', limit: 'больше возможностей' },
-  basic: { name: 'Professional', limit: 'безлимитный доступ' },
+  free: { name: 'Персональный', limit: 'больше возможностей' },
+  personal: { name: 'Корпоративный', limit: 'безлимитный доступ' },
+  basic: { name: 'Персональный', limit: 'больше возможностей' },
 };
 
 interface PaywallProps {
@@ -55,9 +56,6 @@ export function Paywall({ feature, children }: PaywallProps) {
           <div className="flex gap-2 justify-center">
             <Button asChild size="sm">
               <Link to="/pricing">Выбрать план</Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/pricing">Узнать больше</Link>
             </Button>
           </div>
         </div>

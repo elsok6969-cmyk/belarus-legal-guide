@@ -9,73 +9,70 @@ import { PageSEO } from '@/components/shared/PageSEO';
 
 const tiers = [
   {
-    name: 'Бесплатный',
+    name: 'Пробный',
     price: '0',
-    desc: 'Для знакомства с платформой',
+    desc: 'Для знакомства с сервисом',
     highlight: false,
     badge: null,
-    ctaLabel: 'Текущий план',
-    ctaLink: null,
+    ctaLabel: 'Начать',
+    ctaLink: '/register',
     ctaVariant: 'outline' as const,
     features: [
-      '26 кодексов РБ — полный доступ',
-      'Поиск по документам — до 10 запросов/день',
-      'AI-помощник — 3 вопроса/день',
-      'Календарь дедлайнов',
       'Курсы валют НБРБ',
+      'Календарь дедлайнов (текущий месяц)',
+      'Новости и статьи',
+      'Помощник — 3 вопроса',
     ],
   },
   {
-    name: 'Базовый',
-    price: '29',
-    desc: 'Для регулярной работы с документами',
+    name: 'Персональный',
+    price: '69',
+    desc: 'Для физических лиц',
     highlight: true,
     badge: 'Популярный',
-    ctaLabel: 'Выбрать план',
-    ctaLink: '/subscribe/basic',
+    ctaLabel: 'Оформить подписку',
+    ctaLink: '/subscribe/personal',
     ctaVariant: 'default' as const,
     features: [
-      'Всё из бесплатного',
-      'Все законы, указы, постановления',
-      'Поиск — безлимитно',
-      'AI-помощник — 30 вопросов/день',
-      'Избранное — до 100 документов',
-      'Документы на контроле — до 5',
-      'Email-рассылка изменений',
+      'Все кодексы и законы — полный текст',
+      'Поиск по статьям — безлимитно',
+      'Калькуляторы — все',
+      'Календарь — все месяцы',
+      'Помощник — 30 вопросов/день',
+      'Избранное и документы на контроле',
     ],
   },
   {
-    name: 'Про',
-    price: '59',
-    desc: 'Для профессионалов',
+    name: 'Корпоративный',
+    price: '99',
+    desc: 'Для юридических лиц и ИП',
     highlight: false,
     badge: null,
-    ctaLabel: 'Выбрать план',
-    ctaLink: '/subscribe/pro',
-    ctaVariant: 'secondary' as const,
+    ctaLabel: 'Оформить подписку',
+    ctaLink: '/subscribe/corporate',
+    ctaVariant: 'default' as const,
     features: [
-      'Всё из базового',
-      'AI-помощник — безлимитно',
-      'Калькуляторы — все',
-      'Экспорт в PDF/DOCX',
-      'Telegram-уведомления',
+      'Всё из Персонального',
+      'Помощник — безлимитно',
+      'Экспорт PDF/DOCX',
+      'Уведомления об изменениях в Telegram',
       'Приоритетная поддержка',
+      'Акт и счёт-фактура для бухгалтерии',
     ],
   },
 ];
 
 const comparisonFeatures = [
-  { label: 'Кодексы РБ', free: true, basic: true, pro: true },
-  { label: 'Законы, указы, постановления', free: false, basic: true, pro: true },
-  { label: 'Полнотекстовый поиск', free: '10/день', basic: '∞', pro: '∞' },
-  { label: 'AI-помощник', free: '3/день', basic: '30/день', pro: '∞' },
-  { label: 'Избранное', free: false, basic: '100 док.', pro: '∞' },
-  { label: 'Документы на контроле', free: false, basic: '5 док.', pro: '∞' },
-  { label: 'Email-уведомления', free: false, basic: true, pro: true },
-  { label: 'Telegram-уведомления', free: false, basic: false, pro: true },
-  { label: 'Калькуляторы', free: 'Базовые', basic: 'Базовые', pro: 'Все' },
-  { label: 'Экспорт PDF/DOCX', free: false, basic: false, pro: true },
-  { label: 'Приоритетная поддержка', free: false, basic: false, pro: true },
+  { label: 'Кодексы и законы', free: 'Ограничено', personal: '∞', corp: '∞' },
+  { label: 'Поиск по статьям', free: 'Ограничено', personal: '∞', corp: '∞' },
+  { label: 'Помощник', free: '3/день', personal: '30/день', corp: '∞' },
+  { label: 'Калькуляторы', free: false, personal: true, corp: true },
+  { label: 'Календарь дедлайнов', free: 'Текущий месяц', personal: 'Все месяцы', corp: 'Все месяцы' },
+  { label: 'Избранное и контроль', free: false, personal: true, corp: true },
+  { label: 'Экспорт PDF/DOCX', free: false, personal: false, corp: true },
+  { label: 'Telegram-уведомления', free: false, personal: false, corp: true },
+  { label: 'Приоритетная поддержка', free: false, personal: false, corp: true },
+  { label: 'Акт и счёт-фактура', free: false, personal: false, corp: true },
 ];
 
 const faqItems = [
@@ -89,7 +86,7 @@ const faqItems = [
   },
   {
     q: 'Есть ли пробный период?',
-    a: 'Бесплатный тариф доступен без ограничений по времени. Вы можете пользоваться им сколько угодно и перейти на платный план, когда будете готовы.',
+    a: 'Пробный тариф доступен без ограничений по времени. Вы можете пользоваться им и перейти на платный план, когда будете готовы.',
   },
   {
     q: 'Можно ли сменить тариф?',
@@ -107,8 +104,8 @@ export default function Pricing() {
   return (
     <div>
       <PageSEO
-        title="Тарифы — Правовой помощник"
-        description="Три тарифа для работы с законодательством Беларуси: бесплатный, базовый (29 BYN/мес) и про (59 BYN/мес)."
+        title="Тарифы — Бабиджон"
+        description="Тарифы для работы с законодательством Беларуси: Пробный (0 BYN), Персональный (69 BYN/мес), Корпоративный (99 BYN/мес)."
         path="/pricing"
       />
 
@@ -128,7 +125,7 @@ export default function Pricing() {
             <Card
               key={t.name}
               className={cn(
-                'flex flex-col relative',
+                'flex flex-col relative border',
                 t.highlight && 'border-2 border-primary shadow-lg scale-[1.03] md:scale-105 z-10'
               )}
             >
@@ -159,8 +156,7 @@ export default function Pricing() {
                 <Button
                   asChild={!!t.ctaLink}
                   variant={t.ctaVariant}
-                  className={cn('w-full', !t.ctaLink && 'cursor-default')}
-                  disabled={!t.ctaLink}
+                  className="w-full min-h-[44px]"
                 >
                   {t.ctaLink ? (
                     <Link to={t.ctaLink}>
@@ -178,17 +174,17 @@ export default function Pricing() {
       </section>
 
       {/* Comparison table */}
-      <section className="px-6 py-12 bg-muted/30">
+      <section className="px-4 md:px-6 py-12 bg-muted/30">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-8">Сравнение тарифов</h2>
+          <h2 className="text-xl font-semibold text-center mb-8">Сравнение тарифов</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Функция</th>
-                  <th className="text-center py-3 px-4 font-medium">Бесплатный</th>
-                  <th className="text-center py-3 px-4 font-medium text-primary">Базовый</th>
-                  <th className="text-center py-3 px-4 font-medium">Про</th>
+                  <th className="text-center py-3 px-4 font-medium">Пробный</th>
+                  <th className="text-center py-3 px-4 font-medium text-primary">Персональный</th>
+                  <th className="text-center py-3 px-4 font-medium">Корпоративный</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,8 +192,8 @@ export default function Pricing() {
                   <tr key={row.label} className="border-b last:border-0">
                     <td className="py-3 px-4">{row.label}</td>
                     <td className="py-3 px-4 text-center"><CellValue value={row.free} /></td>
-                    <td className="py-3 px-4 text-center bg-primary/5"><CellValue value={row.basic} /></td>
-                    <td className="py-3 px-4 text-center"><CellValue value={row.pro} /></td>
+                    <td className="py-3 px-4 text-center bg-primary/5"><CellValue value={row.personal} /></td>
+                    <td className="py-3 px-4 text-center"><CellValue value={row.corp} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -207,9 +203,9 @@ export default function Pricing() {
       </section>
 
       {/* FAQ */}
-      <section className="px-6 py-16">
+      <section className="px-4 md:px-6 py-16">
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-bold text-center mb-8">Частые вопросы</h2>
+          <h2 className="text-xl font-semibold text-center mb-8">Частые вопросы</h2>
           <Accordion type="single" collapsible className="w-full">
             {faqItems.map((item, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
@@ -224,7 +220,7 @@ export default function Pricing() {
       </section>
 
       {/* Notice */}
-      <section className="px-6 pb-16">
+      <section className="px-4 md:px-6 pb-16">
         <div className="mx-auto max-w-2xl rounded-lg bg-muted/50 p-4">
           <div className="flex items-start gap-3 text-sm text-muted-foreground">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
