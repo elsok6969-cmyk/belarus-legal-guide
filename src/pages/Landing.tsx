@@ -192,122 +192,56 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* Новые НПА / Новости */}
-          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
-              <div className="flex items-center gap-1 border-b border-border pb-2">
-                <button
-                  onClick={() => setNpaTab('npa')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${npaTab === 'npa' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  НПА
-                </button>
-                <button
-                  onClick={() => setNpaTab('news')}
-                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${npaTab === 'news' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Новости
-                </button>
+          {/* Новые НПА */}
+          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+            <h2 className="text-base font-semibold mb-2">Новые НПА</h2>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="divide-y divide-border/30">
+                {latestDocs?.map((doc) => {
+                  const dt = doc.document_types as any;
+                  const dateObj = doc.created_at ? new Date(doc.created_at) : null;
+                  const contentText = (doc as any).content_text as string | null;
+                  return (
+                    <Link
+                      key={doc.id}
+                      to={`/documents/${doc.id}`}
+                      className="flex items-center gap-3 py-2 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
+                    >
+                      <div className="w-[50px] shrink-0 text-center">
+                        {dateObj && (
+                          <span className="text-xs text-muted-foreground">
+                            {format(dateObj, 'd MMM', { locale: ru })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0">
+                            {dt?.name_ru || 'Документ'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                          {doc.title}
+                        </p>
+                        {contentText && (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {contentText.substring(0, 60)}
+                          </p>
+                        )}
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  );
+                })}
+                {(!latestDocs || latestDocs.length === 0) && (
+                  <p className="text-sm text-muted-foreground py-4">Нет документов</p>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0 flex flex-col">
-              {npaTab === 'npa' ? (
-                <>
-                  <div className="divide-y divide-border/50 flex-1 overflow-y-auto min-h-0 pr-1">
-                    {latestDocs?.map((doc) => {
-                      const dt = doc.document_types as any;
-                      const dateObj = doc.created_at ? new Date(doc.created_at) : null;
-                      const contentText = (doc as any).content_text as string | null;
-                      return (
-                        <Link
-                          key={doc.id}
-                          to={`/documents/${doc.id}`}
-                          className="flex items-center gap-3 py-2.5 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
-                        >
-                          <div className="w-[52px] shrink-0 text-center">
-                            {dateObj && (
-                              <>
-                                <div className="text-sm font-semibold leading-tight">
-                                  {format(dateObj, 'd MMM', { locale: ru })}
-                                </div>
-                                <div className="text-[11px] text-muted-foreground">
-                                  {format(dateObj, 'yyyy')}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
-                                {dt?.name_ru || 'Документ'}
-                              </Badge>
-                              {doc.doc_number && (
-                                <span className="text-[11px] text-muted-foreground">№ {doc.doc_number}</span>
-                              )}
-                            </div>
-                            <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                              {doc.title && doc.title.length > 65 ? doc.title.substring(0, 65) + '...' : doc.title}
-                            </p>
-                            {contentText && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                                {contentText.substring(0, 80)}
-                              </p>
-                            )}
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </Link>
-                      );
-                    })}
-                    {(!latestDocs || latestDocs.length === 0) && (
-                      <p className="text-sm text-muted-foreground py-4">Нет документов</p>
-                    )}
-                  </div>
-                  <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 flex-shrink-0 transition-colors">
-                    Все обновления <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <div className="divide-y divide-border/50 flex-1 overflow-y-auto min-h-0 pr-1">
-                    {latestNews?.map((article) => {
-                      const dateObj = article.published_at ? new Date(article.published_at) : null;
-                      return (
-                        <Link
-                          key={article.id}
-                          to={`/news/${article.slug}`}
-                          className="flex items-center gap-3 py-2.5 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
-                        >
-                          <div className="w-[52px] shrink-0 text-center">
-                            {dateObj && (
-                              <>
-                                <div className="text-sm font-semibold leading-tight">
-                                  {format(dateObj, 'd MMM', { locale: ru })}
-                                </div>
-                                <div className="text-[11px] text-muted-foreground">
-                                  {format(dateObj, 'yyyy')}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                              {article.title && article.title.length > 80 ? article.title.substring(0, 80) + '...' : article.title}
-                            </p>
-                            {article.excerpt && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                                {article.excerpt}
-                              </p>
-                            )}
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </Link>
-                      );
-                    })}
-                    {(!latestNews || latestNews.length === 0) && (
-                      <p className="text-sm text-muted-foreground py-4">Нет новостей</p>
-                    )}
-                  </div>
-                  <Link to="/news" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 flex-shrink-0 transition-colors">
+            </div>
+            <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 transition-colors">
+              Все обновления <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Card>
                     Все новости <ArrowRight className="h-3 w-3" />
                   </Link>
                 </>
