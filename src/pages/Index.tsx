@@ -243,21 +243,21 @@ export default function Index() {
                   ))}
                 </div>
               ) : newDocs && newDocs.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {newDocs.map((doc: any) => (
                     <Link
                       key={doc.id}
                       to={`/app/documents/${doc.id}`}
-                      className="flex items-center gap-3 p-2.5 rounded-md hover:bg-accent transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-md hover:bg-accent transition-colors group"
                     >
                       <Badge
                         variant="secondary"
-                        className={`text-[10px] shrink-0 ${typeColors[doc.document_types?.slug] || ''}`}
+                        className={`text-[11px] shrink-0 ${typeColors[doc.document_types?.slug] || ''}`}
                       >
                         {doc.document_types?.name_ru || 'Документ'}
                       </Badge>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm truncate">{doc.short_title || doc.title}</p>
+                        <p className="text-sm line-clamp-2">{doc.short_title || doc.title}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {formatDate(doc.doc_date)}
                           {doc.issuing_bodies?.name_ru && ` • ${doc.issuing_bodies.name_ru}`}
