@@ -79,11 +79,6 @@ function formatDate(d: string | null) {
   try { return format(new Date(d), 'd MMM yyyy', { locale: ru }); } catch { return d; }
 }
 
-function formatShortDate(d: string | null) {
-  if (!d) return '';
-  try { return format(new Date(d), 'dd.MM.yyyy'); } catch { return d; }
-}
-
 export default function Landing() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,15 +194,15 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
-        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* Новые НПА */}
-          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0">
+          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
+            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
               <CardTitle className="text-base font-semibold">Новые НПА</CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1 flex flex-col">
-              <div className="divide-y divide-border/50 flex-1">
+            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0 flex flex-col">
+              <div className="divide-y divide-border/50 flex-1 overflow-y-auto min-h-0 pr-1">
                 {latestDocs?.map((doc) => {
                   const dt = doc.document_types as any;
                   const dateObj = doc.created_at ? new Date(doc.created_at) : null;
@@ -252,111 +247,113 @@ export default function Landing() {
                     </Link>
                   );
                 })}
+                {(!latestDocs || latestDocs.length === 0) && (
+                  <p className="text-sm text-muted-foreground py-4">Нет документов</p>
+                )}
+                {latestDocs && latestDocs.length > 0 && latestDocs.length < 3 && (
+                  <p className="text-xs text-muted-foreground py-3 text-center">
+                    Мониторинг pravo.by проверяет обновления каждые 6 часов
+                  </p>
+                )}
               </div>
-              {(!latestDocs || latestDocs.length === 0) && (
-                <p className="text-sm text-muted-foreground py-4">Нет документов</p>
-              )}
-              {latestDocs && latestDocs.length > 0 && latestDocs.length < 3 && (
-                <p className="text-xs text-muted-foreground mt-3 text-center">
-                  Мониторинг pravo.by проверяет обновления каждые 6 часов
-                </p>
-              )}
-              <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 border-t border-border/50 transition-colors">
+              <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 flex-shrink-0 transition-colors">
                 Все обновления <ArrowRight className="h-3 w-3" />
               </Link>
             </CardContent>
           </Card>
 
-          {/* Курсы + Дедлайны — одна карточка */}
-          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0">
+          {/* Курсы + Показатели + Сроки */}
+          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
+            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
               <CardTitle className="text-base font-semibold">Курсы НБРБ</CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1 flex flex-col">
-              <div className="divide-y divide-border/50">
-                {rates && rates.length > 0 ? rates.map((r) => {
-                  const change = Number(r.change_value) || 0;
-                  const flag = CURRENCY_FLAGS[r.currency_code] || '';
-                  return (
-                    <div key={r.currency_code} className="flex items-center justify-between py-3 first:pt-0">
-                      <span className="text-sm font-medium">
-                        {flag} {r.currency_code}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
-                        <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                          {change > 0 ? (
-                            <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</>
-                          ) : change < 0 ? (
-                            <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</>
-                          ) : (
-                            <><Minus className="h-3 w-3 mr-0.5" />0.0000</>
-                          )}
+            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0 flex flex-col">
+              <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+                <div className="divide-y divide-border/50">
+                  {rates && rates.length > 0 ? rates.map((r) => {
+                    const change = Number(r.change_value) || 0;
+                    const flag = CURRENCY_FLAGS[r.currency_code] || '';
+                    return (
+                      <div key={r.currency_code} className="flex items-center justify-between py-3 first:pt-0">
+                        <span className="text-sm font-medium">
+                          {flag} {r.currency_code}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                          <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                            {change > 0 ? (
+                              <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</>
+                            ) : change < 0 ? (
+                              <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</>
+                            ) : (
+                              <><Minus className="h-3 w-3 mr-0.5" />0.0000</>
+                            )}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }) : (
-                  <p className="text-sm text-muted-foreground py-3">Обновление...</p>
-                )}
-              </div>
-              <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors">
-                Все курсы и конвертер <ArrowRight className="h-3 w-3" />
-              </Link>
-
-              {/* Показатели */}
-              <div className="border-t border-border mt-3 pt-3">
-                <h3 className="text-base font-semibold mb-2">Показатели</h3>
-                <div className="divide-y divide-border/50">
-                  {refRate && (
-                    <div className="flex items-center justify-between py-2 first:pt-0">
-                      <span className="text-sm text-muted-foreground">Ставка рефинансирования</span>
-                      <span className="text-sm font-semibold">{refRate.current_value}</span>
-                    </div>
-                  )}
-                  {minSalary && (
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-muted-foreground">МЗП</span>
-                      <span className="text-sm font-semibold">{minSalary.current_value}</span>
-                    </div>
-                  )}
-                  {baseValue && (
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-muted-foreground">Базовая величина</span>
-                      <span className="text-sm font-semibold">{baseValue.current_value}</span>
-                    </div>
+                    );
+                  }) : (
+                    <p className="text-sm text-muted-foreground py-3">Обновление...</p>
                   )}
                 </div>
-              </div>
 
-              {/* Ближайшие сроки */}
-              <div className="border-t border-border mt-3 pt-3">
-                <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
-                <div className="divide-y divide-border/50">
-                  {deadlines?.map((d) => (
-                    <div key={d.id} className="flex items-start gap-3 py-2.5 first:pt-0">
-                      <div className="rounded bg-muted px-2 py-0.5 text-sm font-medium text-foreground shrink-0">
-                        {formatDate(d.deadline_date)}
-                      </div>
-                      <span className="text-sm">{d.title}</span>
-                    </div>
-                  ))}
-                  {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-2">Нет ближайших дедлайнов</p>}
-                </div>
-                <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 border-t border-border/50 transition-colors">
-                  Календарь <ArrowRight className="h-3 w-3" />
+                <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors">
+                  Все курсы и конвертер <ArrowRight className="h-3 w-3" />
                 </Link>
+
+                <div className="border-t border-border mt-3 pt-3">
+                  <h3 className="text-base font-semibold mb-2">Показатели</h3>
+                  <div className="divide-y divide-border/50">
+                    {refRate && (
+                      <div className="flex items-center justify-between py-2 first:pt-0">
+                        <span className="text-sm text-muted-foreground">Ставка рефинансирования</span>
+                        <span className="text-sm font-semibold">{refRate.current_value}</span>
+                      </div>
+                    )}
+                    {minSalary && (
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm text-muted-foreground">МЗП</span>
+                        <span className="text-sm font-semibold">{minSalary.current_value}</span>
+                      </div>
+                    )}
+                    {baseValue && (
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm text-muted-foreground">Базовая величина</span>
+                        <span className="text-sm font-semibold">{baseValue.current_value}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t border-border mt-3 pt-3">
+                  <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
+                  <div className="divide-y divide-border/50">
+                    {deadlines?.map((d) => (
+                      <div key={d.id} className="flex items-start gap-3 py-2.5 first:pt-0">
+                        <div className="rounded bg-muted px-2 py-0.5 text-sm font-medium text-foreground shrink-0">
+                          {formatDate(d.deadline_date)}
+                        </div>
+                        <span className="text-sm">{d.title}</span>
+                      </div>
+                    ))}
+                    {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-2">Нет ближайших дедлайнов</p>}
+                  </div>
+                </div>
               </div>
+
+              <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 flex-shrink-0 transition-colors">
+                Календарь <ArrowRight className="h-3 w-3" />
+              </Link>
             </CardContent>
           </Card>
 
           {/* Популярные разделы */}
-          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0">
+          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
+            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
               <CardTitle className="text-base font-semibold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1">
-              <div className="divide-y divide-border/50">
+            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0">
+              <div className="divide-y divide-border/50 h-full overflow-y-auto pr-1">
                 {popularSections.map((s) => (
                   <Link
                     key={s.label}
@@ -375,33 +372,6 @@ export default function Landing() {
           </Card>
         </div>
       </section>
-
-
-
-
-      {/* ═══ POPULAR DOCUMENTS (simple list) ═══ */}
-      {popularDocs && popularDocs.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-10">
-          <h2 className="text-lg font-semibold mb-4">Популярные документы</h2>
-          <div>
-            {popularDocs.map((doc) => (
-              <Link
-                key={doc.id}
-                to={`/documents/${doc.id}`}
-                className="flex items-center justify-between py-3 border-b border-border/50 hover:bg-muted/50 px-2 rounded transition-colors group"
-              >
-                <span className="text-sm font-medium text-foreground line-clamp-1 min-w-0 mr-4">
-                  {doc.title}
-                </span>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs text-muted-foreground">{formatShortDate(doc.doc_date)}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* ═══ AUDIENCE PILLS ═══ */}
       <section className="mx-auto max-w-7xl px-4 pb-10">
