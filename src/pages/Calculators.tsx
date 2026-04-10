@@ -55,7 +55,7 @@ const calculators: CalcItem[] = [
   },
 ];
 
-const categories = ['Налоги', 'Зарплата', 'Трудовые отношения'];
+const categories = ['Налоги', 'Зарплата', 'Трудовые отношения', 'Семейное право'];
 
 export default function Calculators() {
   const [filter, setFilter] = useState('');
