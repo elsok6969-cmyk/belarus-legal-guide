@@ -3,12 +3,14 @@ import IncomeTaxCalc from './calculators/IncomeTaxCalc';
 import VatCalc from './calculators/VatCalc';
 import AlimonyCalc from './calculators/AlimonyCalc';
 import SickLeaveCalc from './calculators/SickLeaveCalc';
+import BusinessTripCalc from './calculators/BusinessTripCalc';
 
 const calcMap: Record<string, React.ComponentType> = {
   'income-tax': IncomeTaxCalc,
   'nds': VatCalc,
   'alimony': AlimonyCalc,
   'sick-leave': SickLeaveCalc,
+  'business-trip': BusinessTripCalc,
 };
 
 export default function PublicCalculatorRouter() {
