@@ -39,13 +39,13 @@ const popularSections = [
   { icon: ShoppingCart, label: 'Закупки', to: '/documents?q=закупки' },
 ];
 
-const audiences = [
-  { emoji: '👨‍💼', label: 'Бухгалтер', profession: 'accountant' },
-  { emoji: '⚖️', label: 'Юрист', profession: 'lawyer' },
-  { emoji: '👷', label: 'Кадровик', profession: 'hr' },
-  { emoji: '🛒', label: 'Закупки', profession: 'procurement' },
-  { emoji: '💹', label: 'Экономист', profession: 'economist' },
-  { emoji: '👤', label: 'ИП', profession: 'entrepreneur' },
+const audienceTags = [
+  { label: 'Бухгалтеру', profession: 'accountant' },
+  { label: 'Юристу', profession: 'lawyer' },
+  { label: 'Кадровику', profession: 'hr' },
+  { label: 'По закупкам', profession: 'procurement' },
+  { label: 'Экономисту', profession: 'economist' },
+  { label: 'ИП', profession: 'entrepreneur' },
 ];
 
 const pricingPlans = [
@@ -74,6 +74,11 @@ const CURRENCY_FLAGS: Record<string, string> = {
 function formatDate(d: string | null) {
   if (!d) return '';
   try { return format(new Date(d), 'd MMM yyyy', { locale: ru }); } catch { return d; }
+}
+
+function formatShortDate(d: string | null) {
+  if (!d) return '';
+  try { return format(new Date(d), 'dd.MM.yyyy'); } catch { return d; }
 }
 
 export default function Landing() {
@@ -141,30 +146,12 @@ export default function Landing() {
     },
   });
 
-  const { data: recentChanges } = useQuery({
-    queryKey: ['landing-recent-changes'],
-    queryFn: async () => {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const { data } = await supabase.from('documents')
-        .select('id, title, last_updated, document_types(slug, name_ru)')
-        .gte('last_updated', weekAgo.toISOString())
-        .order('last_updated', { ascending: false }).limit(10);
-      return data ?? [];
-    },
-  });
-
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Бабиджон',
     description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов бесплатно',
     inLanguage: 'ru',
-  };
-
-  const getDocTypeLabel = (doc: any) => {
-    const dt = doc.document_types as any;
-    return dt?.name_ru || '';
   };
 
   const refRate = indicators?.find(i => i.slug === 'refinancing-rate');
@@ -180,8 +167,8 @@ export default function Landing() {
         jsonLd={[websiteJsonLd]}
       />
 
-      {/* ═══ HERO (compact) ═══ */}
-      <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
+      {/* ═══ HERO ═══ */}
+      <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
@@ -190,7 +177,7 @@ export default function Landing() {
         </p>
 
         <div className="mt-5 w-full max-w-[680px]">
-          <div className="flex items-center gap-0 rounded-xl border bg-card shadow-md focus-within:ring-2 focus-within:ring-ring">
+          <div className="flex items-center gap-0 rounded-xl border bg-card focus-within:ring-2 focus-within:ring-ring">
             <Search className="ml-3 md:ml-5 h-5 w-5 md:h-6 md:w-6 text-muted-foreground shrink-0" />
             <input
               type="text"
@@ -209,7 +196,7 @@ export default function Landing() {
             <Link
               key={tag.label}
               to={tag.filter ? `/documents?filter=${tag.filter}` : `/documents?q=${encodeURIComponent(tag.q!)}`}
-              className="rounded-full border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary hover:bg-accent transition-all duration-200"
+              className="rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               {tag.label}
             </Link>
@@ -218,10 +205,11 @@ export default function Landing() {
       </section>
 
       {/* ═══ THREE COLUMNS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 mt-6 pb-12">
+      <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
         <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
-          {/* Latest docs — changelog feed */}
-          <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+
+          {/* Новые НПА */}
+          <Card className="border border-border rounded-xl p-4 md:p-6 min-h-[420px]">
             <CardHeader className="pb-3 px-0 pt-0">
               <CardTitle className="text-lg font-semibold">Новые НПА</CardTitle>
             </CardHeader>
@@ -230,13 +218,13 @@ export default function Landing() {
                 {latestDocs?.map((doc) => {
                   const dt = doc.document_types as any;
                   const dateObj = doc.created_at ? new Date(doc.created_at) : null;
+                  const contentText = (doc as any).content_text as string | null;
                   return (
                     <Link
                       key={doc.id}
                       to={`/documents/${doc.id}`}
                       className="flex items-center gap-3 py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
                     >
-                      {/* Date column */}
                       <div className="w-[60px] shrink-0 text-center">
                         {dateObj && (
                           <>
@@ -249,7 +237,6 @@ export default function Landing() {
                           </>
                         )}
                       </div>
-                      {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
@@ -262,13 +249,12 @@ export default function Landing() {
                         <p className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                           {doc.title && doc.title.length > 65 ? doc.title.substring(0, 65) + '...' : doc.title}
                         </p>
-                        {((doc as any).content_text ? (
+                        {contentText && (
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                            {(doc as any).content_text.substring(0, 80)}
+                            {contentText.substring(0, 80)}
                           </p>
-                        ) : doc.doc_number ? null : null)}
+                        )}
                       </div>
-                      {/* Arrow */}
                       <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                   );
@@ -288,11 +274,11 @@ export default function Landing() {
             </CardContent>
           </Card>
 
-          {/* Rates + Deadlines */}
+          {/* Курсы + Дедлайны */}
           <div className="space-y-4 md:space-y-6 flex flex-col">
-            <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
+            <Card className="border border-border rounded-xl p-4 md:p-6 flex-1">
               <CardHeader className="pb-3 px-0 pt-0">
-                <CardTitle className="text-xl md:text-2xl font-semibold">Курсы НБРБ</CardTitle>
+                <CardTitle className="text-lg font-semibold">Курсы НБРБ</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 px-0 pb-0 pt-0">
                 {rates && rates.length > 0 ? rates.map((r) => {
@@ -300,11 +286,11 @@ export default function Landing() {
                   const flag = CURRENCY_FLAGS[r.currency_code] || '';
                   return (
                     <div key={r.currency_code} className="flex items-center justify-between py-0.5">
-                      <span className="text-[15px] font-medium">
+                      <span className="text-sm font-medium">
                         {flag} {r.currency_code}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                        <span className="text-base font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
                         <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                           {change > 0 ? (
                             <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</>
@@ -326,17 +312,17 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
+            <Card className="border border-border rounded-xl p-4 md:p-6 flex-1">
               <CardHeader className="pb-3 px-0 pt-0">
-                <CardTitle className="text-xl md:text-2xl font-semibold">Ближайшие дедлайны</CardTitle>
+                <CardTitle className="text-lg font-semibold">Ближайшие сроки</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 px-0 pb-0 pt-0">
                 {deadlines?.map((d) => (
                   <div key={d.id} className="flex items-start gap-3">
-                    <div className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground shrink-0">
+                    <div className="rounded bg-muted px-2 py-1 text-xs font-semibold text-foreground shrink-0">
                       {formatDate(d.deadline_date)}
                     </div>
-                    <span className="text-[15px]">{d.title}</span>
+                    <span className="text-sm">{d.title}</span>
                   </div>
                 ))}
                 {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет ближайших дедлайнов</p>}
@@ -347,17 +333,17 @@ export default function Landing() {
             </Card>
           </div>
 
-          {/* Popular sections */}
-          <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+          {/* Популярные разделы */}
+          <Card className="border border-border rounded-xl p-4 md:p-6 min-h-[420px]">
             <CardHeader className="pb-3 px-0 pt-0">
-              <CardTitle className="text-xl md:text-2xl font-semibold">Популярные разделы</CardTitle>
+              <CardTitle className="text-lg font-semibold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 px-0 pb-0 pt-0">
+            <CardContent className="space-y-0 px-0 pb-0 pt-0">
               {popularSections.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200">
-                    <Icon className="h-5 w-5 text-primary shrink-0" />
+                  <Link key={s.label} to={s.to} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                    <Icon className="h-4 w-4 shrink-0" />
                     {s.label}
                   </Link>
                 );
@@ -367,70 +353,27 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ FEATURES ═══ */}
-      <section className="bg-muted/50 py-12">
-        <div className="mx-auto max-w-7xl px-4">
-          <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">Почему Бабиджон</h2>
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3">
-            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-3">🔍</div>
-              <h3 className="font-semibold text-base mb-2">Умный поиск</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">Поиск по тексту всех документов и статей</p>
-            </div>
-            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-3">📑</div>
-              <h3 className="font-semibold text-base mb-2">Фокус на статье</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">Читайте конкретную статью, а не весь кодекс</p>
-            </div>
-            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-3">🤖</div>
-              <h3 className="font-semibold text-base mb-2">AI-помощник</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">Ответы на вопросы со ссылками на статьи</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ AUDIENCE ═══ */}
-      <section className="py-12">
-        <div className="mx-auto max-w-7xl px-4">
-          <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">Для профессионалов</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
-            {audiences.map((a) => (
-              <Link
-                key={a.label}
-                to={`/documents?audience=${a.profession}`}
-                className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200"
-              >
-                <span className="text-2xl">{a.emoji}</span>
-                <span className="text-sm font-medium">{a.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ INFORMERS (dark) ═══ */}
+      {/* ═══ INFORMERS ═══ */}
       {(refRate || minSalary || baseValue) && (
-        <section className="gradient-dark py-4">
+        <section className="border-y border-border bg-muted py-4">
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
               {refRate && (
                 <div className="text-center">
-                  <p className="text-xs text-white/60">Ставка рефинансирования</p>
-                  <p className="text-xl font-bold text-white">{refRate.current_value}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Ставка рефинансирования</p>
+                  <p className="text-lg font-semibold text-foreground">{refRate.current_value}</p>
                 </div>
               )}
               {minSalary && (
                 <div className="text-center">
-                  <p className="text-xs text-white/60">МЗП</p>
-                  <p className="text-xl font-bold text-white">{minSalary.current_value}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">МЗП</p>
+                  <p className="text-lg font-semibold text-foreground">{minSalary.current_value}</p>
                 </div>
               )}
               {baseValue && (
                 <div className="text-center">
-                  <p className="text-xs text-white/60">Базовая величина</p>
-                  <p className="text-xl font-bold text-white">{baseValue.current_value}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Базовая величина</p>
+                  <p className="text-lg font-semibold text-foreground">{baseValue.current_value}</p>
                 </div>
               )}
             </div>
@@ -438,55 +381,59 @@ export default function Landing() {
         </section>
       )}
 
-      {/* ═══ POPULAR DOCUMENTS ═══ */}
+      {/* ═══ POPULAR DOCUMENTS (simple list) ═══ */}
       {popularDocs && popularDocs.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-12">
-          <h2 className="text-xl md:text-2xl font-semibold mb-6">Популярные документы</h2>
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="mx-auto max-w-7xl px-4 py-10">
+          <h2 className="text-lg font-semibold mb-4">Популярные документы</h2>
+          <div>
             {popularDocs.map((doc) => (
-              <Link key={doc.id} to={`/documents/${doc.id}`} className="border rounded-xl p-4 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-border/80 transition-all duration-200 group">
-                <Badge variant="secondary" className="text-[11px] mb-2">{getDocTypeLabel(doc)}</Badge>
-                <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{doc.title}</h3>
-                <p className="text-xs text-muted-foreground mt-2">{formatDate(doc.doc_date)}</p>
+              <Link
+                key={doc.id}
+                to={`/documents/${doc.id}`}
+                className="flex items-center justify-between py-3 border-b border-border/50 hover:bg-muted/50 px-2 rounded transition-colors group"
+              >
+                <span className="text-sm font-medium text-foreground line-clamp-1 min-w-0 mr-4">
+                  {doc.title}
+                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-muted-foreground">{formatShortDate(doc.doc_date)}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                </div>
               </Link>
             ))}
           </div>
         </section>
       )}
 
-      {/* ═══ RECENT CHANGES ═══ */}
-      {recentChanges && recentChanges.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12">
-          <h2 className="text-xl md:text-2xl font-semibold mb-6">Изменения за последние 7 дней</h2>
-          <div className="border rounded-xl bg-card overflow-hidden">
-            {recentChanges.map((doc, i) => (
-              <Link key={doc.id} to={`/documents/${doc.id}`} className={`flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-all duration-200 ${i !== 0 ? 'border-t' : ''}`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <Badge variant="secondary" className="shrink-0 text-[11px]">{getDocTypeLabel(doc)}</Badge>
-                  <span className="text-sm font-medium truncate">{doc.title}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-4">
-                  <span className="text-xs text-muted-foreground">{formatDate(doc.last_updated)}</span>
-                  <Badge className="bg-warning text-warning-foreground text-[11px]">ИЗМЕНЁН</Badge>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ═══ AUDIENCE PILLS ═══ */}
+      <section className="mx-auto max-w-7xl px-4 pb-10">
+        <div className="flex flex-wrap justify-center gap-2.5">
+          {audienceTags.map((a) => (
+            <Link
+              key={a.label}
+              to={`/documents?audience=${a.profession}`}
+              className="border border-border rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              {a.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* ═══ PRICING ═══ */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
+      <section className="mx-auto max-w-7xl px-4 py-10">
         <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl font-semibold">Простые и честные тарифы</h2>
-          <p className="mt-2 text-base leading-relaxed text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
+          <h2 className="text-lg font-semibold">Тарифы</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
         </div>
         <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
           {pricingPlans.map((plan) => (
-            <Card key={plan.name} className={`border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
+            <Card key={plan.name} className={`border border-border rounded-xl p-4 md:p-6 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground text-[11px]"><Star className="h-3 w-3 mr-1" /> Популярный</Badge>
+                  <Badge className="bg-primary text-primary-foreground text-[11px]">
+                    <Star className="h-3 w-3 mr-1" /> Популярный
+                  </Badge>
                 </div>
               )}
               <CardHeader className="text-center pb-2 pt-0 px-0">
@@ -499,7 +446,7 @@ export default function Landing() {
               <CardContent className="space-y-4 px-0 pb-0">
                 <ul className="space-y-2">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm leading-relaxed">
+                    <li key={f} className="flex items-start gap-2 text-sm">
                       <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{f}</span>
                     </li>
