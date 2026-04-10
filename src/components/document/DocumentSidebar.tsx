@@ -47,6 +47,7 @@ export function DocumentSidebar({ documentId }: { documentId: string }) {
   return (
     <div className="space-y-4">
       {/* Related documents */}
+      {relations && relations.length > 0 && (
       <Card>
         <CardHeader className="pb-2 p-4">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -54,31 +55,28 @@ export function DocumentSidebar({ documentId }: { documentId: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {relations && relations.length > 0 ? (
-            <div className="space-y-2">
-              {relations.map(rel => {
-                const isSource = rel.source_document_id === documentId;
-                const linked = isSource ? (rel.target as any) : (rel.source as any);
-                if (!linked) return null;
-                return (
-                  <Link
-                    key={rel.id}
-                    to={`/app/documents/${linked.id}`}
-                    className="block text-xs hover:text-primary transition-colors"
-                  >
-                    <Badge variant="outline" className="text-[10px] mb-0.5">
-                      {RELATION_LABELS[rel.relation_type] || rel.relation_type}
-                    </Badge>
-                    <p className="line-clamp-2">{linked.short_title || linked.title}</p>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Нет связанных документов</p>
-          )}
+          <div className="space-y-2">
+            {relations.map(rel => {
+              const isSource = rel.source_document_id === documentId;
+              const linked = isSource ? (rel.target as any) : (rel.source as any);
+              if (!linked) return null;
+              return (
+                <Link
+                  key={rel.id}
+                  to={`/app/documents/${linked.id}`}
+                  className="block text-xs hover:text-primary transition-colors"
+                >
+                  <Badge variant="outline" className="text-[10px] mb-0.5">
+                    {RELATION_LABELS[rel.relation_type] || rel.relation_type}
+                  </Badge>
+                  <p className="line-clamp-2">{linked.short_title || linked.title}</p>
+                </Link>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Versions */}
       <Card>

@@ -707,53 +707,35 @@ export default function PublicDocumentView() {
           <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
             <div className="sticky top-20 space-y-4">
               {/* Related documents */}
+              {relations && relations.length > 0 && (
               <Card className="rounded-xl shadow-sm">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
                     <FileText className="h-4 w-4" />Связанные документы
                   </h3>
-                  {relations && relations.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {relations.slice(0, 8).map((rel: any) => {
-                        const isSource = rel.source_document_id === id;
-                        const linked = isSource ? rel.target : rel.source;
-                        if (!linked) return null;
-                        return (
-                          <Link
-                            key={rel.id}
-                            to={`/documents/${linked.id}`}
-                            className="block text-xs hover:text-primary transition-colors"
-                          >
-                            <Badge variant="outline" className="text-[10px] mb-0.5">
-                              {RELATION_LABELS[rel.relation_type] || rel.relation_type}
-                            </Badge>
-                            <p className="line-clamp-2">{linked.short_title || linked.title}</p>
-                            {linked.doc_date && <span className="text-muted-foreground">{formatDate(linked.doc_date)}</span>}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Нет связанных документов</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Expert comments placeholder */}
-              <Card className="rounded-xl shadow-sm">
-                <CardContent className="p-4">
-                  <h3 className="text-sm font-semibold mb-2">Экспертные комментарии</h3>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Комментарии экспертов появятся в ближайшее время.
-                  </p>
-                  <div className="flex gap-2">
-                    <Input placeholder="Ваш email" className="text-sm h-8" />
-                    <Button size="sm" className="gap-1 shrink-0 h-8 text-xs">
-                      <Mail className="h-3.5 w-3.5" />Уведомить
-                    </Button>
+                  <div className="space-y-2.5">
+                    {relations.slice(0, 8).map((rel: any) => {
+                      const isSource = rel.source_document_id === id;
+                      const linked = isSource ? rel.target : rel.source;
+                      if (!linked) return null;
+                      return (
+                        <Link
+                          key={rel.id}
+                          to={`/documents/${linked.id}`}
+                          className="block text-xs hover:text-primary transition-colors"
+                        >
+                          <Badge variant="outline" className="text-[10px] mb-0.5">
+                            {RELATION_LABELS[rel.relation_type] || rel.relation_type}
+                          </Badge>
+                          <p className="line-clamp-2">{linked.short_title || linked.title}</p>
+                          {linked.doc_date && <span className="text-muted-foreground">{formatDate(linked.doc_date)}</span>}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
+              )}
             </div>
           </aside>
         )}
