@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,16 @@ const navLinks = [
 export function PublicHeader() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (to: string) => {
     if (to.includes('?')) return location.pathname + location.search === to;
@@ -24,7 +33,15 @@ export function PublicHeader() {
   };
 
   return (
-    <header role="banner" className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+    <header 
+      role="banner" 
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-200",
+        scrolled 
+          ? "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b shadow-sm" 
+          : "bg-background border-b border-transparent"
+      )}
+    >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 font-extrabold text-lg tracking-tight text-foreground">
@@ -101,16 +118,4 @@ export function PublicHeader() {
               </Link>
             ))}
           </nav>
-          <div className="flex flex-col gap-2 mt-3 pt-3 border-t">
-            <Button asChild variant="outline" size="sm" className="w-full rounded-lg">
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Войти</Link>
-            </Button>
-            <Button asChild size="sm" className="w-full rounded-lg">
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Регистрация</Link>
-            </Button>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-}
+          <div className="flex flex-col gap-2 mt-3 pt-3 border-

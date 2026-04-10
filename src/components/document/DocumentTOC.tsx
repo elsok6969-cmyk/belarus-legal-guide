@@ -42,7 +42,7 @@ export function DocumentTOC({ sections, activeSection, onScrollTo }: DocumentTOC
 
   return (
     <ScrollArea className="h-[calc(100vh-120px)]">
-      <nav className="space-y-0.5 p-3">
+      <nav className="space-y-0.5 p-4">
         {sections.map(section => {
           if (!isVisible(section)) return null;
           const label = section.number
@@ -61,23 +61,16 @@ export function DocumentTOC({ sections, activeSection, onScrollTo }: DocumentTOC
                 if (isCollapsible) toggleCollapse(section.id);
                 onScrollTo(section.id);
               }}
-              style={{ paddingLeft: `${section.level * 16}px` }}
+              style={{ paddingLeft: `${section.level * 14}px` }}
               className={cn(
-                'flex items-center gap-1 w-full text-left text-xs py-1.5 px-2 rounded transition-colors hover:bg-accent',
-                isTopLevel ? 'font-semibold text-foreground' : 'text-muted-foreground',
-                activeSection === section.id && 'bg-primary/10 text-primary'
+                'flex items-center gap-1.5 w-full text-left text-sm py-2 px-2.5 rounded-lg transition-all duration-150 hover:bg-accent/80',
+                isTopLevel ? 'font-semibold text-foreground font-serif' : 'text-muted-foreground text-[13px]',
+                activeSection === section.id && 'bg-primary/10 text-primary hover:bg-primary/15'
               )}
             >
               {isCollapsible && (
                 isCollapsed
-                  ? <ChevronRight className="h-3 w-3 shrink-0" />
-                  : <ChevronDown className="h-3 w-3 shrink-0" />
+                  ? <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  : <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               )}
-              <span className="truncate">{label}</span>
-            </button>
-          );
-        })}
-      </nav>
-    </ScrollArea>
-  );
-}
+              <span classNam

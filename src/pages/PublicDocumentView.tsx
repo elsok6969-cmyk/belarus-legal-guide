@@ -621,8 +621,8 @@ export default function PublicDocumentView() {
 
           {/* Content */}
           {sections.length > 0 ? (
-            <Card className="rounded-xl shadow-sm">
-              <CardContent className="p-6 md:p-8" ref={contentRef}>
+            <Card className="border rounded-xl">
+              <CardContent className="p-6 md:p-8 font-serif leading-relaxed" ref={contentRef}>
                 <div className="max-w-none">
                   {displaySections.map((section, idx) => (
                     <ContentGate
@@ -791,7 +791,4 @@ export default function PublicDocumentView() {
             </CardContent>
           </Card>
         </div>
-      )}
-    </div>
-  );
-}
+   

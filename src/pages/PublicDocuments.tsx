@@ -41,8 +41,9 @@ const CHIPS: { value: ChipFilter; label: string }[] = [
 export default function PublicDocuments() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const initialType = (searchParams.get('type') as ChipFilter) || '';
   const [search, setSearch] = useState(initialQuery);
-  const [chipFilter, setChipFilter] = useState<ChipFilter>('');
+  const [chipFilter, setChipFilter] = useState<ChipFilter>(initialType);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -83,17 +84,29 @@ export default function PublicDocuments() {
     retry: false,
   });
 
-  const { data: docs, isLoading: isListLoading } = useQuery({
+  const { data: docs, isLoading: isListLoading, isError: isListError } = useQuery({
     queryKey: ['public-documents-list'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('documents')
-        .select('id, title, doc_number, doc_date, status, document_types(slug, name_ru)')
-        .order('doc_date', { ascending: false, nullsFirst: false })
-        .limit(50);
-      return data || [];
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('id, title, doc_number, doc_date, status, document_types(slug, name_ru)')
+          .order('doc_date', { ascending: false, nullsFirst: false })
+          .limit(50)
+          .abortSignal(controller.signal);
+        clearTimeout(timeout);
+        if (error) throw error;
+        return data || [];
+      } catch (e: any) {
+        clearTimeout(timeout);
+        if (e?.name === 'AbortError') throw new Error('timeout');
+        throw e;
+      }
     },
     enabled: search.trim().length < 1,
+    retry: false,
   });
 
   const isSearchMode = search.trim().length >= 1;
@@ -170,8 +183,13 @@ export default function PublicDocuments() {
         </div>
       ) : isSearchMode && isSearchError ? (
         <div className="text-center py-12">
-          <p className="text-foreground font-medium">Поиск занял слишком много времени</p>
-          <p className="text-sm text-muted-foreground mt-1">Попробуйте более короткий или конкретный запрос</p>
+          <p className="text-foreground font-medium">Не удалось загрузить результаты поиска</p>
+          <p className="text-sm text-muted-foreground mt-1">Попробуйте обновить страницу или повторить запрос позже</p>
+        </div>
+      ) : !isSearchMode && isListError ? (
+        <div className="text-center py-12">
+          <p className="text-foreground font-medium">Не удалось загрузить документы</p>
+          <p className="text-sm text-muted-foreground mt-1">Попробуйте обновить страницу или повторить запрос позже</p>
         </div>
       ) : isSearchMode ? (
         filteredResults.length > 0 ? (
@@ -249,28 +267,4 @@ function DocumentResultRow({ result: r }: { result: SearchAllResult }) {
       </div>
       {r.snippet && (
         <p
-          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-snippet"
-          dangerouslySetInnerHTML={{ __html: r.snippet }}
-        />
-      )}
-    </Link>
-  );
-}
-
-function SectionResultRow({ result: r }: { result: SearchAllResult }) {
-  const linkTo = `/documents/${r.document_id}#section-${r.section_id}`;
-  const title = r.section_title || (r.section_number ? `Статья ${r.section_number}` : 'Без названия');
-
-  return (
-    <Link to={linkTo} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
-      <h2 className="text-[15px] font-semibold leading-snug line-clamp-2 text-foreground">{title}</h2>
-      <p className="text-[13px] text-muted-foreground mt-0.5">{r.document_short_title || r.document_title}</p>
-      {r.snippet && (
-        <p
-          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-snippet"
-          dangerouslySetInnerHTML={{ __html: r.snippet }}
-        />
-      )}
-    </Link>
-  );
-}
+          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-sn

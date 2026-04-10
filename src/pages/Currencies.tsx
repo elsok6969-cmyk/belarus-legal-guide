@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightLeft, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,36 +31,64 @@ export default function Currencies() {
   const { data: rates, isLoading, isError } = useQuery({
     queryKey: ['currencies-all'],
     queryFn: async () => {
+      // Try NBRB API first for fresh data
+      try {
+        const resp = await fetch('https://api.nbrb.by/exrates/rates?periodicity=0');
+        if (resp.ok) {
+          const nbrb = await resp.json();
+          const mapped = nbrb.map((r: any) => ({
+            id: String(r.Cur_ID),
+            currency_code: r.Cur_Abbreviation,
+            currency_name: r.Cur_Name,
+            rate: r.Cur_OfficialRate / (r.Cur_Scale || 1),
+            rate_date: r.Date?.split('T')[0] || new Date().toISOString().split('T')[0],
+            change_value: 0,
+            created_at: new Date().toISOString(),
+          }));
+          // Cache to localStorage for offline fallback
+          localStorage.setItem('nbrb_rates_cache', JSON.stringify({
+            data: mapped,
+            timestamp: Date.now(),
+          }));
+          return mapped;
+        }
+      } catch (e) {
+        console.warn('NBRB API failed, trying fallback:', e);
+      }
+
+      // Fallback 1: Supabase cached data
       const { data, error } = await supabase
         .from('currency_rates')
         .select('*')
         .order('rate_date', { ascending: false });
-      if (error) throw error;
-      // Deduplicate: latest per currency_code
-      const seen = new Set<string>();
-      const deduped = (data ?? []).filter(r => {
-        if (seen.has(r.currency_code)) return false;
-        seen.add(r.currency_code);
-        return true;
-      });
-      // Fallback to NBRB API if empty
-      if (deduped.length === 0) {
-        const resp = await fetch('https://api.nbrb.by/exrates/rates?periodicity=0');
-        if (!resp.ok) return [];
-        const nbrb = await resp.json();
-        return nbrb.map((r: any) => ({
-          id: String(r.Cur_ID),
-          currency_code: r.Cur_Abbreviation,
-          currency_name: r.Cur_Name,
-          rate: r.Cur_OfficialRate / (r.Cur_Scale || 1),
-          rate_date: r.Date?.split('T')[0] || new Date().toISOString().split('T')[0],
-          change_value: 0,
-          created_at: new Date().toISOString(),
-        }));
+      if (!error && data && data.length > 0) {
+        const seen = new Set<string>();
+        const deduped = data.filter(r => {
+          if (seen.has(r.currency_code)) return false;
+          seen.add(r.currency_code);
+          return true;
+        });
+        if (deduped.length > 0) return deduped;
       }
-      return deduped;
+
+      // Fallback 2: localStorage cache (up to 24 hours)
+      const cached = localStorage.getItem('nbrb_rates_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          const age = Date.now() - (parsed.timestamp || 0);
+          if (age < 24 * 60 * 60 * 1000 && parsed.data?.length > 0) {
+            return parsed.data;
+          }
+        } catch (e) {
+          console.warn('Failed to parse cached rates:', e);
+        }
+      }
+
+      return [];
     },
     retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const sortedRates = useMemo(() => {
@@ -74,6 +102,16 @@ export default function Currencies() {
       return a.currency_code.localeCompare(b.currency_code);
     });
   }, [rates]);
+
+  // Set initial currency when rates load
+  useEffect(() => {
+    if (sortedRates.length > 0) {
+      const hasUSD = sortedRates.some(r => r.currency_code === 'USD');
+      if (!hasUSD && sortedRates[0]) {
+        setCurrency(sortedRates[0].currency_code);
+      }
+    }
+  }, [sortedRates]);
 
   const filteredRates = useMemo(() => {
     if (!searchFilter.trim()) return sortedRates;
@@ -138,8 +176,10 @@ export default function Currencies() {
             {direction === 'toByn' ? (
               <div className="w-full sm:w-40">
                 <Label className="text-xs text-muted-foreground">Валюта</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="h-[52px] text-base mt-1"><SelectValue /></SelectTrigger>
+                <Select value={currency} onValueChange={setCurrency} disabled={isLoading || sortedRates.length === 0}>
+                  <SelectTrigger className="h-[52px] text-base mt-1">
+                    <SelectValue placeholder={isLoading ? 'Загрузка...' : 'Выберите'} />
+                  </SelectTrigger>
                   <SelectContent>
                     {sortedRates.map(r => (
                       <SelectItem key={r.currency_code} value={r.currency_code}>
@@ -168,8 +208,10 @@ export default function Currencies() {
             {direction === 'fromByn' ? (
               <div className="w-full sm:w-40">
                 <Label className="text-xs text-muted-foreground">Валюта</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="h-[52px] text-base mt-1"><SelectValue /></SelectTrigger>
+                <Select value={currency} onValueChange={setCurrency} disabled={isLoading || sortedRates.length === 0}>
+                  <SelectTrigger className="h-[52px] text-base mt-1">
+                    <SelectValue placeholder={isLoading ? 'Загрузка...' : 'Выберите'} />
+                  </SelectTrigger>
                   <SelectContent>
                     {sortedRates.map(r => (
                       <SelectItem key={r.currency_code} value={r.currency_code}>
@@ -239,37 +281,4 @@ export default function Currencies() {
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{flagMap[r.currency_code] || '💰'}</span>
                             <div>
-                              <span className="font-semibold">{r.currency_code}</span>
-                              <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">{r.currency_name}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 text-right font-mono font-medium tabular-nums">
-                          {Number(r.rate).toFixed(4)}
-                        </td>
-                        <td className="py-3 text-right hidden sm:table-cell">
-                          {change !== 0 ? (
-                            <span className={`inline-flex items-center gap-0.5 font-mono text-xs ${isUp ? 'text-red-500' : 'text-emerald-600'}`}>
-                              {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{change.toFixed(4)}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Нет данных о курсах</p>
-          )}
-          <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
-            Источник: Национальный банк Республики Беларусь (nbrb.by)
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+                              <span className="font-semibold">{r.currency_c

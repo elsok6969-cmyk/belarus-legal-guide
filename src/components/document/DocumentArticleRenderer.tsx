@@ -173,7 +173,14 @@ export function DocumentArticleRenderer({
 
       {/* Content */}
       <div className="font-serif text-base leading-[1.8] text-foreground">
-        {processedContent}
+        {!content || content.trim().length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            <p>Текст статьи временно недоступен.</p>
+            <p className="text-sm mt-1">Попробуйте обновить страницу позже.</p>
+          </div>
+        ) : (
+          processedContent
+        )}
       </div>
 
       {/* Amendment history button */}
@@ -188,13 +195,4 @@ export function DocumentArticleRenderer({
           История изменений
         </Button>
       )}
-      {showHistory && (
-        <div className="mt-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-          <p>Хронология изменений будет доступна в ближайшем обновлении.</p>
-        </div>
-      )}
-
-      {level >= 2 && <div className="border-b border-border/40 mt-6" />}
-    </article>
-  );
-}
+      

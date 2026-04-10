@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 const planNames: Record<string, string> = {
   basic: 'Basic — 29 BYN/мес',
   professional: 'Professional — 59 BYN/мес',
+  pro: 'Pro — 59 BYN/мес',
 };
 
 interface FormData {
@@ -118,8 +119,4 @@ export default function Subscribe() {
               </p>
             </form>
           </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-}
+        </Ca

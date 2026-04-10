@@ -182,10 +182,10 @@ export default function Landing() {
 
       {/* ═══ HERO (compact) ═══ */}
       <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6 bg-gradient-to-b from-accent/40 to-background">
-        <h1 className="text-xl sm:text-2xl md:text-[32px] font-bold text-center max-w-3xl leading-tight">
+        <h1 className="text-2xl md:text-3xl font-bold text-center max-w-3xl leading-tight">
           Законодательство Беларуси — <span className="text-primary">бесплатно</span>
         </h1>
-        <p className="mt-3 text-base text-muted-foreground text-center max-w-xl">
+        <p className="mt-3 text-base leading-relaxed text-muted-foreground text-center max-w-xl">
           Полные тексты кодексов и законов, поиск по статьям, AI-ассистент
         </p>
 
@@ -219,13 +219,13 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-6 pb-12">
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
           {/* Latest docs */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
-            <CardHeader className="pb-3 px-6 pt-6">
-              <CardTitle className="text-xl font-bold">Последние НПА</CardTitle>
+          <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+            <CardHeader className="pb-3 px-0 pt-0">
+              <CardTitle className="text-xl md:text-2xl font-semibold">Последние НПА</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 px-6 pb-6 pt-0">
+            <CardContent className="space-y-3 px-0 pb-0 pt-0">
               {latestDocs?.map((doc) => (
                 <div key={doc.id} className="flex items-start gap-2.5">
                   <Badge variant="secondary" className="shrink-0 text-[11px] mt-0.5">
@@ -247,12 +247,12 @@ export default function Landing() {
           </Card>
 
           {/* Rates + Deadlines */}
-          <div className="space-y-6 flex flex-col">
-            <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
-              <CardHeader className="pb-3 px-6 pt-6">
-                <CardTitle className="text-xl font-bold">Курсы НБРБ</CardTitle>
+          <div className="space-y-4 md:space-y-6 flex flex-col">
+            <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
+              <CardHeader className="pb-3 px-0 pt-0">
+                <CardTitle className="text-xl md:text-2xl font-semibold">Курсы НБРБ</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-6 pb-6 pt-0">
+              <CardContent className="space-y-3 px-0 pb-0 pt-0">
                 {rates && rates.length > 0 ? rates.map((r) => {
                   const change = Number(r.change_value) || 0;
                   const flag = CURRENCY_FLAGS[r.currency_code] || '';
@@ -284,11 +284,11 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
-              <CardHeader className="pb-3 px-6 pt-6">
-                <CardTitle className="text-xl font-bold">Ближайшие дедлайны</CardTitle>
+            <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 flex-1">
+              <CardHeader className="pb-3 px-0 pt-0">
+                <CardTitle className="text-xl md:text-2xl font-semibold">Ближайшие дедлайны</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-6 pb-6 pt-0">
+              <CardContent className="space-y-3 px-0 pb-0 pt-0">
                 {deadlines?.map((d) => (
                   <div key={d.id} className="flex items-start gap-3">
                     <div className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground shrink-0">
@@ -306,11 +306,11 @@ export default function Landing() {
           </div>
 
           {/* Popular sections */}
-          <Card className="rounded-xl border hover:border-border/80 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
-            <CardHeader className="pb-3 px-6 pt-6">
-              <CardTitle className="text-xl font-bold">Популярные разделы</CardTitle>
+          <Card className="border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 min-h-[420px]">
+            <CardHeader className="pb-3 px-0 pt-0">
+              <CardTitle className="text-xl md:text-2xl font-semibold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 px-6 pb-6 pt-0">
+            <CardContent className="space-y-1 px-0 pb-0 pt-0">
               {popularSections.map((s) => {
                 const Icon = s.icon;
                 return (
@@ -326,42 +326,42 @@ export default function Landing() {
       </section>
 
       {/* ═══ FEATURES ═══ */}
-      <section className="bg-muted/50 py-8">
+      <section className="bg-muted/50 py-12">
         <div className="mx-auto max-w-7xl px-4">
-          <h2 className="text-xl font-bold text-center mb-5">Почему Бабиджон</h2>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-            <div className="rounded-xl border bg-card p-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-2">🔍</div>
-              <h3 className="font-semibold text-sm mb-1">Умный поиск</h3>
-              <p className="text-xs text-muted-foreground">Поиск по тексту всех документов и статей</p>
+          <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">Почему Бабиджон</h2>
+          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3">
+            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+              <div className="text-2xl mb-3">🔍</div>
+              <h3 className="font-semibold text-base mb-2">Умный поиск</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">Поиск по тексту всех документов и статей</p>
             </div>
-            <div className="rounded-xl border bg-card p-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-2">📑</div>
-              <h3 className="font-semibold text-sm mb-1">Фокус на статье</h3>
-              <p className="text-xs text-muted-foreground">Читайте конкретную статью, а не весь кодекс</p>
+            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+              <div className="text-2xl mb-3">📑</div>
+              <h3 className="font-semibold text-base mb-2">Фокус на статье</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">Читайте конкретную статью, а не весь кодекс</p>
             </div>
-            <div className="rounded-xl border bg-card p-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
-              <div className="text-2xl mb-2">🤖</div>
-              <h3 className="font-semibold text-sm mb-1">AI-помощник</h3>
-              <p className="text-xs text-muted-foreground">Ответы на вопросы со ссылками на статьи</p>
+            <div className="border rounded-xl p-4 md:p-6 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200">
+              <div className="text-2xl mb-3">🤖</div>
+              <h3 className="font-semibold text-base mb-2">AI-помощник</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">Ответы на вопросы со ссылками на статьи</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ═══ AUDIENCE ═══ */}
-      <section className="py-8">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-4">
-          <h2 className="text-xl font-bold text-center mb-5">Для профессионалов</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">Для профессионалов</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
             {audiences.map((a) => (
               <Link
                 key={a.label}
                 to={`/documents?audience=${a.profession}`}
-                className="flex flex-col items-center gap-1.5 rounded-xl border bg-card p-3 text-center hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200"
+                className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200"
               >
                 <span className="text-2xl">{a.emoji}</span>
-                <span className="text-xs font-medium">{a.label}</span>
+                <span className="text-sm font-medium">{a.label}</span>
               </Link>
             ))}
           </div>
@@ -398,14 +398,14 @@ export default function Landing() {
 
       {/* ═══ POPULAR DOCUMENTS ═══ */}
       {popularDocs && popularDocs.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-8">
-          <h2 className="text-xl font-bold mb-4">Популярные документы</h2>
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="mx-auto max-w-7xl px-4 py-12">
+          <h2 className="text-xl md:text-2xl font-semibold mb-6">Популярные документы</h2>
+          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             {popularDocs.map((doc) => (
-              <Link key={doc.id} to={`/documents/${doc.id}`} className="rounded-xl border bg-card p-3 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-border/80 transition-all duration-200 group">
-                <Badge variant="secondary" className="text-[10px] mb-1.5">{getDocTypeLabel(doc)}</Badge>
-                <h3 className="text-xs font-medium line-clamp-2 group-hover:text-primary transition-colors">{doc.title}</h3>
-                <p className="text-[10px] text-muted-foreground mt-1">{formatDate(doc.doc_date)}</p>
+              <Link key={doc.id} to={`/documents/${doc.id}`} className="border rounded-xl p-4 bg-card hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-border/80 transition-all duration-200 group">
+                <Badge variant="secondary" className="text-[11px] mb-2">{getDocTypeLabel(doc)}</Badge>
+                <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{doc.title}</h3>
+                <p className="text-xs text-muted-foreground mt-2">{formatDate(doc.doc_date)}</p>
               </Link>
             ))}
           </div>
@@ -414,18 +414,18 @@ export default function Landing() {
 
       {/* ═══ RECENT CHANGES ═══ */}
       {recentChanges && recentChanges.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-8">
-          <h2 className="text-xl font-bold mb-4">Изменения за последние 7 дней</h2>
-          <div className="rounded-xl border bg-card overflow-hidden">
+        <section className="mx-auto max-w-7xl px-4 pb-12">
+          <h2 className="text-xl md:text-2xl font-semibold mb-6">Изменения за последние 7 дней</h2>
+          <div className="border rounded-xl bg-card overflow-hidden">
             {recentChanges.map((doc, i) => (
-              <Link key={doc.id} to={`/documents/${doc.id}`} className={`flex items-center justify-between px-3 py-2 hover:bg-accent/50 transition-all duration-200 ${i !== 0 ? 'border-t' : ''}`}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <Badge variant="secondary" className="shrink-0 text-[10px]">{getDocTypeLabel(doc)}</Badge>
-                  <span className="text-xs font-medium truncate">{doc.title}</span>
+              <Link key={doc.id} to={`/documents/${doc.id}`} className={`flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-all duration-200 ${i !== 0 ? 'border-t' : ''}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Badge variant="secondary" className="shrink-0 text-[11px]">{getDocTypeLabel(doc)}</Badge>
+                  <span className="text-sm font-medium truncate">{doc.title}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
-                  <span className="text-[10px] text-muted-foreground">{formatDate(doc.last_updated)}</span>
-                  <Badge className="bg-warning text-warning-foreground text-[10px]">ИЗМЕНЁН</Badge>
+                  <span className="text-xs text-muted-foreground">{formatDate(doc.last_updated)}</span>
+                  <Badge className="bg-warning text-warning-foreground text-[11px]">ИЗМЕНЁН</Badge>
                 </div>
               </Link>
             ))}
@@ -434,36 +434,36 @@ export default function Landing() {
       )}
 
       {/* ═══ PRICING ═══ */}
-      <section className="mx-auto max-w-7xl px-4 py-8">
-        <div className="text-center mb-6">
-          <h2 className="text-xl md:text-2xl font-bold">Простые и честные тарифы</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
+      <section className="mx-auto max-w-7xl px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-xl md:text-2xl font-semibold">Простые и честные тарифы</h2>
+          <p className="mt-2 text-base leading-relaxed text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
         </div>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
           {pricingPlans.map((plan) => (
-            <Card key={plan.name} className={`rounded-xl hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
+            <Card key={plan.name} className={`border rounded-xl p-4 md:p-6 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground text-[10px]"><Star className="h-3 w-3 mr-1" /> Популярный</Badge>
+                  <Badge className="bg-primary text-primary-foreground text-[11px]"><Star className="h-3 w-3 mr-1" /> Популярный</Badge>
                 </div>
               )}
-              <CardHeader className="text-center pb-1 pt-4 px-4">
-                <CardTitle className="text-base">{plan.name}</CardTitle>
-                <div className="mt-1">
+              <CardHeader className="text-center pb-2 pt-0 px-0">
+                <CardTitle className="text-base font-semibold">{plan.name}</CardTitle>
+                <div className="mt-2">
                   <span className="text-2xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground text-xs"> BYN{plan.price !== '0' ? '/мес' : ''}</span>
+                  <span className="text-muted-foreground text-sm"> BYN{plan.price !== '0' ? '/мес' : ''}</span>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 pb-4">
-                <ul className="space-y-1.5">
+              <CardContent className="space-y-4 px-0 pb-0">
+                <ul className="space-y-2">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-1.5 text-xs">
-                      <Check className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                    <li key={f} className="flex items-start gap-2 text-sm leading-relaxed">
+                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button asChild variant={plan.popular ? 'default' : 'outline'} size="sm" className="w-full rounded-lg">
+                <Button asChild variant={plan.popular ? 'default' : 'outline'} size="sm" className="w-full rounded-lg min-h-[44px]">
                   <Link to={plan.to}>{plan.cta}</Link>
                 </Button>
               </CardContent>
@@ -473,13 +473,6 @@ export default function Landing() {
       </section>
 
       {/* ═══ EMAIL CAPTURE ═══ */}
-      <section className="mx-auto max-w-2xl px-4 pb-8">
+      <section className="mx-auto max-w-2xl px-4 pb-12">
         <InlineEmailForm
-          source="landing"
-          title="📧 Будьте в курсе изменений"
-          description="Получайте еженедельный обзор изменений в законодательстве Беларуси"
-        />
-      </section>
-    </article>
-  );
-}
+       
