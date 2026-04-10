@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageSEO } from '@/components/shared/PageSEO';
 import { ArrowLeft, Copy, Printer, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -47,28 +48,18 @@ export default function RentCalc() {
   const reset = () => { setArea(''); setBav('20.03'); setLocCoef('1.2'); setFloorCoef('1.0'); };
 
   const copyResult = () => {
-    navigator.clipboard.writeText(
-      `Аренда\nПлощадь: ${area} м²\nБАВ: ${bav} BYN\nПлата/мес: ${fmt(result.monthly)} BYN\nЗа м²: ${fmt(result.perSqm)} BYN\nЗа год: ${fmt(result.yearly)} BYN`
-    );
+    navigator.clipboard.writeText(`Аренда\nПлощадь: ${area} м²\nПлата/мес: ${fmt(result.monthly)} BYN\nЗа м²: ${fmt(result.perSqm)} BYN\nЗа год: ${fmt(result.yearly)} BYN`);
     toast.success('Скопировано');
   };
 
   return (
     <>
-      <PageSEO
-        title="Калькулятор арендной платы — Бабиджон"
-        description="Расчёт арендной платы за помещение на основе базовой арендной величины"
-        path="/calculator/rent"
-      />
+      <PageSEO title="Калькулятор арендной платы — Бабиджон" description="Расчёт арендной платы по базовой арендной величине" path="/calculator/rent" />
       <div className="space-y-4">
-        <Link
-          to={location.pathname.startsWith('/app/') ? '/app/calculator' : '/calculator'}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
+        <Link to={location.pathname.startsWith('/app/') ? '/app/calculator' : '/calculator'} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Все калькуляторы
         </Link>
         <h1 className="text-2xl font-bold text-foreground">Калькулятор арендной платы</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="pb-4"><CardTitle className="text-base">Входные данные</CardTitle></CardHeader>
@@ -86,30 +77,19 @@ export default function RentCalc() {
                 <Label>Коэффициент расположения</Label>
                 <Select value={locCoef} onValueChange={setLocCoef}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {locations.map((l) => (
-                      <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectContent>{locations.map((l) => (<SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Коэффициент этажности</Label>
                 <Select value={floorCoef} onValueChange={setFloorCoef}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {floors.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectContent>{floors.map((f) => (<SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" size="sm" onClick={reset}>
-                <RotateCcw className="h-3 w-3 mr-1" /> Сбросить
-              </Button>
+              <Button variant="outline" size="sm" onClick={reset}><RotateCcw className="h-3 w-3 mr-1" /> Сбросить</Button>
             </CardContent>
           </Card>
-
           <Card className="border-primary/20">
             <CardHeader className="pb-4"><CardTitle className="text-base">Результат</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -128,28 +108,15 @@ export default function RentCalc() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={copyResult}>
-                  <Copy className="h-3 w-3 mr-1" /> Копировать
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => window.print()}>
-                  <Printer className="h-3 w-3 mr-1" /> Печать
-                </Button>
+                <Button variant="outline" size="sm" onClick={copyResult}><Copy className="h-3 w-3 mr-1" /> Копировать</Button>
+                <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-3 w-3 mr-1" /> Печать</Button>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {result.monthly > 0 && (
-          <InlineEmailForm
-            source="calculator_rent"
-            title="Получите результат на email"
-            description="Будьте в курсе изменений базовой арендной величины"
-          />
-        )}
-
-        <p className="text-xs text-muted-foreground">
-          Расчёт произведён на основе Указа Президента РБ № 150. Формула: площадь × БАВ × коэф. расположения × коэф. этажности.
-        </p>
+        {result.monthly > 0 && <InlineEmailForm source="calculator_rent" title="Получите результат на email" description="Будьте в курсе изменений базовой арендной величины" />}
+        <p className="text-xs text-muted-foreground">Расчёт на основе Указа Президента РБ № 150. Формула: площадь × БАВ × коэф. расположения × коэф. этажности.</p>
+        <OtherCalculators currentSlug="rent" />
       </div>
     </>
   );

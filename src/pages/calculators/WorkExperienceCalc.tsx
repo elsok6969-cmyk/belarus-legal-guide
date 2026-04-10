@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,6 +115,7 @@ export default function WorkExperienceCalc() {
         <p className="text-xs text-muted-foreground">
           Расчёт носит информационный характер. Для точного подсчёта обратитесь в отдел кадров.
         </p>
+        <OtherCalculators currentSlug="work-experience" />
       </div>
     </>
   );

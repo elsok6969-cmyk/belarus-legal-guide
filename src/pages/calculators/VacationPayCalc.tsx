@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,6 +85,7 @@ export default function VacationPayCalc() {
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно ст. 176 Трудового кодекса РБ.
         </p>
+        <OtherCalculators currentSlug="vacation-pay" />
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+import { OtherCalculators } from '@/components/calculators/OtherCalculators';
 import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -139,6 +140,7 @@ export default function IncomeTaxCalc() {
         <p className="text-xs text-muted-foreground">
           Расчёт произведён согласно НК РБ, глава 18. Ставка 13%. Вычеты актуальны на {year} год.
         </p>
+        <OtherCalculators currentSlug="income-tax" />
       </div>
     </>
   );
