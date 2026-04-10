@@ -792,6 +792,7 @@ export default function PublicDocumentView() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      )}
+    </div>
   );
 }
