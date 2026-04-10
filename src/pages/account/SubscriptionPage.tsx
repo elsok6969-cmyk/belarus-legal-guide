@@ -18,7 +18,7 @@ const planLabels: Record<string, string> = {
 };
 
 const featureLabels: Record<string, { label: string; icon: typeof Zap }> = {
-  ai_chat: { label: 'AI-ассистент', icon: Zap },
+  ai_chat: { label: 'Помощник', icon: Zap },
   search: { label: 'Поиск', icon: Search },
   calculator: { label: 'Калькуляторы', icon: Calculator },
   favorites: { label: 'Избранное', icon: Star },
