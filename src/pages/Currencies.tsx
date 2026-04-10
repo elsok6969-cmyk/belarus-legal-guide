@@ -281,4 +281,31 @@ export default function Currencies() {
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{flagMap[r.currency_code] || '💰'}</span>
                             <div>
-                              <span className="font-semibold">{r.currency_c
+                              <span className="font-semibold">{r.currency_code}</span>
+                              <span className="text-xs text-muted-foreground">{r.currency_name}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right font-mono font-semibold">{r.rate.toFixed(4)}</td>
+                        <td className="py-3 text-right hidden sm:table-cell">
+                          <span className={cn(
+                            'text-sm font-medium',
+                            isUp && 'text-emerald-600',
+                            isDown && 'text-red-500',
+                            !isUp && !isDown && 'text-muted-foreground'
+                          )}>
+                            {isUp ? '+' : ''}{change.toFixed(4)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

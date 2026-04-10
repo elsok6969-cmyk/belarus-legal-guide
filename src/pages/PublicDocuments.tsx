@@ -267,4 +267,10 @@ function DocumentResultRow({ result: r }: { result: SearchAllResult }) {
       </div>
       {r.snippet && (
         <p
-          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 search-sn
+          className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2"
+          dangerouslySetInnerHTML={{ __html: r.snippet }}
+        />
+      )}
+    </Link>
+  );
+}

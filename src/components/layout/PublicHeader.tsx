@@ -118,4 +118,14 @@ export function PublicHeader() {
               </Link>
             ))}
           </nav>
-          <div className="flex flex-col gap-2 mt-3 pt-3 border-
+          <div className="flex flex-col gap-2 mt-3 pt-3 border-t">
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5">Войти</Link>
+            <Link to="/register" onClick={() => setMobileOpen(false)}>
+              <Button size="sm" className="w-full">Регистрация</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}

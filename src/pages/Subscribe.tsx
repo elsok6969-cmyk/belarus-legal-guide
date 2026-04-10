@@ -119,4 +119,8 @@ export default function Subscribe() {
               </p>
             </form>
           </CardContent>
-        </Ca
+        </Card>
+      </div>
+    </>
+  );
+}

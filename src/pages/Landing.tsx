@@ -476,6 +476,6 @@ export default function Landing() {
       <section className="mx-auto max-w-2xl px-4 pb-12">
         <InlineEmailForm />
       </section>
-    </div>
+    </article>
   );
 }
