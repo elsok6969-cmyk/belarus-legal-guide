@@ -77,7 +77,7 @@ function flattenSections(sections: Section[], parentId: string | null = null): A
 }
 
 async function insertSectionsFlat(
-  supabaseClient: ReturnType<typeof createClient>,
+  supabaseClient: any,
   documentId: string,
   sections: Section[],
   parentId: string | null
