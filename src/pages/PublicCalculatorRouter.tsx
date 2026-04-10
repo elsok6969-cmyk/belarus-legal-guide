@@ -2,11 +2,13 @@ import { useParams, Navigate } from 'react-router-dom';
 import IncomeTaxCalc from './calculators/IncomeTaxCalc';
 import VatCalc from './calculators/VatCalc';
 import AlimonyCalc from './calculators/AlimonyCalc';
+import SickLeaveCalc from './calculators/SickLeaveCalc';
 
 const calcMap: Record<string, React.ComponentType> = {
   'income-tax': IncomeTaxCalc,
   'nds': VatCalc,
   'alimony': AlimonyCalc,
+  'sick-leave': SickLeaveCalc,
 };
 
 export default function PublicCalculatorRouter() {
