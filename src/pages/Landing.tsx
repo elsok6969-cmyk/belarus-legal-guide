@@ -2,15 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/shared/PageSEO';
-import {
-  Search, ArrowRight, TrendingUp, TrendingDown, Minus,
-  Check, Star, Calendar, Banknote, Calculator, Receipt,
-} from 'lucide-react';
+import { Search, ArrowRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -34,12 +31,10 @@ const popularSections = [
   { label: 'Жилищный кодекс', desc: '224 статьи · Жилищные отношения', to: '/documents?q=Жилищный кодекс' },
   { label: 'Банковский кодекс', desc: '312 статей · Банковская деятельность', to: '/documents?q=Банковский кодекс' },
   { label: 'Кодекс о браке и семье', desc: '241 статья · Семейные отношения', to: '/documents?q=Кодекс о браке и семье' },
-  { label: 'Бюджетный кодекс', desc: '149 статей · Бюджетное регулирование', to: '/documents?q=Бюджетный кодекс' },
   { label: 'Закон об ООО', desc: 'Хозяйственные общества', to: '/documents?q=ООО' },
   { label: 'УСН для ИП', desc: 'Упрощённая система', to: '/documents?q=УСН' },
-  { label: 'Охрана труда', desc: 'Безопасность на рабочем месте', to: '/documents?q=охрана труда' },
   { label: 'Налоговый календарь', desc: 'Сроки сдачи отчётности', to: '/calendar' },
-  { label: 'Закупки', desc: 'Государственные закупки', to: '/documents?q=закупки' },
+  { label: 'Калькуляторы', desc: 'НДС, налоги, отпускные', to: '/calculators' },
 ];
 
 const audienceTags = [
@@ -51,22 +46,11 @@ const audienceTags = [
   { label: 'ИП', profession: 'entrepreneur' },
 ];
 
-const pricingPlans = [
-  {
-    name: 'Пробный', price: '0', desc: 'Для знакомства с сервисом',
-    features: ['Курсы валют НБРБ', 'Календарь дедлайнов', 'Новости и статьи', 'Помощник — 3 вопроса'],
-    cta: 'Начать', to: '/register', popular: false,
-  },
-  {
-    name: 'Персональный', price: '69', desc: 'Для физических лиц',
-    features: ['Все кодексы и законы', 'Поиск — безлимитно', 'Калькуляторы — все', 'Помощник — 30 вопросов/день'],
-    cta: 'Оформить подписку', to: '/subscribe/personal', popular: true,
-  },
-  {
-    name: 'Корпоративный', price: '99', desc: 'Для юридических лиц и ИП',
-    features: ['Всё из Персонального', 'Помощник — безлимитно', 'Экспорт PDF/DOCX', 'Приоритетная поддержка'],
-    cta: 'Оформить подписку', to: '/subscribe/corporate', popular: false,
-  },
+const toolCards = [
+  { title: 'Калькулятор НДС', desc: 'Выделить или начислить', to: '/calculator/nds' },
+  { title: 'Подоходный налог', desc: 'Расчёт с вычетами', to: '/calculator/income-tax' },
+  { title: 'Курсы валют', desc: 'Конвертер + все курсы НБРБ', to: '/currencies' },
+  { title: 'Произв. календарь', desc: 'Рабочие дни и часы 2026', to: '/production-calendar' },
 ];
 
 const CURRENCY_ORDER = ['USD', 'EUR', 'RUB', 'CNY', 'PLN'];
@@ -82,7 +66,7 @@ function formatDate(d: string | null) {
 export default function Landing() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [npaTab, setNpaTab] = useState<'npa' | 'news'>('npa');
+  
 
   const handleSearch = () => {
     if (searchQuery.trim()) navigate(`/documents?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -93,7 +77,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data } = await supabase.from('documents')
         .select('id, title, doc_date, doc_number, created_at, content_text, document_types(slug, name_ru)')
-        .order('created_at', { ascending: false }).limit(6);
+        .order('created_at', { ascending: false }).limit(7);
       return data ?? [];
     },
   });
@@ -131,9 +115,9 @@ export default function Landing() {
     queryKey: ['landing-news'],
     queryFn: async () => {
       const { data } = await supabase.from('articles')
-        .select('id, title, slug, excerpt, published_at')
+        .select('id, title, slug, excerpt, body, published_at')
         .not('published_at', 'is', null)
-        .order('published_at', { ascending: false }).limit(5);
+        .order('published_at', { ascending: false }).limit(3);
       return data ?? [];
     },
   });
