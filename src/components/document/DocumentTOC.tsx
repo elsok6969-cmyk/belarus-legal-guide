@@ -73,4 +73,11 @@ export function DocumentTOC({ sections, activeSection, onScrollTo }: DocumentTOC
                   ? <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   : <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               )}
-              <span classNam
+              <span className="truncate">{label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </ScrollArea>
+  );
+}

@@ -195,4 +195,6 @@ export function DocumentArticleRenderer({
           История изменений
         </Button>
       )}
-      
+    </article>
+  );
+}
