@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightLeft, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
