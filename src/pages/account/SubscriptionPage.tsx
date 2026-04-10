@@ -10,9 +10,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { Crown, Zap, Search, Calculator, Star, Eye } from 'lucide-react';
 
 const planLabels: Record<string, string> = {
-  free: 'Бесплатный',
-  basic: 'Basic — 29 BYN/мес',
-  professional: 'Professional — 59 BYN/мес',
+  free: 'Пробный — 0 BYN',
+  basic: 'Пробный — 0 BYN',
+  personal: 'Персональный — 69 BYN/мес',
+  professional: 'Корпоративный — 99 BYN/мес',
+  corporate: 'Корпоративный — 99 BYN/мес',
 };
 
 const featureLabels: Record<string, { label: string; icon: typeof Zap }> = {
