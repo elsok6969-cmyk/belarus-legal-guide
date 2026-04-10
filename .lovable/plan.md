@@ -1,56 +1,44 @@
 
 
-## Plan: Rebuild Landing.tsx to exact specification
+## Plan: Add blocks 3-6 below three columns on Landing.tsx
 
-### Header (PublicHeader.tsx)
-Add "Калькуляторы" (`/calculators`) between "Календарь" and "Новости" in `navLinks`. "Новости" already present.
+### What changes
 
-### Landing.tsx — Full rewrite
+Replace everything after the three-column `</section>` (lines 455-543) — removing Audience Pills, Pricing, Полезное, and Email Capture — with four new blocks:
 
-**Remove** the following blocks entirely:
-- Audience pills section
-- Pricing section  
-- "Полезное" 2x2 grid section
-- Email capture (InlineEmailForm) section
-- NPA/News tab switcher (replace with simple "Новые НПА" list)
+### Block 3: Инструменты (lines ~455+)
+- `bg-muted/30 py-10` section
+- Title: "Инструменты" centered, `text-xl font-semibold mb-6`
+- 4-column grid (`md:grid-cols-4 grid-cols-2 gap-3`)
+- Cards: `bg-background border rounded-lg p-4 hover:shadow-sm hover:border-foreground/20 transition-all text-center`
+- Items: Калькулятор НДС → `/calculator/nds`, Подоходный налог → `/calculator/income-tax`, Курсы валют → `/currencies`, Произв. календарь → `/production-calendar`
 
-**Keep**: PageSEO, JSON-LD, all data queries (latestDocs, rates, deadlines, indicators). Remove `latestNews` query and `npaTab` state.
+### Block 4: Профессии
+- White bg, `py-8`, no heading
+- `flex flex-wrap justify-center gap-2`
+- Reuse existing `audienceTags` array, style: `border rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors`
+- Links go to `/documents?profession=<slug>`
 
-#### Block 1: Hero
-- White bg, no gradients. `pt-8 pb-6`, centered.
-- H1: `text-2xl md:text-3xl font-bold` centered, plain text (remove `<span className="text-primary">`)
-- Subtitle: exact text as specified, `text-base text-muted-foreground max-w-lg mx-auto`
-- Search bar: `max-w-xl`, input height 48px, "Найти" button inside right
-- Quick tags below: `border rounded-full px-3 py-1.5 text-xs hover:bg-muted cursor-pointer`
+### Block 5: Новости
+- White bg, `py-10`
+- Title: "Новости законодательства" `text-xl font-semibold mb-6`
+- Reuse existing `latestNews` query (change limit to 3, add `body` to select)
+- `md:grid-cols-3 grid-cols-1 gap-4` grid
+- Each card: `border rounded-xl p-4 hover:shadow-sm transition-all`, clickable → `/news/:slug`
+- Date, title (line-clamp-2), 80-char excerpt, topic badge
+- "Все новости →" link centered below
+- **Conditionally render**: only if `latestNews && latestNews.length > 0`
 
-#### Block 2: Three columns
-`md:grid-cols-3 grid-cols-1 gap-4`. Cards: `border rounded-xl p-4 max-h-[550px] flex flex-col`.
-
-**Column 1 — "Новые НПА":**
-- Title: `text-base font-semibold`
-- 7 docs (change limit from 6 to 7)
-- Each row: date (text-xs, 50px width), badge + title (line-clamp-2) + 60 chars content_text, arrow →
-- `py-2 border-b border-border/30`
-- Bottom link: "Все обновления →"
-
-**Column 2 — Combined card:**
-- "Курсы НБРБ" header + 5 currencies (USD/EUR/RUB/CNY/PLN) with flag, code, rate, change. `py-1.5` between rows.
-- Link: "Все курсы →"
-- `border-t my-3` separator
-- "Показатели": ref rate 9.75%, МЗП 858 BYN, базовая величина 45 BYN, production calendar current month. Each row: `flex justify-between py-1`, name `text-xs text-muted-foreground`, value `text-sm font-semibold`
-- `border-t my-3` separator  
-- "Ближайшие сроки": 3 deadlines. Date `text-xs font-medium text-primary` + title `text-sm`.
-- Link: "Календарь →"
-
-**Column 3 — "Популярные разделы":**
-- Title: `text-base font-semibold`
-- 12 items (updated list per spec — remove Бюджетный кодекс, Охрана труда, Закупки; add Калькуляторы)
-- Each: `py-2 border-b border-border/30`, name `text-sm font-medium`, desc `text-xs text-muted-foreground`, arrow →, `hover:bg-muted/50 rounded`
-- No bottom link
+### Block 6: CTA
+- `bg-muted/30 py-10 text-center`
+- Title: "Полный доступ к законодательству"
+- Subtitle: "Все кодексы, законы и указы с навигацией по статьям"
+- Two buttons: [Оформить подписку] primary → `/pricing`, [Попробовать] outline → `/auth`
 
 ### Technical details
-- Single file edit: `src/pages/Landing.tsx` — full rewrite
-- Single file edit: `src/components/layout/PublicHeader.tsx` — add "Калькуляторы" to navLinks
+- Single file edit: `src/pages/Landing.tsx`
+- Remove unused imports: `Star`, `Check`, `Calendar`, `Banknote`, `Calculator`, `Receipt`, `InlineEmailForm`
+- Remove `pricingPlans` constant
+- Update `latestNews` query: limit 3, add `body` field
 - No DB changes needed
-- All existing imports stay except remove unused ones (Star, Check, Calendar, Banknote, Calculator, Receipt, InlineEmailForm)
 
