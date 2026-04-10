@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, Calculator, Percent, Palmtree, AlertTriangle,
-  Receipt, Briefcase, Heart, Stethoscope, Plane,
+  Receipt, Briefcase, Heart, Stethoscope, Plane, Building2,
 } from 'lucide-react';
 
 interface CalcItem {
@@ -74,9 +74,16 @@ const calculators: CalcItem[] = [
     icon: <Plane className="h-6 w-6" />,
     category: 'Зарплата',
   },
+  {
+    slug: 'rent',
+    title: 'Арендная плата',
+    description: 'Расчёт аренды по базовой арендной величине',
+    icon: <Building2 className="h-6 w-6" />,
+    category: 'Недвижимость',
+  },
 ];
 
-const categories = ['Налоги', 'Зарплата', 'Трудовые отношения', 'Семейное право'];
+const categories = ['Налоги', 'Зарплата', 'Трудовые отношения', 'Семейное право', 'Недвижимость'];
 
 export default function Calculators() {
   const [filter, setFilter] = useState('');
