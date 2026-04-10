@@ -304,6 +304,9 @@ export default function Currencies() {
                 </tbody>
               </table>
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">Валюты не найдены</p>
+          )}
           </CardContent>
         </Card>
       </div>
