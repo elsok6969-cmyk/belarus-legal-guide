@@ -52,7 +52,7 @@ export default function PublicDocuments() {
     setSearchParams(params, { replace: true });
   }, [search, chipFilter, setSearchParams]);
 
-  const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : null;
+  const rpcFilterType = chipFilter && chipFilter !== 'sections' ? chipFilter : undefined;
 
   const { data: searchResults, isLoading: isSearching, isError: isSearchError } = useQuery({
     queryKey: ['search-all', search, rpcFilterType],
