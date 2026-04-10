@@ -91,6 +91,8 @@ export default function Currencies() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const loadingTimedOut = useLoadingTimeout(isLoading);
+
   const sortedRates = useMemo(() => {
     if (!rates) return [];
     return [...rates].sort((a, b) => {
