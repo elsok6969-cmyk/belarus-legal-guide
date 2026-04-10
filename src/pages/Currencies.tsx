@@ -259,7 +259,7 @@ export default function Currencies() {
           {isError ? (
             <p className="text-sm text-destructive text-center py-8">Не удалось загрузить курсы. Попробуйте обновить страницу.</p>
           ) : isLoading ? (
-            useLoadingTimeout(isLoading) ? (
+            loadingTimedOut ? (
               <div className="text-center py-8">
                 <p className="text-sm text-muted-foreground">Не удалось загрузить данные.</p>
                 <button onClick={() => window.location.reload()} className="mt-2 text-sm text-primary hover:underline">Обновить страницу</button>
