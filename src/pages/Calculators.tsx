@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, Calculator, Percent, Palmtree, AlertTriangle,
-  Receipt, Briefcase,
+  Receipt, Briefcase, Heart,
 } from 'lucide-react';
 
 interface CalcItem {
@@ -52,6 +52,13 @@ const calculators: CalcItem[] = [
     description: 'Подсчёт общего трудового стажа по периодам',
     icon: <Briefcase className="h-6 w-6" />,
     category: 'Трудовые отношения',
+  },
+  {
+    slug: 'alimony',
+    title: 'Калькулятор алиментов',
+    description: 'Расчёт алиментов на детей по ст. 92 КоБС',
+    icon: <Heart className="h-6 w-6" />,
+    category: 'Семейное право',
   },
 ];
 
