@@ -205,15 +205,15 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
-        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-start">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
 
           {/* Новые НПА */}
-          <Card className="border border-border rounded-xl p-4 md:p-6 min-h-[420px]">
+          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
             <CardHeader className="pb-3 px-0 pt-0">
-              <CardTitle className="text-lg font-semibold">Новые НПА</CardTitle>
+              <CardTitle className="text-base font-semibold">Новые НПА</CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0">
-              <div className="divide-y divide-border/50">
+            <CardContent className="px-0 pb-0 pt-0 flex-1 flex flex-col">
+              <div className="divide-y divide-border/50 flex-1">
                 {latestDocs?.map((doc) => {
                   const dt = doc.document_types as any;
                   const dateObj = doc.created_at ? new Date(doc.created_at) : null;
@@ -224,7 +224,7 @@ export default function Landing() {
                       to={`/documents/${doc.id}`}
                       className="flex items-center gap-3 py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
                     >
-                      <div className="w-[60px] shrink-0 text-center">
+                      <div className="w-[52px] shrink-0 text-center">
                         {dateObj && (
                           <>
                             <div className="text-sm font-semibold leading-tight">
@@ -267,29 +267,29 @@ export default function Landing() {
                   Мониторинг pravo.by проверяет обновления каждые 6 часов
                 </p>
               )}
-              <Button asChild variant="ghost" size="sm" className="w-full mt-3">
-                <Link to="/documents?sort=newest">Все обновления <ArrowRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
+              <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 pt-3 border-t border-border/50 transition-colors">
+                Все обновления <ArrowRight className="h-3 w-3" />
+              </Link>
             </CardContent>
           </Card>
 
-          {/* Курсы + Дедлайны */}
-          <div className="space-y-4 flex flex-col">
-            <Card className="border border-border rounded-xl p-4 md:p-6">
-              <CardHeader className="pb-3 px-0 pt-0">
-                <CardTitle className="text-lg font-semibold">Курсы НБРБ</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 px-0 pb-0 pt-0">
+          {/* Курсы + Дедлайны — одна карточка */}
+          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
+            <CardHeader className="pb-3 px-0 pt-0">
+              <CardTitle className="text-base font-semibold">Курсы НБРБ</CardTitle>
+            </CardHeader>
+            <CardContent className="px-0 pb-0 pt-0 flex-1 flex flex-col">
+              <div className="divide-y divide-border/50">
                 {rates && rates.length > 0 ? rates.map((r) => {
                   const change = Number(r.change_value) || 0;
                   const flag = CURRENCY_FLAGS[r.currency_code] || '';
                   return (
-                    <div key={r.currency_code} className="flex items-center justify-between py-0.5">
+                    <div key={r.currency_code} className="flex items-center justify-between py-3 first:pt-0">
                       <span className="text-sm font-medium">
                         {flag} {r.currency_code}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-base font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                        <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
                         <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                           {change > 0 ? (
                             <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</>
@@ -303,47 +303,46 @@ export default function Landing() {
                     </div>
                   );
                 }) : (
-                  <p className="text-sm text-muted-foreground">Обновление...</p>
+                  <p className="text-sm text-muted-foreground py-3">Обновление...</p>
                 )}
-                <Button asChild variant="ghost" size="sm" className="w-full mt-3">
-                  <Link to="/currencies">Все курсы и конвертер <ArrowRight className="h-3 w-3 ml-1" /></Link>
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+              <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors">
+                Все курсы и конвертер <ArrowRight className="h-3 w-3" />
+              </Link>
 
-            <Card className="border border-border rounded-xl p-4 md:p-6">
-              <CardHeader className="pb-3 px-0 pt-0">
-                <CardTitle className="text-lg font-semibold">Ближайшие сроки</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 px-0 pb-0 pt-0">
-                {deadlines?.map((d) => (
-                  <div key={d.id} className="flex items-start gap-3">
-                    <div className="rounded bg-muted px-2 py-1 text-xs font-semibold text-foreground shrink-0">
-                      {formatDate(d.deadline_date)}
+              {/* Разделитель */}
+              <div className="border-t border-border mt-4 pt-4">
+                <h3 className="text-base font-semibold mb-3">Ближайшие сроки</h3>
+                <div className="divide-y divide-border/50">
+                  {deadlines?.map((d) => (
+                    <div key={d.id} className="flex items-start gap-3 py-3 first:pt-0">
+                      <div className="rounded bg-muted px-2 py-0.5 text-sm font-medium text-foreground shrink-0">
+                        {formatDate(d.deadline_date)}
+                      </div>
+                      <span className="text-sm">{d.title}</span>
                     </div>
-                    <span className="text-sm">{d.title}</span>
-                  </div>
-                ))}
-                {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет ближайших дедлайнов</p>}
-                <Button asChild variant="ghost" size="sm" className="w-full mt-3">
-                  <Link to="/calendar">Календарь <ArrowRight className="h-3 w-3 ml-1" /></Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                  ))}
+                  {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-3">Нет ближайших дедлайнов</p>}
+                </div>
+                <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 pt-3 border-t border-border/50 transition-colors">
+                  Календарь <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Популярные разделы */}
-          <Card className="border border-border rounded-xl p-4 md:p-6">
+          <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
             <CardHeader className="pb-3 px-0 pt-0">
-              <CardTitle className="text-lg font-semibold">Популярные разделы</CardTitle>
+              <CardTitle className="text-base font-semibold">Популярные разделы</CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0">
+            <CardContent className="px-0 pb-0 pt-0 flex-1">
               <div className="divide-y divide-border/50">
                 {popularSections.map((s) => (
                   <Link
                     key={s.label}
                     to={s.to}
-                    className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors group"
+                    className="flex items-center justify-between py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors group"
                   >
                     <span className="text-sm font-medium">{s.label}</span>
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
