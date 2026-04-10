@@ -50,19 +50,19 @@ const audienceTags = [
 
 const pricingPlans = [
   {
-    name: 'Бесплатный', price: '0',
-    features: ['26 кодексов РБ', '3 AI-запроса/день', 'Курсы НБРБ и календарь'],
-    cta: 'Начать бесплатно', to: '/register', popular: false,
+    name: 'Пробный', price: '0', desc: 'Для знакомства с сервисом',
+    features: ['Курсы валют НБРБ', 'Календарь дедлайнов', 'Новости и статьи', 'Помощник — 3 вопроса'],
+    cta: 'Начать', to: '/register', popular: false,
   },
   {
-    name: 'Базовый', price: '29',
-    features: ['Все НПА без ограничений', '30 AI-запросов/день', 'Избранное и контроль'],
-    cta: 'Подключить', to: '/pricing', popular: true,
+    name: 'Персональный', price: '69', desc: 'Для физических лиц',
+    features: ['Все кодексы и законы', 'Поиск — безлимитно', 'Калькуляторы — все', 'Помощник — 30 вопросов/день'],
+    cta: 'Оформить подписку', to: '/subscribe/personal', popular: true,
   },
   {
-    name: 'Про', price: '59',
-    features: ['AI без лимитов', 'Все калькуляторы', 'Экспорт в PDF', 'Приоритетная поддержка'],
-    cta: 'Подключить', to: '/pricing', popular: false,
+    name: 'Корпоративный', price: '99', desc: 'Для юридических лиц и ИП',
+    features: ['Всё из Персонального', 'Помощник — безлимитно', 'Экспорт PDF/DOCX', 'Приоритетная поддержка'],
+    cta: 'Оформить подписку', to: '/subscribe/corporate', popular: false,
   },
 ];
 
@@ -150,7 +150,7 @@ export default function Landing() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Бабиджон',
-    description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов бесплатно',
+    description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов',
     inLanguage: 'ru',
   };
 
@@ -162,7 +162,7 @@ export default function Landing() {
     <article>
       <PageSEO
         title="Законодательство Беларуси онлайн"
-        description="Полные тексты 26 кодексов и 200+ законов Беларуси бесплатно. Поиск по НПА, налоговый календарь, AI-ассистент для бухгалтеров и юристов."
+        description="Полные тексты 26 кодексов и 200+ законов Беларуси. Поиск по НПА, налоговый календарь, помощник для бухгалтеров и юристов."
         path="/"
         jsonLd={[websiteJsonLd]}
       />
@@ -170,10 +170,10 @@ export default function Landing() {
       {/* ═══ HERO ═══ */}
       <section className="flex flex-col items-center px-4 md:px-6 pt-8 pb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-center max-w-3xl leading-tight">
-          Законодательство Беларуси — <span className="text-primary">бесплатно</span>
+          Законодательство Беларуси — <span className="text-primary">удобно</span>
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground text-center max-w-xl">
-          Полные тексты кодексов и законов, поиск по статьям, AI-ассистент
+          Все кодексы и законы с навигацией по статьям. Поиск, калькуляторы, налоговый календарь.
         </p>
 
         <div className="mt-5 w-full max-w-[680px]">
@@ -424,7 +424,7 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 py-10">
         <div className="text-center mb-8">
           <h2 className="text-lg font-semibold">Тарифы</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Все кодексы и 200+ законов — бесплатно, без регистрации</p>
+          <p className="mt-2 text-sm text-muted-foreground">Выберите план, подходящий для ваших задач</p>
         </div>
         <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
           {pricingPlans.map((plan) => (
@@ -438,6 +438,7 @@ export default function Landing() {
               )}
               <CardHeader className="text-center pb-2 pt-0 px-0">
                 <CardTitle className="text-base font-semibold">{plan.name}</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">{plan.desc}</p>
                 <div className="mt-2">
                   <span className="text-2xl font-bold">{plan.price}</span>
                   <span className="text-muted-foreground text-sm"> BYN{plan.price !== '0' ? '/мес' : ''}</span>
