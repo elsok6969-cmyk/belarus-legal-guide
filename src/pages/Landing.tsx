@@ -514,7 +514,7 @@ export default function Landing() {
         <h2 className="text-xl font-bold mb-6">Полезное</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {[
-            { icon: Calendar, title: 'Производственный календарь 2026', sub: 'Рабочие дни, часы, праздники', to: '/calendar' },
+            { icon: Calendar, title: 'Производственный календарь 2026', sub: 'Рабочие дни, часы, праздники', to: '/production-calendar' },
             { icon: Banknote, title: 'Курсы валют НБРБ', sub: 'Официальные курсы + конвертер', to: '/currencies' },
             { icon: Calculator, title: 'Калькулятор НДС', sub: 'Выделить или начислить НДС онлайн', to: '/calculator/nds' },
             { icon: Receipt, title: 'Калькулятор подоходного налога', sub: 'Расчёт с учётом вычетов', to: '/calculator/income-tax' },

@@ -55,6 +55,7 @@ import CalculatorRouter from './pages/CalculatorRouter';
 import Subscribe from './pages/Subscribe';
 import Guide from './pages/Guide';
 import Forms from './pages/Forms';
+import ProductionCalendar from './pages/ProductionCalendar';
 import NotFound from './pages/NotFound';
 import { AIChatWidget } from './components/chat/AIChatWidget';
 
@@ -98,6 +99,7 @@ const App = () => (
           <Route path="/rates" element={<PublicLayout><PublicRates /></PublicLayout>} />
           <Route path="/currencies" element={<PublicLayout><Currencies /></PublicLayout>} />
           <Route path="/calendar" element={<PublicLayout><PublicCalendar /></PublicLayout>} />
+          <Route path="/production-calendar" element={<PublicLayout><ProductionCalendar /></PublicLayout>} />
           <Route path="/documents" element={<PublicLayout><PublicDocuments /></PublicLayout>} />
           <Route path="/documents/:id" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
           <Route path="/doc/:slug" element={<PublicLayout><PublicDocumentView /></PublicLayout>} />
