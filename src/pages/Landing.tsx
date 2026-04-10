@@ -275,8 +275,8 @@ export default function Landing() {
           </Card>
 
           {/* Курсы + Дедлайны */}
-          <div className="space-y-4 md:space-y-6 flex flex-col">
-            <Card className="border border-border rounded-xl p-4 md:p-6 flex-1">
+          <div className="space-y-4 flex flex-col">
+            <Card className="border border-border rounded-xl p-4 md:p-6">
               <CardHeader className="pb-3 px-0 pt-0">
                 <CardTitle className="text-lg font-semibold">Курсы НБРБ</CardTitle>
               </CardHeader>
