@@ -242,219 +242,160 @@ export default function Landing() {
               Все обновления <ArrowRight className="h-3 w-3" />
             </Link>
           </Card>
-                    Все новости <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Курсы + Показатели + Сроки */}
-          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
-              <CardTitle className="text-base font-semibold">Курсы НБРБ</CardTitle>
-            </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0 flex flex-col">
-              <div className="flex-1 overflow-y-auto min-h-0 pr-1">
-                <div className="divide-y divide-border/50">
-                  {rates && rates.length > 0 ? rates.map((r) => {
-                    const change = Number(r.change_value) || 0;
-                    const flag = CURRENCY_FLAGS[r.currency_code] || '';
-                    return (
-                      <div key={r.currency_code} className="flex items-center justify-between py-3 first:pt-0">
-                        <span className="text-sm font-medium">
-                          {flag} {r.currency_code}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
-                          <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                            {change > 0 ? (
-                              <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</>
-                            ) : change < 0 ? (
-                              <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</>
-                            ) : (
-                              <><Minus className="h-3 w-3 mr-0.5" />0.0000</>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }) : (
-                    <p className="text-sm text-muted-foreground py-3">Обновление...</p>
-                  )}
-                </div>
-
-                <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors">
-                  Все курсы и конвертер <ArrowRight className="h-3 w-3" />
-                </Link>
-
-                <div className="border-t border-border mt-3 pt-3">
-                  <h3 className="text-base font-semibold mb-2">Показатели</h3>
-                  <div className="divide-y divide-border/50">
-                    {refRate && (
-                      <div className="flex items-center justify-between py-2 first:pt-0">
-                        <span className="text-sm text-muted-foreground">Ставка рефинансирования</span>
-                        <span className="text-sm font-semibold">{refRate.current_value}</span>
-                      </div>
-                    )}
-                    {minSalary && (
-                      <div className="flex items-center justify-between py-2">
-                        <span className="text-sm text-muted-foreground">МЗП</span>
-                        <span className="text-sm font-semibold">{minSalary.current_value}</span>
-                      </div>
-                    )}
-                    {baseValue && (
-                      <div className="flex items-center justify-between py-2">
-                        <span className="text-sm text-muted-foreground">Базовая величина</span>
-                        <span className="text-sm font-semibold">{baseValue.current_value}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-muted-foreground">Произв. календарь</span>
-                      <span className="text-sm font-semibold">{(() => {
-                        const cal: Record<number,{h:number,d:number}> = {1:{h:151,d:20},2:{h:160,d:20},3:{h:175,d:22},4:{h:166,d:21},5:{h:159,d:20},6:{h:168,d:21},7:{h:184,d:23},8:{h:168,d:21},9:{h:176,d:22},10:{h:176,d:22},11:{h:160,d:20},12:{h:175,d:22}};
-                        const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-                        const m = new Date().getMonth() + 1;
-                        const c = cal[m];
-                        return `${months[m-1]}: ${c.h} ч / ${c.d} дн.`;
-                      })()}</span>
+          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+            <h2 className="text-base font-semibold mb-2">Курсы НБРБ</h2>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {rates && rates.length > 0 ? rates.map((r) => {
+                const change = Number(r.change_value) || 0;
+                const flag = CURRENCY_FLAGS[r.currency_code] || '';
+                return (
+                  <div key={r.currency_code} className="flex items-center justify-between py-1.5">
+                    <span className="text-sm font-medium">{flag} {r.currency_code}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                      <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                        {change > 0 ? <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</> : change < 0 ? <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</> : <><Minus className="h-3 w-3 mr-0.5" />0.0000</>}
+                      </span>
                     </div>
                   </div>
-                </div>
+                );
+              }) : <p className="text-sm text-muted-foreground py-3">Обновление...</p>}
 
-                <div className="border-t border-border mt-3 pt-3">
-                  <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
-                  <div className="divide-y divide-border/50">
-                    {deadlines?.map((d) => (
-                      <div key={d.id} className="flex items-start gap-3 py-2.5 first:pt-0">
-                        <div className="rounded bg-muted px-2 py-0.5 text-sm font-medium text-foreground shrink-0">
-                          {formatDate(d.deadline_date)}
-                        </div>
-                        <span className="text-sm">{d.title}</span>
-                      </div>
-                    ))}
-                    {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-2">Нет ближайших дедлайнов</p>}
-                  </div>
-                </div>
-              </div>
-
-              <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 flex-shrink-0 transition-colors">
-                Календарь <ArrowRight className="h-3 w-3" />
+              <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2 transition-colors">
+                Все курсы <ArrowRight className="h-3 w-3" />
               </Link>
-            </CardContent>
+
+              <div className="border-t my-3" />
+              <h3 className="text-base font-semibold mb-2">Показатели</h3>
+              {[
+                { label: 'Ставка рефинансирования', value: refRate?.current_value || '9.75%' },
+                { label: 'МЗП', value: minSalary?.current_value || '858 BYN' },
+                { label: 'Базовая величина', value: baseValue?.current_value || '45 BYN' },
+                { label: (() => {
+                  const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                  return `Произв. календарь (${months[new Date().getMonth()]})`;
+                })(), value: (() => {
+                  const cal: Record<number,{h:number,d:number}> = {0:{h:151,d:20},1:{h:160,d:20},2:{h:175,d:22},3:{h:166,d:21},4:{h:159,d:20},5:{h:168,d:21},6:{h:184,d:23},7:{h:168,d:21},8:{h:176,d:22},9:{h:176,d:22},10:{h:160,d:20},11:{h:175,d:22}};
+                  const c = cal[new Date().getMonth()];
+                  return `${c.h} ч / ${c.d} дн.`;
+                })() },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between py-1">
+                  <span className="text-xs text-muted-foreground">{row.label}</span>
+                  <span className="text-sm font-semibold">{row.value}</span>
+                </div>
+              ))}
+
+              <div className="border-t my-3" />
+              <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
+              {deadlines?.map((d) => (
+                <div key={d.id} className="mb-2">
+                  <span className="text-xs font-medium text-primary">{formatDate(d.deadline_date)}</span>
+                  <p className="text-sm">{d.title}</p>
+                </div>
+              ))}
+              {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет дедлайнов</p>}
+            </div>
+            <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 transition-colors">
+              Календарь <ArrowRight className="h-3 w-3" />
+            </Link>
           </Card>
 
           {/* Популярные разделы */}
-          <Card className="border border-border rounded-xl p-5 h-[600px] max-h-[600px] flex flex-col">
-            <CardHeader className="pb-3 px-0 pt-0 flex-shrink-0">
-              <CardTitle className="text-base font-semibold">Популярные разделы</CardTitle>
-            </CardHeader>
-            <CardContent className="px-0 pb-0 pt-0 flex-1 min-h-0">
-              <div className="divide-y divide-border/50 h-full overflow-y-auto pr-1">
-                {popularSections.map((s) => (
-                  <Link
-                    key={s.label}
-                    to={s.to}
-                    className="flex items-center justify-between py-2 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
-                  >
-                    <div className="min-w-0">
-                      <span className="text-base font-medium text-foreground">{s.label}</span>
-                      <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0 ml-2" />
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
+          <Card className="border border-border rounded-xl p-4 max-h-[550px] flex flex-col">
+            <h2 className="text-base font-semibold mb-2">Популярные разделы</h2>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {popularSections.map((s) => (
+                <Link
+                  key={s.label}
+                  to={s.to}
+                  className="flex items-center justify-between py-2 border-b border-border/30 hover:bg-muted/50 -mx-2 px-2 rounded transition-all group"
+                >
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium">{s.label}</span>
+                    <p className="text-xs text-muted-foreground">{s.desc}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ))}
+            </div>
           </Card>
         </div>
       </section>
 
-      {/* ═══ AUDIENCE PILLS ═══ */}
-      <section className="mx-auto max-w-7xl px-4 pb-10">
-        <div className="flex flex-wrap justify-center gap-2.5">
-          {audienceTags.map((a) => (
-            <Link
-              key={a.label}
-              to={`/documents?audience=${a.profession}`}
-              className="border border-border rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            >
-              {a.label}
-            </Link>
-          ))}
+      {/* ═══ BLOCK 3: ИНСТРУМЕНТЫ ═══ */}
+      <section className="bg-muted/30 py-10">
+        <div className="mx-auto max-w-5xl px-4">
+          <h2 className="text-xl font-semibold text-center mb-6">Инструменты</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {toolCards.map((t) => (
+              <Link key={t.to} to={t.to} className="bg-background border rounded-lg p-4 hover:shadow-sm hover:border-foreground/20 transition-all text-center">
+                <p className="text-sm font-medium">{t.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ═══ PRICING ═══ */}
-      <section className="mx-auto max-w-7xl px-4 py-10">
-        <div className="text-center mb-8">
-          <h2 className="text-lg font-semibold">Тарифы</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Выберите план, подходящий для ваших задач</p>
-        </div>
-        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3 max-w-3xl mx-auto">
-          {pricingPlans.map((plan) => (
-            <Card key={plan.name} className={`border border-border rounded-xl p-4 md:p-6 relative ${plan.popular ? 'border-2 border-primary' : ''}`}>
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground text-[11px]">
-                    <Star className="h-3 w-3 mr-1" /> Популярный
-                  </Badge>
-                </div>
-              )}
-              <CardHeader className="text-center pb-2 pt-0 px-0">
-                <CardTitle className="text-base font-semibold">{plan.name}</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">{plan.desc}</p>
-                <div className="mt-2">
-                  <span className="text-2xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground text-sm"> BYN{plan.price !== '0' ? '/мес' : ''}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 px-0 pb-0">
-                <ul className="space-y-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild variant={plan.popular ? 'default' : 'outline'} size="sm" className="w-full rounded-lg min-h-[44px]">
-                  <Link to={plan.to}>{plan.cta}</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+      {/* ═══ BLOCK 4: ПРОФЕССИИ ═══ */}
+      <section className="py-8">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="flex flex-wrap justify-center gap-2">
+            {audienceTags.map((a) => (
+              <Link
+                key={a.label}
+                to={`/documents?profession=${a.profession}`}
+                className="border rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+              >
+                {a.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ═══ ПОЛЕЗНОЕ ═══ */}
-      <section className="mx-auto max-w-5xl px-4 pb-12">
-        <h2 className="text-xl font-bold mb-6">Полезное</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            { icon: Calendar, title: 'Производственный календарь 2026', sub: 'Рабочие дни, часы, праздники', to: '/production-calendar' },
-            { icon: Banknote, title: 'Курсы валют НБРБ', sub: 'Официальные курсы + конвертер', to: '/currencies' },
-            { icon: Calculator, title: 'Калькулятор НДС', sub: 'Выделить или начислить НДС онлайн', to: '/calculator/nds' },
-            { icon: Receipt, title: 'Калькулятор подоходного налога', sub: 'Расчёт с учётом вычетов', to: '/calculator/income-tax' },
-          ].map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex items-start gap-4 border rounded-xl p-5 hover:shadow-md transition-shadow group"
-            >
-              <item.icon className="h-5 w-5 text-muted-foreground/60 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold group-hover:text-primary transition-colors">{item.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* ═══ BLOCK 5: НОВОСТИ ═══ */}
+      {latestNews && latestNews.length > 0 && (
+        <section className="py-10">
+          <div className="mx-auto max-w-5xl px-4">
+            <h2 className="text-xl font-semibold mb-6">Новости законодательства</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {latestNews.map((article) => {
+                const excerpt = article.excerpt || (article.body ? article.body.replace(/[#*_\[\]]/g, '').substring(0, 80) : '');
+                return (
+                  <Link key={article.id} to={`/news/${article.slug}`} className="border rounded-xl p-4 hover:shadow-sm transition-all block">
+                    <span className="text-xs text-muted-foreground">
+                      {article.published_at ? format(new Date(article.published_at), 'd MMMM yyyy', { locale: ru }) : ''}
+                    </span>
+                    <h3 className="text-sm font-semibold mt-1 line-clamp-2">{article.title}</h3>
+                    {excerpt && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{excerpt.substring(0, 80)}</p>}
+                    <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full bg-muted font-medium mt-2">Общее</Badge>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="text-center mt-6">
+              <Link to="/news" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Все новости <ArrowRight className="h-3 w-3 inline" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* ═══ EMAIL CAPTURE ═══ */}
-      <section className="mx-auto max-w-2xl px-4 pb-12">
-        <InlineEmailForm source="landing" />
+      {/* ═══ BLOCK 6: CTA ═══ */}
+      <section className="bg-muted/30 py-10 text-center">
+        <div className="mx-auto max-w-2xl px-4">
+          <h2 className="text-xl font-semibold">Полный доступ к законодательству</h2>
+          <p className="text-sm text-muted-foreground mt-2">Все кодексы, законы и указы с навигацией по статьям</p>
+          <div className="flex justify-center gap-3 mt-4">
+            <Button asChild><Link to="/pricing">Оформить подписку</Link></Button>
+            <Button asChild variant="outline"><Link to="/auth">Попробовать</Link></Button>
+          </div>
+        </div>
       </section>
     </article>
   );
