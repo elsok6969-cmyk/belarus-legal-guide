@@ -136,6 +136,7 @@ export default function Codexes() {
           По вашему запросу ничего не найдено
         </p>
       )}
+      </LoadingTimeout>
     </div>
   );
 }
