@@ -7,6 +7,7 @@ import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLoadingTimeout } from '@/hooks/useLoadingTimeout';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
