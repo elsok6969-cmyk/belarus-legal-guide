@@ -26,16 +26,20 @@ const quickTags = [
 ];
 
 const popularSections = [
-  { label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
-  { label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
-  { label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
-  { label: 'Уголовный кодекс', to: '/documents?q=Уголовный кодекс' },
-  { label: 'Закон об ООО', to: '/documents?q=ООО' },
-  { label: 'УСН для ИП', to: '/documents?q=УСН' },
-  { label: 'Охрана труда', to: '/documents?q=охрана труда' },
-  { label: 'Налоговый календарь', to: '/calendar' },
-  { label: 'КоАП', to: '/documents?q=КоАП' },
-  { label: 'Закупки', to: '/documents?q=закупки' },
+  { label: 'Трудовой кодекс', desc: '461 статья · Трудовые отношения', to: '/documents?q=Трудовой кодекс' },
+  { label: 'Налоговый кодекс', desc: '382 статьи · Налоги и сборы', to: '/documents?q=Налоговый кодекс' },
+  { label: 'Гражданский кодекс', desc: '1153 статьи · Гражданские правоотношения', to: '/documents?q=Гражданский кодекс' },
+  { label: 'Уголовный кодекс', desc: '466 статей · Преступления и наказания', to: '/documents?q=Уголовный кодекс' },
+  { label: 'КоАП', desc: '466 статей · Административные правонарушения', to: '/documents?q=КоАП' },
+  { label: 'Жилищный кодекс', desc: '224 статьи · Жилищные отношения', to: '/documents?q=Жилищный кодекс' },
+  { label: 'Банковский кодекс', desc: '312 статей · Банковская деятельность', to: '/documents?q=Банковский кодекс' },
+  { label: 'Кодекс о браке и семье', desc: '241 статья · Семейные отношения', to: '/documents?q=Кодекс о браке и семье' },
+  { label: 'Бюджетный кодекс', desc: '149 статей · Бюджетное регулирование', to: '/documents?q=Бюджетный кодекс' },
+  { label: 'Закон об ООО', desc: 'Хозяйственные общества', to: '/documents?q=ООО' },
+  { label: 'УСН для ИП', desc: 'Упрощённая система налогообложения', to: '/documents?q=УСН' },
+  { label: 'Охрана труда', desc: 'Безопасность на рабочем месте', to: '/documents?q=охрана труда' },
+  { label: 'Налоговый календарь', desc: 'Сроки сдачи отчётности', to: '/calendar' },
+  { label: 'Закупки', desc: 'Государственные закупки', to: '/documents?q=закупки' },
 ];
 
 const audienceTags = [
@@ -342,10 +346,13 @@ export default function Landing() {
                   <Link
                     key={s.label}
                     to={s.to}
-                    className="flex items-center justify-between py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors group"
+                    className="flex items-center justify-between py-4 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
                   >
-                    <span className="text-sm font-medium">{s.label}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-base font-medium text-foreground">{s.label}</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0 ml-2" />
                   </Link>
                 ))}
               </div>
