@@ -10,6 +10,7 @@ const navLinks = [
   { label: 'Кодексы', to: '/documents?filter=codex' },
   { label: 'Курсы валют', to: '/currencies' },
   { label: 'Календарь', to: '/calendar' },
+  { label: 'Новости', to: '/news' },
   { label: 'Тарифы', to: '/pricing' },
 ];
 
