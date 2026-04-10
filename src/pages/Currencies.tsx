@@ -29,6 +29,7 @@ export default function Currencies() {
   const [currency, setCurrency] = useState('USD');
   const [direction, setDirection] = useState<'toByn' | 'fromByn'>('toByn');
   const [searchFilter, setSearchFilter] = useState('');
+  const loadingTimedOut = useLoadingTimeout(isLoading);
 
   const { data: rates, isLoading, isError } = useQuery({
     queryKey: ['currencies-all'],
