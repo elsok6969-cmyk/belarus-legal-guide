@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, ArrowRight, TrendingUp, TrendingDown, Minus,
-  BookOpen, Scale, FileText, Building2, Calculator, Users,
-  HardHat, CalendarDays, Check, Star, Briefcase, ShoppingCart,
+  Check, Star,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -27,16 +26,16 @@ const quickTags = [
 ];
 
 const popularSections = [
-  { icon: BookOpen, label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
-  { icon: Calculator, label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
-  { icon: Scale, label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
-  { icon: FileText, label: 'Уголовный кодекс', to: '/documents?q=Уголовный кодекс' },
-  { icon: Building2, label: 'Закон об ООО', to: '/documents?q=ООО' },
-  { icon: Users, label: 'УСН для ИП', to: '/documents?q=УСН' },
-  { icon: HardHat, label: 'Охрана труда', to: '/documents?q=охрана труда' },
-  { icon: CalendarDays, label: 'Налоговый календарь', to: '/calendar' },
-  { icon: Briefcase, label: 'КоАП', to: '/documents?q=КоАП' },
-  { icon: ShoppingCart, label: 'Закупки', to: '/documents?q=закупки' },
+  { label: 'Трудовой кодекс', to: '/documents?q=Трудовой кодекс' },
+  { label: 'Налоговый кодекс', to: '/documents?q=Налоговый кодекс' },
+  { label: 'Гражданский кодекс', to: '/documents?q=Гражданский кодекс' },
+  { label: 'Уголовный кодекс', to: '/documents?q=Уголовный кодекс' },
+  { label: 'Закон об ООО', to: '/documents?q=ООО' },
+  { label: 'УСН для ИП', to: '/documents?q=УСН' },
+  { label: 'Охрана труда', to: '/documents?q=охрана труда' },
+  { label: 'Налоговый календарь', to: '/calendar' },
+  { label: 'КоАП', to: '/documents?q=КоАП' },
+  { label: 'Закупки', to: '/documents?q=закупки' },
 ];
 
 const audienceTags = [
