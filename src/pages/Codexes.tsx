@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingTimeout } from '@/components/shared/LoadingTimeout';
 import { supabase } from '@/integrations/supabase/client';
 
 const iconMap: Record<string, string> = {
@@ -95,13 +95,8 @@ export default function Codexes() {
         />
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-lg" />
-          ))}
-        </div>
-      ) : filtered.length > 0 ? (
+      <LoadingTimeout isLoading={isLoading} skeletonCount={9} skeletonClassName="h-36 w-full">
+        {filtered.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((doc: any) => {
             const st = statusLabels[doc.status] || statusLabels.active;
@@ -109,7 +104,7 @@ export default function Codexes() {
               <Link
                 key={doc.id}
                 to={`/app/documents/${doc.id}`}
-                className="group block rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
+                className="group block rounded-xl border bg-card p-5 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl shrink-0">{getIcon(doc.title)}</span>
