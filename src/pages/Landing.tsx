@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSEO } from '@/components/shared/PageSEO';
 import {
   Search, ArrowRight, TrendingUp, TrendingDown, Minus,
-  Check, Star,
+  Check, Star, Calendar, Banknote, Calculator, Receipt,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
