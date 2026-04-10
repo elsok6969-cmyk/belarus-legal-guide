@@ -119,6 +119,7 @@ export default function PublicDocuments() {
 
   const isSearchMode = search.trim().length >= 1;
   const isLoading = isSearchMode ? isSearching : isListLoading;
+  const loadingTimedOut = useLoadingTimeout(isLoading);
 
   // Filter by chip
   let filteredResults = searchResults || [];
@@ -186,9 +187,16 @@ export default function PublicDocuments() {
       )}
 
       {isLoading ? (
-        <div className="space-y-0 divide-y divide-border">
-          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 w-full rounded-none" />)}
-        </div>
+        loadingTimedOut ? (
+          <div className="text-center py-12">
+            <p className="text-foreground font-medium">Не удалось загрузить данные</p>
+            <button onClick={() => window.location.reload()} className="mt-2 text-sm text-primary hover:underline">Обновить страницу</button>
+          </div>
+        ) : (
+          <div className="space-y-0 divide-y divide-border">
+            {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 w-full rounded-none" />)}
+          </div>
+        )
       ) : isSearchMode && isSearchError ? (
         <div className="text-center py-12">
           <p className="text-foreground font-medium">Не удалось загрузить результаты поиска</p>
