@@ -32,14 +32,8 @@ const popularSections = [
   { label: 'Уголовный кодекс', desc: '466 статей · Преступления и наказания', to: '/documents?q=Уголовный кодекс' },
   { label: 'КоАП', desc: '466 статей · Административные правонарушения', to: '/documents?q=КоАП' },
   { label: 'Жилищный кодекс', desc: '224 статьи · Жилищные отношения', to: '/documents?q=Жилищный кодекс' },
-  { label: 'Банковский кодекс', desc: '312 статей · Банковская деятельность', to: '/documents?q=Банковский кодекс' },
-  { label: 'Кодекс о браке и семье', desc: '241 статья · Семейные отношения', to: '/documents?q=Кодекс о браке и семье' },
-  { label: 'Бюджетный кодекс', desc: '149 статей · Бюджетное регулирование', to: '/documents?q=Бюджетный кодекс' },
   { label: 'Закон об ООО', desc: 'Хозяйственные общества', to: '/documents?q=ООО' },
   { label: 'УСН для ИП', desc: 'Упрощённая система налогообложения', to: '/documents?q=УСН' },
-  { label: 'Охрана труда', desc: 'Безопасность на рабочем месте', to: '/documents?q=охрана труда' },
-  { label: 'Налоговый календарь', desc: 'Сроки сдачи отчётности', to: '/calendar' },
-  { label: 'Закупки', desc: 'Государственные закупки', to: '/documents?q=закупки' },
 ];
 
 const audienceTags = [
@@ -97,7 +91,7 @@ export default function Landing() {
     queryFn: async () => {
       const { data } = await supabase.from('documents')
         .select('id, title, doc_date, doc_number, created_at, content_text, document_types(slug, name_ru)')
-        .order('created_at', { ascending: false }).limit(8);
+        .order('created_at', { ascending: false }).limit(7);
       return data ?? [];
     },
   });
@@ -209,7 +203,7 @@ export default function Landing() {
 
       {/* ═══ THREE COLUMNS ═══ */}
       <section className="mx-auto max-w-7xl px-4 mt-4 pb-10">
-        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 items-stretch">
 
           {/* Новые НПА */}
           <Card className="border border-border rounded-xl p-5 h-full flex flex-col">
@@ -226,7 +220,7 @@ export default function Landing() {
                     <Link
                       key={doc.id}
                       to={`/documents/${doc.id}`}
-                      className="flex items-center gap-3 py-3 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
+                      className="flex items-center gap-3 py-2.5 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
                     >
                       <div className="w-[52px] shrink-0 text-center">
                         {dateObj && (
@@ -271,7 +265,7 @@ export default function Landing() {
                   Мониторинг pravo.by проверяет обновления каждые 6 часов
                 </p>
               )}
-              <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 pt-3 border-t border-border/50 transition-colors">
+              <Link to="/documents?sort=newest" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 border-t border-border/50 transition-colors">
                 Все обновления <ArrowRight className="h-3 w-3" />
               </Link>
             </CardContent>
@@ -314,21 +308,46 @@ export default function Landing() {
                 Все курсы и конвертер <ArrowRight className="h-3 w-3" />
               </Link>
 
-              {/* Разделитель */}
-              <div className="border-t border-border mt-4 pt-4">
-                <h3 className="text-base font-semibold mb-3">Ближайшие сроки</h3>
+              {/* Показатели */}
+              <div className="border-t border-border mt-3 pt-3">
+                <h3 className="text-base font-semibold mb-2">Показатели</h3>
+                <div className="divide-y divide-border/50">
+                  {refRate && (
+                    <div className="flex items-center justify-between py-2 first:pt-0">
+                      <span className="text-sm text-muted-foreground">Ставка рефинансирования</span>
+                      <span className="text-sm font-semibold">{refRate.current_value}</span>
+                    </div>
+                  )}
+                  {minSalary && (
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-muted-foreground">МЗП</span>
+                      <span className="text-sm font-semibold">{minSalary.current_value}</span>
+                    </div>
+                  )}
+                  {baseValue && (
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-muted-foreground">Базовая величина</span>
+                      <span className="text-sm font-semibold">{baseValue.current_value}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Ближайшие сроки */}
+              <div className="border-t border-border mt-3 pt-3">
+                <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
                 <div className="divide-y divide-border/50">
                   {deadlines?.map((d) => (
-                    <div key={d.id} className="flex items-start gap-3 py-3 first:pt-0">
+                    <div key={d.id} className="flex items-start gap-3 py-2.5 first:pt-0">
                       <div className="rounded bg-muted px-2 py-0.5 text-sm font-medium text-foreground shrink-0">
                         {formatDate(d.deadline_date)}
                       </div>
                       <span className="text-sm">{d.title}</span>
                     </div>
                   ))}
-                  {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-3">Нет ближайших дедлайнов</p>}
+                  {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground py-2">Нет ближайших дедлайнов</p>}
                 </div>
-                <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 pt-3 border-t border-border/50 transition-colors">
+                <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 border-t border-border/50 transition-colors">
                   Календарь <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -346,7 +365,7 @@ export default function Landing() {
                   <Link
                     key={s.label}
                     to={s.to}
-                    className="flex items-center justify-between py-4 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
+                    className="flex items-center justify-between py-2.5 first:pt-0 hover:bg-muted -mx-2 px-2 rounded-lg transition-all duration-150 group"
                   >
                     <div className="min-w-0">
                       <span className="text-base font-medium text-foreground">{s.label}</span>
@@ -361,33 +380,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ INFORMERS ═══ */}
-      {(refRate || minSalary || baseValue) && (
-        <section className="border-y border-border bg-muted py-4">
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-              {refRate && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Ставка рефинансирования</p>
-                  <p className="text-lg font-semibold text-foreground">{refRate.current_value}</p>
-                </div>
-              )}
-              {minSalary && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">МЗП</p>
-                  <p className="text-lg font-semibold text-foreground">{minSalary.current_value}</p>
-                </div>
-              )}
-              {baseValue && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Базовая величина</p>
-                  <p className="text-lg font-semibold text-foreground">{baseValue.current_value}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
+
+
 
       {/* ═══ POPULAR DOCUMENTS (simple list) ═══ */}
       {popularDocs && popularDocs.length > 0 && (
