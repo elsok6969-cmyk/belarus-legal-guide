@@ -5,6 +5,7 @@ const calculators = [
   { emoji: '💰', title: 'Калькулятор НДС', desc: 'Выделить или начислить НДС', slug: 'nds', ready: true },
   { emoji: '📊', title: 'Подоходный налог', desc: 'Расчёт подоходного налога 13%', slug: 'income-tax', ready: true },
   { emoji: '👨‍👧', title: 'Калькулятор алиментов', desc: 'Расчёт алиментов на детей', slug: 'alimony', ready: true },
+  { emoji: '🏥', title: 'Больничный лист', desc: 'Расчёт пособия по нетрудоспособности', slug: 'sick-leave', ready: true },
 ];
 
 export default function PublicCalculators() {
