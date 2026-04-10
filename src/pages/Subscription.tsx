@@ -15,36 +15,28 @@ import { cn } from '@/lib/utils';
 const plans = [
   {
     id: 'free',
-    name: 'Бесплатный',
+    name: 'Пробный',
     price: '0',
     period: '',
-    features: ['26 кодексов', '200+ законов', 'Поиск', '5 AI-запросов/день', '5 документов/день'],
-    cta: 'Начать',
+    features: ['Курсы валют НБРБ', 'Календарь дедлайнов', 'Новости и статьи', 'Помощник — 3 вопроса'],
+    cta: 'Текущий план',
   },
   {
-    id: 'standard',
-    name: 'Стандарт',
-    price: '19',
-    period: '/месяц',
-    features: ['Все НПА', 'Закладки', 'Подписки', 'Email-уведомления', 'Без AI-лимита'],
-    cta: 'Подключить',
-  },
-  {
-    id: 'pro',
-    name: 'Профи',
-    price: '49',
+    id: 'personal',
+    name: 'Персональный',
+    price: '69',
     period: '/месяц',
     popular: true,
-    features: ['Всё из Стандарт', 'AI без лимитов', 'История редакций', 'PDF скачивание', 'Приоритет поддержки'],
-    cta: 'Подключить',
+    features: ['Все кодексы и законы', 'Поиск — безлимитно', 'Калькуляторы — все', 'Помощник — 30 вопросов/день', 'Избранное и контроль'],
+    cta: 'Оформить подписку',
   },
   {
-    id: 'business',
-    name: 'Бизнес',
-    price: '149',
+    id: 'corporate',
+    name: 'Корпоративный',
+    price: '99',
     period: '/месяц',
-    features: ['Всё из Профи', '5 аккаунтов', 'API доступ', 'Приоритетная поддержка', 'Индивидуальные настройки'],
-    cta: 'Подключить',
+    features: ['Всё из Персонального', 'Помощник — безлимитно', 'Экспорт PDF/DOCX', 'Telegram-уведомления', 'Приоритетная поддержка', 'Акт и счёт-фактура'],
+    cta: 'Оформить подписку',
   },
 ];
 
@@ -97,7 +89,7 @@ export default function Subscription() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold mb-2">Выберите тариф</h1>
-          <p className="text-muted-foreground text-lg">Все кодексы Беларуси бесплатно, навсегда</p>
+          <p className="text-muted-foreground text-lg">Выберите план, подходящий для ваших задач</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -299,7 +299,7 @@ export function AIChatWidget() {
           setGuestLimitReached(true);
           setMessages(prev => [...prev, {
             role: 'system',
-            content: '🔒 Вы использовали 2 бесплатных вопроса.\nЗарегистрируйтесь, чтобы получить 3 вопроса в день бесплатно.',
+            content: '🔒 Вы использовали все пробные вопросы.\nЗарегистрируйтесь, чтобы продолжить.',
           }]);
         }
         setIsStreaming(false);
@@ -384,7 +384,7 @@ export function AIChatWidget() {
                   <p className="text-sm text-muted-foreground">Задайте вопрос о законодательстве РБ</p>
                   {!user && (
                     <p className="text-xs text-muted-foreground">
-                      Попробуйте бесплатно — {GUEST_LIMIT - getGuestCount()} вопрос{GUEST_LIMIT - getGuestCount() === 1 ? '' : 'а'} без регистрации
+                      {GUEST_LIMIT - getGuestCount()} вопрос{GUEST_LIMIT - getGuestCount() === 1 ? '' : 'а'} без регистрации
                     </p>
                   )}
                 </div>

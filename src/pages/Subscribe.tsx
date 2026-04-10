@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 const planNames: Record<string, string> = {
-  basic: 'Basic — 29 BYN/мес',
-  professional: 'Professional — 59 BYN/мес',
-  pro: 'Pro — 59 BYN/мес',
+  personal: 'Персональный — 69 BYN/мес',
+  corporate: 'Корпоративный — 99 BYN/мес',
+  // Legacy slugs redirect gracefully
+  basic: 'Персональный — 69 BYN/мес',
+  pro: 'Корпоративный — 99 BYN/мес',
+  professional: 'Корпоративный — 99 BYN/мес',
 };
 
 interface FormData {
@@ -28,7 +31,6 @@ interface FormData {
 export default function Subscribe() {
   const { plan } = useParams<{ plan: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: {
@@ -73,14 +75,14 @@ export default function Subscribe() {
         <p className="text-muted-foreground">
           Наш менеджер свяжется с вами в ближайшее время для оформления подписки.
         </p>
-        <Button asChild><Link to="/app">На главную</Link></Button>
+        <Button asChild><Link to="/">На главную</Link></Button>
       </div>
     );
   }
 
   return (
     <>
-      <PageSEO title={`Подписка ${plan} — Бабиджон`} description="Оформление подписки" path={`/subscribe/${plan}`} />
+      <PageSEO title={`Подписка — Бабиджон`} description="Оформление подписки" path={`/subscribe/${plan}`} />
       <div className="max-w-lg mx-auto py-12 px-4 space-y-6">
         <Link to="/pricing" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Назад к тарифам
@@ -111,7 +113,7 @@ export default function Subscribe() {
                 <Label>Комментарий</Label>
                 <Textarea {...register('comment')} placeholder="Название организации, пожелания..." rows={3} />
               </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full min-h-[44px]" disabled={isSubmitting}>
                 {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
               </Button>
               <p className="text-xs text-muted-foreground text-center">

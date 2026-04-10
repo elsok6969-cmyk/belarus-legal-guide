@@ -51,7 +51,7 @@ export default function About() {
           </p>
           <Button asChild size="lg" className="mt-6">
             <Link to="/register">
-              Попробовать бесплатно
+              Начать работу
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
