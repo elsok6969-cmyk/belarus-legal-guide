@@ -1,10 +1,12 @@
 import { useParams, Navigate } from 'react-router-dom';
 import IncomeTaxCalc from './calculators/IncomeTaxCalc';
 import VatCalc from './calculators/VatCalc';
+import StatuteOfLimitationsCalc from './calculators/StatuteOfLimitationsCalc';
 
 const calcMap: Record<string, React.ComponentType> = {
   'income-tax': IncomeTaxCalc,
   'nds': VatCalc,
+  'statute-of-limitations': StatuteOfLimitationsCalc,
 };
 
 export default function PublicCalculatorRouter() {
