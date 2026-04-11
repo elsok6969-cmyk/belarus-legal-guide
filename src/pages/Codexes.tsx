@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
+import { PageSEO } from '@/components/shared/PageSEO';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LoadingTimeout } from '@/components/shared/LoadingTimeout';
@@ -78,6 +79,11 @@ export default function Codexes() {
 
   return (
     <div className="space-y-6">
+      <PageSEO
+        title="Кодексы Республики Беларусь — 26 кодексов онлайн | Бабиджон"
+        description="Полные тексты всех 26 кодексов РБ в актуальных редакциях с навигацией по статьям."
+        path="/codex"
+      />
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Кодексы Республики Беларусь</h1>
         <p className="text-sm text-muted-foreground mt-1">
