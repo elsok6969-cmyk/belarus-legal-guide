@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Star, Eye, EyeOff, Trash2, FileText, Calendar } from 'lucide-react';
+import { Star, Eye, EyeOff, Trash2, FileText, Calendar, Pencil, X } from 'lucide-react';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
@@ -24,6 +25,9 @@ export default function FavoritesPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['user-favorites', user?.id],
@@ -65,6 +69,25 @@ export default function FavoritesPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const saveNote = useCallback((id: string, note: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      await supabase.from('user_favorites').update({ note: note || null }).eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+    }, 1000);
+  }, [queryClient]);
+
+  const openNoteEditor = (id: string, currentNote: string | null) => {
+    setEditingNoteId(id);
+    setNoteText(currentNote || '');
+  };
+
+  const closeNoteEditor = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setEditingNoteId(null);
+    setNoteText('');
+  };
+
   const filtered = favorites?.filter((f) => filter === 'all' || f.on_watch) || [];
   const watchedCount = favorites?.filter((f) => f.on_watch).length || 0;
 
@@ -100,13 +123,15 @@ export default function FavoritesPage() {
             return (
               <Card key={fav.id} className="group">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <Link to={`/app/documents/${doc.id}`} className="flex-1 min-w-0 space-y-1 hover:underline">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary shrink-0" />
-                        <span className="font-medium text-sm line-clamp-1">{doc.title}</span>
-                        {fav.on_watch && <Badge variant="secondary" className="text-[10px] shrink-0">На контроле</Badge>}
-                      </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <Link to={`/app/documents/${doc.id}`} className="hover:underline">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-primary shrink-0" />
+                          <span className="font-medium text-sm line-clamp-1">{doc.title}</span>
+                          {fav.on_watch && <Badge variant="secondary" className="text-[10px] shrink-0">На контроле</Badge>}
+                        </div>
+                      </Link>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         {doc.doc_number && <span>№ {doc.doc_number}</span>}
                         {doc.doc_date && (
@@ -119,8 +144,45 @@ export default function FavoritesPage() {
                           {STATUS_LABELS[doc.status] || doc.status}
                         </Badge>
                         <span>Добавлено {new Date(fav.created_at).toLocaleDateString('ru-RU')}</span>
+                        <Pencil
+                          className="h-4 w-4 text-muted-foreground cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => openNoteEditor(fav.id, fav.note)}
+                        />
                       </div>
-                    </Link>
+                      {/* Show existing note always */}
+                      {fav.note && editingNoteId !== fav.id && (
+                        <p
+                          className="text-xs text-muted-foreground mt-1 cursor-pointer hover:text-foreground transition-colors"
+                          onClick={() => openNoteEditor(fav.id, fav.note)}
+                        >
+                          {fav.note}
+                        </p>
+                      )}
+                      {/* Note editor */}
+                      {editingNoteId === fav.id && (
+                        <div className="mt-1 flex gap-1.5 items-start">
+                          <Textarea
+                            rows={3}
+                            className="text-sm border rounded-lg p-2 w-full"
+                            autoFocus
+                            value={noteText}
+                            placeholder="Заметка..."
+                            onChange={(e) => {
+                              setNoteText(e.target.value);
+                              saveNote(fav.id, e.target.value);
+                            }}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={closeNoteEditor}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button
                         variant="ghost"
