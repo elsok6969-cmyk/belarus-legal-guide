@@ -19,6 +19,7 @@ import { DocumentSearchBar } from '@/components/document/DocumentSearchBar';
 import { DocumentSidebar } from '@/components/document/DocumentSidebar';
 import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
 import { DocumentFreshness } from '@/components/document/DocumentFreshness';
+import { DocumentAmendments } from '@/components/document/DocumentAmendments';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -488,6 +489,11 @@ export default function DocumentViewer() {
           onClose={() => { setShowSearch(false); setSearchResults([]); }}
         />
       )}
+
+      {/* Amendment history */}
+      <div className="mb-4">
+        <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
+      </div>
 
       {/* Three-column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
