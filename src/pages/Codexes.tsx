@@ -110,7 +110,7 @@ export default function Codexes() {
             return (
               <Link
                 key={doc.id}
-                to={`/app/documents/${doc.id}`}
+                to={`/documents/${doc.slug || doc.id}`}
                 className="group block rounded-xl border bg-card p-5 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
               >
                 <div className="flex items-start gap-3">

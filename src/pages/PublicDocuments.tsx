@@ -246,7 +246,7 @@ export default function PublicDocuments() {
           {docs.map(doc => {
             const dt = doc.document_types as any;
             return (
-              <Link key={doc.id} to={`/documents/${doc.id}`} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
+              <Link key={doc.id} to={`/documents/${(doc as any).slug || doc.id}`} className="block px-3 py-3 hover:bg-muted/50 transition-colors duration-150">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-medium text-primary">{dt?.name_ru || ''}</span>
                   {doc.status === 'active' && <span className="text-xs text-emerald-600">Действует</span>}
