@@ -5,10 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   FileText, Clock, Download, Share2, Bookmark, Bell, Lock,
   ExternalLink, Mail, Search, ChevronLeft, ChevronRight,
-  BookOpen, Menu, MoreHorizontal, MessageCircle,
+  BookOpen, Menu, MoreHorizontal, MessageCircle, MoreVertical,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -532,71 +535,103 @@ export default function PublicDocumentView() {
       ]} />
 
       {/* Document header */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${TYPE_CLS[typeSlug] || 'bg-muted text-muted-foreground'}`}>
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] md:text-xs font-semibold ${TYPE_CLS[typeSlug] || 'bg-muted text-muted-foreground'}`}>
             {typeLabel}
           </span>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.cls}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] md:text-xs font-semibold ${statusInfo.cls}`}>
             ● {statusInfo.label}
           </span>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold leading-snug mb-3">{doc.title}</h1>
+        <h1 className="text-lg md:text-3xl font-bold leading-snug mb-2 md:mb-3">{doc.title}</h1>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-4">
-          {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Принят: {formatDate(doc.doc_date)}</span>}
+        <div className="flex flex-wrap items-center gap-x-3 md:gap-x-4 gap-y-1 text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
+          {doc.doc_date && <span className="flex items-center gap-1"><Clock className="h-3 w-3 md:h-3.5 md:w-3.5" />Принят: {formatDate(doc.doc_date)}</span>}
           {doc.doc_number && <span>№ {doc.doc_number}</span>}
-          {ib && <span>{ib.name_ru}</span>}
+          {ib && <span className="hidden md:inline">{ib.name_ru}</span>}
           {doc.source_url && (
             <a href={doc.source_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
-              <ExternalLink className="h-3.5 w-3.5" />Источник
+              <ExternalLink className="h-3 w-3 md:h-3.5 md:w-3.5" />Источник
             </a>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Action buttons — desktop */}
+        <div className="hidden md:flex items-center gap-2 flex-wrap">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                <Download className="h-4 w-4" /><span className="hidden sm:inline">PDF</span>
+                <Download className="h-4 w-4" />PDF
               </Button>
             </TooltipTrigger>
             <TooltipContent>Доступно на тарифе Профи</TooltipContent>
           </Tooltip>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleShare}>
-            <Share2 className="h-4 w-4" /><span className="hidden sm:inline">Поделиться</span>
+            <Share2 className="h-4 w-4" />Поделиться
           </Button>
           <Button variant={isBookmarked ? 'default' : 'outline'} size="sm" className="gap-1.5" onClick={toggleBookmark}>
-            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} /><span className="hidden sm:inline">Избранное</span>
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />Избранное
           </Button>
           <Button variant={isSubscribed ? 'default' : 'outline'} size="sm" className="gap-1.5" onClick={toggleSubscription}>
-            <Bell className={`h-4 w-4 ${isSubscribed ? 'fill-current' : ''}`} /><span className="hidden sm:inline">Следить</span>
+            <Bell className={`h-4 w-4 ${isSubscribed ? 'fill-current' : ''}`} />Следить
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowSearch(true)}>
-            <Search className="h-4 w-4" /><span className="hidden sm:inline">Поиск</span>
+            <Search className="h-4 w-4" />Поиск
           </Button>
-
-          {/* Mobile TOC trigger */}
-          {isMobile && tocSections.length > 0 && (
-            <Sheet open={tocOpen} onOpenChange={setTocOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Menu className="h-4 w-4" />Содержание
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] p-0">
-                <DocumentTOCPanel
-                  sections={tocSections}
-                  activeId={focusedId}
-                  onSelect={handleSelectSection}
-                  mode={viewMode}
-                />
-              </SheetContent>
-            </Sheet>
-          )}
         </div>
+
+        {/* Action buttons — mobile: search + dropdown */}
+        <div className="flex md:hidden items-center gap-2">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowSearch(true)}>
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button variant={isBookmarked ? 'default' : 'outline'} size="icon" className="h-9 w-9 shrink-0" onClick={toggleBookmark}>
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-2" />Поделиться
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleSubscription}>
+                <Bell className="h-4 w-4 mr-2" />{isSubscribed ? 'Отписаться' : 'Следить'}
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <Download className="h-4 w-4 mr-2" />PDF (Профи)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Mobile TOC button — full width */}
+        {tocSections.length > 0 && (
+          <Sheet open={tocOpen} onOpenChange={setTocOpen}>
+            <SheetTrigger asChild>
+              <button className="md:hidden w-full flex items-center justify-between border rounded-lg px-4 py-3 text-sm font-medium mt-3 bg-background hover:bg-muted/50 transition-colors">
+                <span className="flex items-center gap-2">
+                  <Menu className="h-4 w-4 text-muted-foreground" />
+                  Содержание{focusedSections?.[0] ? ` · ${focusedSections[0].number || focusedSections[0].title || ''}` : ''}
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] p-0">
+              <DocumentTOCPanel
+                sections={tocSections}
+                activeId={focusedId}
+                onSelect={handleSelectSection}
+                mode={viewMode}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
 
       {/* Three-column layout */}
