@@ -198,7 +198,7 @@ export function DocumentArticleRenderer({
       {/* Content */}
       <div className="font-serif text-base leading-[1.8] text-foreground">
         {!content || content.trim().length === 0 ? (
-          <p className="text-sm italic text-muted-foreground">Текст загружается...</p>
+          <p className="text-sm text-muted-foreground italic">Текст статьи не загружен</p>
         ) : (
           processedContent
         )}
