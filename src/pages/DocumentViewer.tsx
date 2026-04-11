@@ -392,7 +392,7 @@ export default function DocumentViewer() {
   };
 
   return (
-    <div className="space-y-4 pb-20 lg:pb-4">
+    <div className="space-y-4 pb-20 lg:pb-4 md:h-[calc(100vh-64px)] md:flex md:flex-col md:overflow-hidden">
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
         { label: 'Главная', href: '/app' },
@@ -491,23 +491,16 @@ export default function DocumentViewer() {
       )}
 
       {/* Three-column layout */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-6 md:flex-1 md:min-h-0">
         {/* Left: TOC */}
         {!isMobile && tocContent && (
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20">
-              <Card>
-                <div className="p-3 border-b">
-                  <p className="text-sm font-semibold">Оглавление</p>
-                </div>
+          <aside className="hidden lg:block w-64 shrink-0 overflow-y-auto doc-scroll border-r border-border pr-4">
                 {tocContent}
-              </Card>
-            </div>
           </aside>
         )}
 
         {/* Center: Document content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-visible md:overflow-y-auto doc-scroll">
           {/* Virtual sections (parsed from markdown) */}
           {hasVirtualSections ? (
             <Card>
@@ -629,8 +622,8 @@ export default function DocumentViewer() {
 
         {/* Right: Sidebar */}
         {!isMobile && (
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20 space-y-4">
+          <aside className="hidden lg:block w-64 shrink-0 overflow-y-auto doc-scroll">
+            <div className="space-y-4">
               <DocumentSidebar documentId={id!} />
               <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
             </div>
