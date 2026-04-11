@@ -6,8 +6,8 @@ export default function PublicCalculators() {
   return (
     <>
       <PageSEO
-        title="Калькуляторы — Бабиджон"
-        description="10 онлайн-калькуляторов для бухгалтеров и предпринимателей: НДС, подоходный налог, отпускные, алименты, больничный и другие"
+        title="Онлайн калькуляторы для бухгалтера РБ | Бабиджон"
+        description="10 калькуляторов: НДС, подоходный, пени, отпускные, алименты, больничный, стаж."
         path="/calculator"
       />
       <div className="container max-w-5xl mx-auto px-4 py-10 space-y-6">

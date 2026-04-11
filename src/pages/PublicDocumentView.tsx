@@ -489,8 +489,8 @@ export default function PublicDocumentView() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <PageSEO
-        title={`${doc.title} — полный текст`}
-        description={`Полный текст ${typeLabel} «${doc.title}»${doc.doc_date ? ` от ${formatDate(doc.doc_date)}` : ''}. Актуальная редакция.`}
+        title={`${doc.title} | Бабиджон`}
+        description={(doc.content_text || '').slice(0, 155)}
         path={`/documents/${doc.id}`}
         type="article"
         jsonLd={[legalDocJsonLd]}

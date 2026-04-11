@@ -143,8 +143,8 @@ export default function Currencies() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <PageSEO
-        title="Курсы валют НБРБ — конвертер"
-        description="Актуальные курсы валют Национального банка Республики Беларусь. Онлайн конвертер валют."
+        title="Курсы валют НБРБ сегодня — конвертер валют | Бабиджон"
+        description="Официальные курсы валют Национального банка РБ. Онлайн-конвертер валют."
         path="/currencies"
       />
 
