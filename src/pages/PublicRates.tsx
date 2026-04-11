@@ -1,30 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { useFreshRates } from '@/hooks/useFreshRates';
 
 export default function PublicRates() {
-  const { data: rates, isLoading } = useQuery({
-    queryKey: ['public-rates-full'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('currency_rates')
-        .select('*')
-        .order('rate_date', { ascending: false })
-        .limit(100);
-      // Group by date
-      const byDate = new Map<string, typeof data>();
-      data?.forEach(r => {
-        const d = r.rate_date;
-        if (!byDate.has(d)) byDate.set(d, []);
-        byDate.get(d)!.push(r);
-      });
-      return Array.from(byDate.entries()).slice(0, 5);
-    },
-  });
+  const { data: rates, isLoading } = useFreshRates();
+
+  // Group by date for display
+  const grouped = rates ? [[ rates[0]?.rate_date || '', rates ]] as [string, typeof rates][] : [];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -33,16 +18,16 @@ export default function PublicRates() {
 
       {isLoading ? (
         <div className="space-y-4">{[1,2,3].map(i => <Skeleton key={i} className="h-40 w-full" />)}</div>
-      ) : rates && rates.length > 0 ? (
+      ) : grouped.length > 0 && grouped[0][1]!.length > 0 ? (
         <div className="space-y-6">
-          {rates.map(([date, items]) => (
+          {grouped.map(([date, items]) => (
             <Card key={date} className="border">
               <CardContent className="p-5">
                 <h2 className="text-sm font-bold text-muted-foreground mb-3">
-                  {format(new Date(date), 'dd.MM.yyyy')}
+                  {date ? format(new Date(date), 'dd.MM.yyyy') : 'Сегодня'}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {items!.map((r: any) => (
+                  {items!.map((r) => (
                     <div key={r.id} className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
                       <div>
                         <span className="text-sm font-semibold">{r.currency_code}</span>
