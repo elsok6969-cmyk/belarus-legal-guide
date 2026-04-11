@@ -28,14 +28,14 @@ interface SearchAllResult {
   rank: number;
 }
 
-type ChipFilter = '' | 'kodeks' | 'zakon' | 'ukaz' | 'postanovlenie' | 'sections';
+type ChipFilter = '' | 'codex' | 'law' | 'decree' | 'resolution' | 'sections';
 
 const CHIPS: { value: ChipFilter; label: string }[] = [
   { value: '', label: 'Все' },
-  { value: 'kodeks', label: 'Кодексы' },
-  { value: 'zakon', label: 'Законы' },
-  { value: 'ukaz', label: 'Указы' },
-  { value: 'postanovlenie', label: 'Постановления' },
+  { value: 'codex', label: 'Кодексы' },
+  { value: 'law', label: 'Законы' },
+  { value: 'decree', label: 'Указы' },
+  { value: 'resolution', label: 'Постановления' },
   { value: 'sections', label: 'Статьи' },
 ];
 
