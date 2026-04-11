@@ -22,6 +22,7 @@ import { DocumentArticleRenderer } from '@/components/document/DocumentArticleRe
 import { DocumentSearchPanel } from '@/components/document/DocumentSearchPanel';
 import { parseMarkdownIntoSections, getTocSections, VirtualSection } from '@/lib/parseDocumentSections';
 import { DocumentFreshness } from '@/components/document/DocumentFreshness';
+import { DocumentAmendments } from '@/components/document/DocumentAmendments';
 import { ContentGate } from '@/components/paywall/ContentGate';
 import { InlineEmailForm } from '@/components/paywall/InlineEmailForm';
 import { getSessionId } from '@/hooks/useVisitTracking';
@@ -579,6 +580,11 @@ export default function PublicDocumentView() {
             </Sheet>
           )}
         </div>
+      </div>
+
+      {/* Amendment history */}
+      <div className="mb-6">
+        <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
       </div>
 
       {/* Three-column layout */}
