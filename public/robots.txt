@@ -1,9 +1,8 @@
 User-agent: *
 Allow: /
 
-Disallow: /profile
-Disallow: /profile/
-Disallow: /auth
-Disallow: /auth/
 Disallow: /app/
-Disallow: /app
+Disallow: /admin/
+Disallow: /auth
+
+Sitemap: https://babijon.by/sitemap.xml
