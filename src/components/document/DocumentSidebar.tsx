@@ -105,3 +105,6 @@ export function DocumentSidebar({ documentId }: { documentId: string }) {
         </CardContent>
       </Card>
       )}
+    </div>
+  );
+}
