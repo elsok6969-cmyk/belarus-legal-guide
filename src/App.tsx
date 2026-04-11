@@ -48,6 +48,7 @@ import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import AdminHealth from './pages/AdminHealth';
 import AdminAnalytics from './pages/AdminAnalytics';
+import AdminPending from './pages/AdminPending';
 import NewDocuments from './pages/NewDocuments';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
