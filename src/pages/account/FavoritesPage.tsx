@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Star, Eye, EyeOff, Trash2, FileText, Calendar } from 'lucide-react';
+import { Star, Eye, EyeOff, Trash2, FileText, Calendar, Pencil, X } from 'lucide-react';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
