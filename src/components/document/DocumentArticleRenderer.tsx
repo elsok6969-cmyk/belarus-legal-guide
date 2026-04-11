@@ -44,7 +44,7 @@ function wrapAmendments(node: React.ReactNode, keyPrefix: string): React.ReactNo
   while ((m = regex.exec(node)) !== null) {
     if (m.index > last) parts.push(node.slice(last, m.index));
     parts.push(
-      <span key={`${keyPrefix}-am-${m.index}`} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded">
+      <span key={`${keyPrefix}-am-${m.index}`} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded inline-flex items-center gap-1">
         {m[0]}
       </span>
     );
@@ -77,7 +77,7 @@ function processContent(
 
     if (isFullAmendment) {
       result.push(
-        <div key={i} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded inline-block my-2">
+        <div key={i} className="text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950 px-2 py-0.5 rounded inline-flex items-center gap-1 my-2">
           {highlightSearch(line, searchQuery || '')}
         </div>
       );
