@@ -582,11 +582,6 @@ export default function PublicDocumentView() {
         </div>
       </div>
 
-      {/* Amendment history */}
-      <div className="mb-6">
-        <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
-      </div>
-
       {/* Three-column layout */}
       <div className="flex gap-6">
         {/* LEFT: TOC */}
@@ -742,6 +737,9 @@ export default function PublicDocumentView() {
                 </CardContent>
               </Card>
               )}
+
+              {/* Amendment history */}
+              <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
             </div>
           </aside>
         )}
@@ -750,6 +748,7 @@ export default function PublicDocumentView() {
       {/* Mobile: right sidebar content below */}
       {isMobile && (
         <div className="mt-6 space-y-4">
+          <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
           {relations && relations.length > 0 && (
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-4">
@@ -769,16 +768,6 @@ export default function PublicDocumentView() {
               </CardContent>
             </Card>
           )}
-          <Card className="rounded-xl shadow-sm">
-            <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-2">Экспертные комментарии</h3>
-              <p className="text-xs text-muted-foreground mb-3">Появятся в ближайшее время.</p>
-              <div className="flex gap-2">
-                <Input placeholder="Ваш email" className="text-sm h-8" />
-                <Button size="sm" className="gap-1 shrink-0 h-8 text-xs"><Mail className="h-3.5 w-3.5" />Уведомить</Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
     </div>

@@ -490,11 +490,6 @@ export default function DocumentViewer() {
         />
       )}
 
-      {/* Amendment history */}
-      <div className="mb-4">
-        <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
-      </div>
-
       {/* Three-column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: TOC */}
@@ -625,8 +620,9 @@ export default function DocumentViewer() {
 
           {/* Mobile: sidebar content below document */}
           {isMobile && (
-            <div className="mt-6">
+            <div className="mt-6 space-y-4">
               <DocumentSidebar documentId={id!} />
+              <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
             </div>
           )}
         </div>
@@ -634,8 +630,9 @@ export default function DocumentViewer() {
         {/* Right: Sidebar */}
         {!isMobile && (
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20">
+            <div className="sticky top-20 space-y-4">
               <DocumentSidebar documentId={id!} />
+              <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
             </div>
           </aside>
         )}
