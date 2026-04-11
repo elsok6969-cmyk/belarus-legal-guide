@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   FileText, Clock, Download, Share2, Bookmark, Bell, Lock,
   ExternalLink, Mail, Search, ChevronLeft, ChevronRight,
-  BookOpen, Menu, MoreHorizontal,
+  BookOpen, Menu, MoreHorizontal, MessageCircle,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
