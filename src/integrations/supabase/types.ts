@@ -367,6 +367,50 @@ export type Database = {
           },
         ]
       }
+      document_amendments: {
+        Row: {
+          affected_articles: string[] | null
+          amendment_date: string | null
+          amendment_law_number: string | null
+          amendment_law_title: string
+          created_at: string
+          document_id: string
+          effective_date: string | null
+          id: string
+          raw_text: string | null
+        }
+        Insert: {
+          affected_articles?: string[] | null
+          amendment_date?: string | null
+          amendment_law_number?: string | null
+          amendment_law_title: string
+          created_at?: string
+          document_id: string
+          effective_date?: string | null
+          id?: string
+          raw_text?: string | null
+        }
+        Update: {
+          affected_articles?: string[] | null
+          amendment_date?: string | null
+          amendment_law_number?: string | null
+          amendment_law_title?: string
+          created_at?: string
+          document_id?: string
+          effective_date?: string | null
+          id?: string
+          raw_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_amendments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_relations: {
         Row: {
           created_at: string | null
