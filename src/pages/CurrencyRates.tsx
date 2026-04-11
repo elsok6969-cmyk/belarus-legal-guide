@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DollarSign, TrendingUp, TrendingDown, Minus, Calendar, ArrowRightLeft } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Minus, ArrowRightLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
