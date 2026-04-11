@@ -79,6 +79,7 @@ export function DocumentSidebar({ documentId }: { documentId: string }) {
       )}
 
       {/* Versions */}
+      {versions && versions.length > 0 && (
       <Card>
         <CardHeader className="pb-2 p-4">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -86,39 +87,24 @@ export function DocumentSidebar({ documentId }: { documentId: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {versions && versions.length > 0 ? (
-            <div className="space-y-2">
-              {versions.map(v => (
-                <div key={v.id} className="text-xs">
-                  <p className="font-medium">Версия {v.version_number}</p>
-                  {v.effective_date && (
-                    <p className="text-muted-foreground">
-                      от {new Date(v.effective_date).toLocaleDateString('ru-RU')}
-                    </p>
-                  )}
-                  {v.change_description && (
-                    <p className="text-muted-foreground line-clamp-2">{v.change_description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Нет редакций</p>
-          )}
+          <div className="space-y-2">
+            {versions.map(v => (
+              <div key={v.id} className="text-xs">
+                <p className="font-medium">Версия {v.version_number}</p>
+                {v.effective_date && (
+                  <p className="text-muted-foreground">
+                    от {new Date(v.effective_date).toLocaleDateString('ru-RU')}
+                  </p>
+                )}
+                {v.change_description && (
+                  <p className="text-muted-foreground line-clamp-2">{v.change_description}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Placeholder */}
-      <Card>
-        <CardHeader className="pb-2 p-4">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Lightbulb className="h-4 w-4" /> Похожие документы
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <p className="text-xs text-muted-foreground">В разработке</p>
-        </CardContent>
-      </Card>
+      )}
     </div>
   );
 }
