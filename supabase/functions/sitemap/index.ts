@@ -47,6 +47,27 @@ serve(async () => {
     .order("updated_at", { ascending: false })
     .limit(1000);
 
+  // Fetch codex article sections for individual article pages
+  const codexDocs = (documents || []).filter((d: any) => d.slug && !d.slug.match(/^\d/));
+  const codexSlugs = codexDocs.map((d: any) => d.id);
+  
+  let codexSections: any[] = [];
+  if (codexSlugs.length > 0) {
+    const { data: sections } = await supabase
+      .from("document_sections")
+      .select("document_id, number")
+      .in("document_id", codexSlugs)
+      .eq("section_type", "article")
+      .limit(5000);
+    codexSections = sections || [];
+  }
+
+  // Build slug map for codex docs
+  const idToSlug: Record<string, string> = {};
+  for (const d of codexDocs) {
+    idToSlug[d.id] = d.slug;
+  }
+
   const escape = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -64,6 +85,16 @@ serve(async () => {
     <priority>0.8</priority>
   </url>`
     ),
+    ...codexSections.map((s: any) => {
+      const slug = idToSlug[s.document_id];
+      if (!slug) return "";
+      const artNum = (s.number || "").match(/\d+/)?.[0];
+      if (!artNum) return "";
+      return `  <url>
+    <loc>${SITE_URL}/codex/${escape(slug)}/statya-${artNum}</loc>
+    <priority>0.5</priority>
+  </url>`;
+    }).filter(Boolean),
     ...(articles || []).map(
       (a) => `  <url>
     <loc>${SITE_URL}/news/${escape(a.slug)}</loc>${a.updated_at ? `\n    <lastmod>${a.updated_at.split("T")[0]}</lastmod>` : ""}
