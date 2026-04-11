@@ -7,7 +7,6 @@ import { useTheme } from '@/hooks/useTheme';
 
 const navLinks = [
   { label: 'Документы', to: '/documents' },
-  { label: 'Кодексы', to: '/documents?filter=codex' },
   { label: 'Курсы валют', to: '/currencies' },
   { label: 'Календарь', to: '/production-calendar' },
   { label: 'Калькуляторы', to: '/calculator' },
