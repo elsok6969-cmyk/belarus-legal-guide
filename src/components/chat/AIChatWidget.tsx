@@ -41,6 +41,13 @@ export function AIChatWidget() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+
+  // Allow opening from external components via custom event
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('open-ai-chat', handler);
+    return () => window.removeEventListener('open-ai-chat', handler);
+  }, []);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
