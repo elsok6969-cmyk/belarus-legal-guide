@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useFreshRates } from '@/hooks/useFreshRates';
 
 function MiniSparkline({ data }: { data: number[] }) {
   if (data.length < 2) return null;
@@ -24,35 +25,10 @@ function MiniSparkline({ data }: { data: number[] }) {
 }
 
 export default function CurrencyRates() {
-  const [selectedDate, setSelectedDate] = useState<string>('latest');
   const [convertAmount, setConvertAmount] = useState('1');
   const [convertCurrency, setConvertCurrency] = useState('USD');
 
-  const { data: dates } = useQuery({
-    queryKey: ['currency-dates'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('currency_rates')
-        .select('rate_date')
-        .order('rate_date', { ascending: false });
-      return [...new Set((data || []).map((d) => d.rate_date))];
-    },
-  });
-
-  const currentDate = selectedDate === 'latest' ? dates?.[0] : selectedDate;
-
-  const { data: rates, isLoading } = useQuery({
-    queryKey: ['currency-rates', currentDate],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('currency_rates')
-        .select('*')
-        .eq('rate_date', currentDate!)
-        .order('currency_code');
-      return data || [];
-    },
-    enabled: !!currentDate,
-  });
+  const { data: rates, isLoading } = useFreshRates();
 
   // History for sparklines (last 30 days)
   const { data: history } = useQuery({
@@ -80,6 +56,8 @@ export default function CurrencyRates() {
     return (amt * Number(r.rate)).toFixed(2);
   }, [convertAmount, convertCurrency, rates]);
 
+  const currentDate = rates?.[0]?.rate_date;
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -90,20 +68,6 @@ export default function CurrencyRates() {
           <DollarSign className="h-6 w-6 text-primary" />
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Курсы валют НБРБ</h1>
         </div>
-        {dates && dates.length > 1 && (
-          <Select value={selectedDate} onValueChange={setSelectedDate}>
-            <SelectTrigger className="w-[200px]">
-              <Calendar className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="latest">Последние</SelectItem>
-              {dates.slice(0, 30).map((d) => (
-                <SelectItem key={d} value={d}>{formatDate(d)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
       </div>
 
       {/* Converter */}
