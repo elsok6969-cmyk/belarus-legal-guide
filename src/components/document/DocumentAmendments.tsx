@@ -23,7 +23,7 @@ export function DocumentAmendments({ documentId, onArticleClick }: DocumentAmend
   const { data: amendments } = useQuery({
     queryKey: ['document-amendments', documentId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('document_amendments')
         .select('id, amendment_law_title, amendment_law_number, amendment_date, affected_articles')
         .eq('document_id', documentId)
