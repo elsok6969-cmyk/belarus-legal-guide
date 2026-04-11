@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   FileText, Clock, Download, Share2, Bookmark, Bell, Lock,
   ExternalLink, Mail, Search, ChevronLeft, ChevronRight,
-  BookOpen, Menu, MoreHorizontal,
+  BookOpen, Menu, MoreHorizontal, MessageCircle,
 } from 'lucide-react';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
@@ -757,6 +757,25 @@ export default function PublicDocumentView() {
 
               {/* Amendment history */}
               <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
+
+              {/* AI assistant block */}
+              <div className="border rounded-xl p-4 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Есть вопрос по документу?</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Задайте вопрос и получите ответ со ссылками на статьи
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={() => window.dispatchEvent(new Event('open-ai-chat'))}
+                >
+                  Задать вопрос
+                </Button>
+              </div>
             </div>
           </aside>
         )}
