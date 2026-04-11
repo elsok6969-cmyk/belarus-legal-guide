@@ -48,6 +48,7 @@ import DeadlinesCalendar from './pages/DeadlinesCalendar';
 import AdminImport from './pages/AdminImport';
 import AdminHealth from './pages/AdminHealth';
 import AdminAnalytics from './pages/AdminAnalytics';
+import AdminPending from './pages/AdminPending';
 import NewDocuments from './pages/NewDocuments';
 import Codexes from './pages/Codexes';
 import Calculators from './pages/Calculators';
@@ -150,6 +151,7 @@ const App = () => (
           <Route path="/admin/import" element={<AdminGuard><AppLayout><AdminImport /></AppLayout></AdminGuard>} />
           <Route path="/admin/health" element={<AdminGuard><AppLayout><AdminHealth /></AppLayout></AdminGuard>} />
           <Route path="/admin/analytics" element={<AdminGuard><AppLayout><AdminAnalytics /></AppLayout></AdminGuard>} />
+          <Route path="/admin/pending" element={<AdminGuard><AppLayout><AdminPending /></AppLayout></AdminGuard>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
