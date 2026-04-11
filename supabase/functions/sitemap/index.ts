@@ -35,8 +35,10 @@ serve(async () => {
 
   const { data: documents } = await supabase
     .from("documents")
-    .select("id, updated_at")
+    .select("id, slug, updated_at")
     .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(5000);
     .order("updated_at", { ascending: false })
     .limit(5000);
 
@@ -59,7 +61,7 @@ serve(async () => {
     ),
     ...(documents || []).map(
       (d) => `  <url>
-    <loc>${SITE_URL}/documents/${escape(d.id)}</loc>${d.updated_at ? `\n    <lastmod>${d.updated_at.split("T")[0]}</lastmod>` : ""}
+    <loc>${SITE_URL}/documents/${escape(d.slug || d.id)}</loc>${d.updated_at ? `\n    <lastmod>${d.updated_at.split("T")[0]}</lastmod>` : ""}
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>`
