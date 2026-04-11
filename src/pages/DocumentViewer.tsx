@@ -620,8 +620,9 @@ export default function DocumentViewer() {
 
           {/* Mobile: sidebar content below document */}
           {isMobile && (
-            <div className="mt-6">
+            <div className="mt-6 space-y-4">
               <DocumentSidebar documentId={id!} />
+              <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
             </div>
           )}
         </div>

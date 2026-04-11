@@ -748,8 +748,7 @@ export default function PublicDocumentView() {
       {/* Mobile: right sidebar content below */}
       {isMobile && (
         <div className="mt-6 space-y-4">
-          {relations && relations.length > 0 && (
-            <Card className="rounded-xl shadow-sm">
+          <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3">Связанные документы</h3>
                 <div className="space-y-2">
