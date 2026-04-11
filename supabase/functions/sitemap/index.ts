@@ -39,8 +39,6 @@ serve(async () => {
     .eq("status", "active")
     .order("updated_at", { ascending: false })
     .limit(5000);
-    .order("updated_at", { ascending: false })
-    .limit(5000);
 
   const { data: articles } = await supabase
     .from("articles")
