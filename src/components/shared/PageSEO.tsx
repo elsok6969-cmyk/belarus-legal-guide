@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const SITE_URL = '';
+const SITE_URL = 'https://belarus-legal-guide.lovable.app';
 const DEFAULT_OG_IMAGE = '';
 
 interface PageSEOProps {
@@ -33,12 +33,12 @@ export function PageSEO({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {SITE_URL && <link rel="canonical" href={url} />}
+      <link rel="canonical" href={url} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
-      {SITE_URL && <meta property="og:url" content={url} />}
+      <meta property="og:url" content={url} />
       <meta property="og:type" content={type} />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <meta property="og:locale" content="ru_BY" />

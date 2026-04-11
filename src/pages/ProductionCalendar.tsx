@@ -49,8 +49,8 @@ export default function ProductionCalendar() {
   return (
     <article className="mx-auto max-w-4xl px-4 py-10">
       <PageSEO
-        title="Производственный календарь Беларуси 2026 — рабочие дни и часы | Бабиджон"
-        description="Производственный календарь Республики Беларусь на 2026 год: рабочие дни, часы, выходные и государственные праздники."
+        title="Производственный календарь Беларуси 2026 | Бабиджон"
+        description="Рабочие дни, часы и праздники на 2026 год."
         path="/production-calendar"
       />
 
