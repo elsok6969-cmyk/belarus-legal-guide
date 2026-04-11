@@ -25,6 +25,9 @@ export default function FavoritesPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['user-favorites', user?.id],
@@ -65,6 +68,25 @@ export default function FavoritesPage() {
     },
     onError: (err: Error) => toast.error(err.message),
   });
+
+  const saveNote = useCallback((id: string, note: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      await supabase.from('user_favorites').update({ note: note || null }).eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+    }, 1000);
+  }, [queryClient]);
+
+  const openNoteEditor = (id: string, currentNote: string | null) => {
+    setEditingNoteId(id);
+    setNoteText(currentNote || '');
+  };
+
+  const closeNoteEditor = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setEditingNoteId(null);
+    setNoteText('');
+  };
 
   const filtered = favorites?.filter((f) => filter === 'all' || f.on_watch) || [];
   const watchedCount = favorites?.filter((f) => f.on_watch).length || 0;
