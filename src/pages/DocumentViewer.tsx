@@ -2,13 +2,16 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FileText, Calendar, Bookmark, BookmarkCheck, ArrowLeft, ExternalLink,
-  Bell, BellOff, Scale, Search, List, Copy, Share2, Menu,
+  Bell, BellOff, Scale, Search, List, Copy, Share2, Menu, MoreVertical, ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -402,42 +405,43 @@ export default function DocumentViewer() {
 
       {/* Document header */}
       <div>
-        <div className="flex items-center gap-2 flex-wrap mb-2">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap mb-2">
           {dt && (
-            <Badge className={TYPE_COLORS[typeSlug] || 'bg-secondary text-secondary-foreground'} variant="secondary">
+            <Badge className={`text-[11px] md:text-xs ${TYPE_COLORS[typeSlug] || 'bg-secondary text-secondary-foreground'}`} variant="secondary">
               {dt.name_ru}
             </Badge>
           )}
-          <Badge className={STATUS_COLORS[doc.status] || ''} variant="secondary">
+          <Badge className={`text-[11px] md:text-xs ${STATUS_COLORS[doc.status] || ''}`} variant="secondary">
             {STATUS_LABELS[doc.status] || doc.status}
           </Badge>
-          {doc.doc_number && <span className="text-sm text-muted-foreground">№ {doc.doc_number}</span>}
+          {doc.doc_number && <span className="text-xs md:text-sm text-muted-foreground">№ {doc.doc_number}</span>}
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight mb-3">{doc.title}</h1>
+        <h1 className="text-lg md:text-3xl font-bold tracking-tight leading-tight mb-2 md:mb-3">{doc.title}</h1>
 
-        <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground mb-4">
+        <div className="flex items-center gap-x-3 md:gap-4 flex-wrap text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
           {doc.doc_date && (
             <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3 w-3 md:h-3.5 md:w-3.5" />
               {new Date(doc.doc_date).toLocaleDateString('ru-RU')}
             </span>
           )}
           {doc.effective_date && (
-            <span className="flex items-center gap-1">
+            <span className="hidden md:flex items-center gap-1">
               <Scale className="h-3.5 w-3.5" />
               Вступил: {new Date(doc.effective_date).toLocaleDateString('ru-RU')}
             </span>
           )}
           {ib && (
-            <span className="flex items-center gap-1">
+            <span className="hidden md:flex items-center gap-1">
               <FileText className="h-3.5 w-3.5" />
               {ib.name_ru}
             </span>
           )}
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        {/* Action buttons — desktop */}
+        <div className="hidden md:flex gap-2 flex-wrap">
           {user && (
             <>
               <Button variant={bookmark ? 'default' : 'outline'} size="sm" onClick={() => toggleBookmark.mutate()} disabled={toggleBookmark.isPending}>
@@ -463,19 +467,61 @@ export default function DocumentViewer() {
           <Button variant="outline" size="sm" onClick={() => setShowSearch(!showSearch)}>
             <Search className="mr-1 h-4 w-4" /> Поиск
           </Button>
-          {isMobile && tocContent && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Menu className="mr-1 h-4 w-4" /> Оглавление
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
-                <div className="pt-10">{tocContent}</div>
-              </SheetContent>
-            </Sheet>
-          )}
         </div>
+
+        {/* Action buttons — mobile */}
+        <div className="flex md:hidden items-center gap-2">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowSearch(!showSearch)}>
+            <Search className="h-4 w-4" />
+          </Button>
+          {user && (
+            <Button variant={bookmark ? 'default' : 'outline'} size="icon" className="h-9 w-9 shrink-0" onClick={() => toggleBookmark.mutate()} disabled={toggleBookmark.isPending}>
+              {bookmark ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={copyLink}>
+                <Copy className="h-4 w-4 mr-2" />Копировать ссылку
+              </DropdownMenuItem>
+              {user && (
+                <DropdownMenuItem onClick={() => toggleSubscription.mutate()}>
+                  <Bell className="h-4 w-4 mr-2" />{subscription ? 'Отписаться' : 'Следить'}
+                </DropdownMenuItem>
+              )}
+              {doc.source_url && (
+                <DropdownMenuItem asChild>
+                  <a href={doc.source_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />Источник
+                  </a>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Mobile TOC button — full width */}
+        {isMobile && tocContent && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="md:hidden w-full flex items-center justify-between border rounded-lg px-4 py-3 text-sm font-medium mt-3 bg-background hover:bg-muted/50 transition-colors">
+                <span className="flex items-center gap-2">
+                  <Menu className="h-4 w-4 text-muted-foreground" />
+                  Содержание{activeSection ? ` · ${tocSections.find(s => s.id === activeSection)?.title || ''}`.slice(0, 40) : ''}
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0">
+              <div className="pt-10">{tocContent}</div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
 
       {/* In-document search bar */}
