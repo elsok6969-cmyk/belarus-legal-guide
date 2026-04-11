@@ -19,15 +19,26 @@ interface ParsedAmendment {
 }
 
 function parseChangeAddSection(html: string): ParsedAmendment[] {
-  // Find changeadd section
-  const changeAddMatch = html.match(/<[^>]*class="[^"]*changeadd[^"]*"[^>]*>([\s\S]*?)(?:<\/div>\s*<div|<\/div>\s*$)/i);
-  if (!changeAddMatch) {
-    // Try broader match
-    const alt = html.match(/changeadd[^>]*>([\s\S]*?)<\/(?:div|section|ul)/i);
-    if (!alt) return [];
-    return parseAmendmentList(alt[1]);
+  // pravo.by uses <p class="changeadd"> for each amendment entry
+  const amendments: ParsedAmendment[] = [];
+  const pRe = /<p[^>]*class="[^"]*changeadd[^"]*"[^>]*>([\s\S]*?)<\/p>/gi;
+  let m;
+  while ((m = pRe.exec(html)) !== null) {
+    const text = stripTags(m[1]).trim();
+    if (text.length < 10) continue;
+    const parsed = parseAmendmentEntry(text);
+    if (parsed) amendments.push(parsed);
   }
-  return parseAmendmentList(changeAddMatch[1]);
+
+  // Fallback: try finding a div.changeadd container
+  if (amendments.length === 0) {
+    const containerMatch = html.match(/<div[^>]*class="[^"]*changeadd[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    if (containerMatch) {
+      return parseAmendmentList(containerMatch[1]);
+    }
+  }
+
+  return amendments;
 }
 
 function parseAmendmentList(html: string): ParsedAmendment[] {
