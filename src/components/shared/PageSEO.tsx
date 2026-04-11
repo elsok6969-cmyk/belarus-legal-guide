@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const SITE_URL = 'https://belarus-legal-guide.lovable.app';
+const SITE_URL = 'https://babijon.by';
 const DEFAULT_OG_IMAGE = '';
 
 interface PageSEOProps {
@@ -11,6 +11,7 @@ interface PageSEOProps {
   type?: 'website' | 'article';
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  breadcrumbs?: { name: string; path: string }[];
 }
 
 export function PageSEO({
@@ -21,13 +22,27 @@ export function PageSEO({
   type = 'website',
   noindex = false,
   jsonLd,
+  breadcrumbs,
 }: PageSEOProps) {
   const fullTitle = title;
-  const url = SITE_URL ? `${SITE_URL}${path}` : path;
+  const url = `${SITE_URL}${path}`;
 
   const jsonLdItems = jsonLd
     ? Array.isArray(jsonLd) ? jsonLd : [jsonLd]
     : [];
+
+  if (breadcrumbs && breadcrumbs.length > 0) {
+    jsonLdItems.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((b, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: b.name,
+        item: `${SITE_URL}${b.path}`,
+      })),
+    });
+  }
 
   return (
     <Helmet>

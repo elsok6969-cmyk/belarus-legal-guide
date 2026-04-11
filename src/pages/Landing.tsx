@@ -134,8 +134,14 @@ export default function Landing() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Бабиджон',
-    description: 'Законодательство Республики Беларусь онлайн — полные тексты кодексов и законов',
+    url: 'https://babijon.by',
+    description: 'Удобный доступ к законодательству Республики Беларусь',
     inLanguage: 'ru',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://babijon.by/documents?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
   };
 
   const refRate = indicators?.find(i => i.slug === 'refinancing-rate');

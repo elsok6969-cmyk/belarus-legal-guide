@@ -85,6 +85,7 @@ export default function News() {
         title="Новости законодательства Беларуси | Бабиджон"
         description="Обзоры изменений в НПА, разъяснения, новые законы и указы."
         path="/news"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Новости', path: '/news' }]}
       />
 
       <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Новости' }]} />

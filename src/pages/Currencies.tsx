@@ -146,6 +146,7 @@ export default function Currencies() {
         title="Курсы валют НБРБ сегодня — конвертер валют | Бабиджон"
         description="Официальные курсы валют Национального банка РБ. Онлайн-конвертер валют."
         path="/currencies"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Курсы валют', path: '/currencies' }]}
       />
 
       <h1 className="text-2xl md:text-3xl font-bold mb-1">Курсы валют НБРБ</h1>

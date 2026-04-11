@@ -466,10 +466,11 @@ export default function PublicDocumentView() {
 
   const legalDocJsonLd: any = {
     '@context': 'https://schema.org', '@type': 'Legislation',
-    name: doc.title, datePublished: doc.doc_date, dateModified: doc.last_updated,
+    name: doc.title, legislationIdentifier: doc.doc_number,
+    datePublished: doc.doc_date, dateModified: doc.last_updated,
     publisher: ib ? { '@type': 'Organization', name: ib.name_ru } : undefined,
-    inLanguage: 'ru', legislationIdentifier: doc.doc_number,
-    url: `/documents/${doc.id}`,
+    inLanguage: 'ru', legislationJurisdiction: 'BY',
+    url: `https://babijon.by/documents/${doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
@@ -494,6 +495,11 @@ export default function PublicDocumentView() {
         path={`/documents/${doc.id}`}
         type="article"
         jsonLd={[legalDocJsonLd]}
+        breadcrumbs={[
+          { name: 'Главная', path: '/' },
+          { name: typeLabel, path: '/codex' },
+          { name: doc.short_title || doc.title, path: `/documents/${doc.id}` },
+        ]}
       />
 
       {/* Search panel */}

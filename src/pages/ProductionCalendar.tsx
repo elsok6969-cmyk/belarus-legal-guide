@@ -52,6 +52,7 @@ export default function ProductionCalendar() {
         title="Производственный календарь Беларуси 2026 | Бабиджон"
         description="Рабочие дни, часы и праздники на 2026 год."
         path="/production-calendar"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Производственный календарь', path: '/production-calendar' }]}
       />
 
       <h1 className="text-2xl md:text-3xl font-bold">Производственный календарь Беларуси 2026</h1>

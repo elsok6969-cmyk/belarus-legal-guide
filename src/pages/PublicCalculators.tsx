@@ -9,6 +9,7 @@ export default function PublicCalculators() {
         title="Онлайн калькуляторы для бухгалтера РБ | Бабиджон"
         description="10 калькуляторов: НДС, подоходный, пени, отпускные, алименты, больничный, стаж."
         path="/calculator"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Калькуляторы', path: '/calculator' }]}
       />
       <div className="container max-w-5xl mx-auto px-4 py-10 space-y-6">
         <div>

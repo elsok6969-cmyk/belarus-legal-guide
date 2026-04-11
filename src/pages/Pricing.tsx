@@ -107,6 +107,16 @@ export default function Pricing() {
         title="Тарифы Бабиджон — Персональный 69 BYN, Корпоративный 99 BYN"
         description="Подписка на правовую базу РБ. Пробный доступ, персональный и корпоративный планы."
         path="/pricing"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Тарифы', path: '/pricing' }]}
+        jsonLd={[{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            { '@type': 'Question', name: 'Сколько стоит подписка?', acceptedAnswer: { '@type': 'Answer', text: 'Персональный план — 69 BYN/мес для физлиц. Корпоративный — 99 BYN/мес для юрлиц и ИП.' } },
+            { '@type': 'Question', name: 'Что входит в пробный доступ?', acceptedAnswer: { '@type': 'Answer', text: 'Курсы валют НБРБ, налоговый календарь на текущий месяц, новости, 3 вопроса помощнику.' } },
+            { '@type': 'Question', name: 'Можно ли оформить на организацию?', acceptedAnswer: { '@type': 'Answer', text: 'Да, корпоративный план включает акт и счёт-фактуру для бухгалтерии.' } },
+          ],
+        }]}
       />
 
       <section className="bg-primary px-4 md:px-6 py-10 md:py-20">
