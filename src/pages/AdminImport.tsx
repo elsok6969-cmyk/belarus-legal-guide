@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Trash2, RefreshCw, Upload, Search, Database } from 'lucide-react';
+import { Loader2, Trash2, RefreshCw, Upload, Search, Database, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DbStatus {
@@ -62,6 +62,10 @@ export default function AdminImport() {
   const [brokenCount, setBrokenCount] = useState<number | null>(null);
   const [dupeCount, setDupeCount] = useState<number | null>(null);
   const [cleanupLoading, setCleanupLoading] = useState('');
+
+  // Section 5: Amendments
+  const [amendmentsLoading, setAmendmentsLoading] = useState(false);
+  const [amendmentsResult, setAmendmentsResult] = useState<string | null>(null);
 
   const appendLog = useCallback((line: string) => {
     const ts = new Date().toLocaleTimeString('ru-RU');
@@ -550,6 +554,49 @@ export default function AdminImport() {
               <Loader2 className="h-4 w-4 animate-spin" />
               Выполняется...
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section 5: Extract Amendments */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Извлечение истории изменений
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Извлекает из raw_html документов секцию «changeadd» со списком поправок и сохраняет в таблицу document_amendments.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={async () => {
+                setAmendmentsLoading(true);
+                setAmendmentsResult(null);
+                try {
+                  const { data, error } = await supabase.functions.invoke('extract-amendments', { body: {} });
+                  if (error) throw error;
+                  const msg = `Обработано документов: ${data.processed_documents}, найдено поправок: ${data.total_amendments}`;
+                  setAmendmentsResult(msg);
+                  toast.success(msg);
+                } catch (e: any) {
+                  const msg = e.message || 'Ошибка';
+                  setAmendmentsResult(`Ошибка: ${msg}`);
+                  toast.error(msg);
+                } finally {
+                  setAmendmentsLoading(false);
+                }
+              }}
+              disabled={amendmentsLoading}
+            >
+              {amendmentsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <History className="mr-2 h-4 w-4" />}
+              Извлечь историю изменений
+            </Button>
+          </div>
+          {amendmentsResult && (
+            <p className="text-sm text-muted-foreground">{amendmentsResult}</p>
           )}
         </CardContent>
       </Card>
