@@ -499,7 +499,7 @@ export default function PublicDocumentView() {
   const docPath = `/documents/${doc.slug || doc.id}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 md:h-screen md:flex md:flex-col md:overflow-hidden">
       <PageSEO
         title={`${doc.title} | Бабиджон`}
         description={(doc.content_text || '').slice(0, 155)}
@@ -600,23 +600,21 @@ export default function PublicDocumentView() {
       </div>
 
       {/* Three-column layout */}
-      <div className="flex gap-6">
+      <div className="flex gap-6 md:flex-1 md:min-h-0">
         {/* LEFT: TOC */}
         {!isMobile && tocSections.length > 0 && (
-          <aside className="hidden md:block w-[280px] shrink-0">
-            <div className="sticky top-20 border border-border rounded-lg overflow-hidden h-[calc(100vh-120px)]">
+          <aside className="hidden md:block w-[280px] shrink-0 overflow-y-auto doc-scroll border-r border-border pr-4">
               <DocumentTOCPanel
                 sections={tocSections}
                 activeId={focusedId}
                 onSelect={handleSelectSection}
                 mode={viewMode}
               />
-            </div>
           </aside>
         )}
 
         {/* CENTER: Document body */}
-        <div className="flex-1 min-w-0 max-w-[820px] mx-auto">
+        <div className="flex-1 min-w-0 max-w-[820px] mx-auto overflow-visible md:overflow-y-auto doc-scroll">
           {/* Mode switcher */}
           {sections.length > 0 && (
             <div className="mb-4">
@@ -722,8 +720,8 @@ export default function PublicDocumentView() {
 
         {/* RIGHT: Sidebar */}
         {!isMobile && (
-          <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
-            <div className="sticky top-20 space-y-4">
+          <aside className="hidden lg:block w-[280px] shrink-0 overflow-y-auto doc-scroll space-y-4">
+            <div className="space-y-4">
               {/* Related documents */}
               {relations && relations.length > 0 && (
               <Card className="rounded-xl shadow-sm">
