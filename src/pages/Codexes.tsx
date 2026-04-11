@@ -83,6 +83,7 @@ export default function Codexes() {
         title="Кодексы Республики Беларусь — 26 кодексов онлайн | Бабиджон"
         description="Полные тексты всех 26 кодексов РБ в актуальных редакциях с навигацией по статьям."
         path="/codex"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Кодексы', path: '/codex' }]}
       />
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Кодексы Республики Беларусь</h1>

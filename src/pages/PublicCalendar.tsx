@@ -263,6 +263,7 @@ export default function PublicCalendar() {
         title="Налоговый календарь 2026 — сроки отчётности РБ | Бабиджон"
         description="Все сроки уплаты налогов и сдачи отчётности: НДС, налог на прибыль, ФСЗН."
         path="/calendar"
+        breadcrumbs={[{ name: 'Главная', path: '/' }, { name: 'Налоговый календарь', path: '/calendar' }]}
       />
 
       <Breadcrumbs items={[
