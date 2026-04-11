@@ -490,11 +490,6 @@ export default function DocumentViewer() {
         />
       )}
 
-      {/* Amendment history */}
-      <div className="mb-4">
-        <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
-      </div>
-
       {/* Three-column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: TOC */}

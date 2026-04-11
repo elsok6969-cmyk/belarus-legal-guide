@@ -582,11 +582,6 @@ export default function PublicDocumentView() {
         </div>
       </div>
 
-      {/* Amendment history */}
-      <div className="mb-6">
-        <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
-      </div>
-
       {/* Three-column layout */}
       <div className="flex gap-6">
         {/* LEFT: TOC */}
