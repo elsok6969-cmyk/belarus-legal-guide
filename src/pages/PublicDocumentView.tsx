@@ -80,7 +80,7 @@ function formatDate(d: string | null) {
 /* ─── main component ────────────────────────────── */
 
 export default function PublicDocumentView() {
-  const { id } = useParams<{ id: string }>();
+  const { id: idOrSlug } = useParams<{ id: string }>();
   const location = useLocation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -97,17 +97,26 @@ export default function PublicDocumentView() {
   /* ── data fetching ── */
 
   const { data: doc, isLoading } = useQuery({
-    queryKey: ['public-doc', id],
+    queryKey: ['public-doc', idOrSlug],
     queryFn: async () => {
-      const { data } = await supabase.from('documents')
+      // Try slug first
+      const { data: bySlug } = await supabase.from('documents')
         .select('*, document_types(slug, name_ru), issuing_bodies(name_ru)')
-        .eq('id', id!)
-        .single();
-      return data;
+        .eq('slug', idOrSlug!)
+        .maybeSingle();
+      if (bySlug) return bySlug;
+      // Fallback to id
+      const { data: byId } = await supabase.from('documents')
+        .select('*, document_types(slug, name_ru), issuing_bodies(name_ru)')
+        .eq('id', idOrSlug!)
+        .maybeSingle();
+      return byId;
     },
-    enabled: !!id,
+    enabled: !!idOrSlug,
     staleTime: 3600000,
   });
+
+  const id = doc?.id;
 
   const { data: dbSections } = useQuery({
     queryKey: ['document-sections', id],
@@ -470,7 +479,7 @@ export default function PublicDocumentView() {
     datePublished: doc.doc_date, dateModified: doc.last_updated,
     publisher: ib ? { '@type': 'Organization', name: ib.name_ru } : undefined,
     inLanguage: 'ru', legislationJurisdiction: 'BY',
-    url: `https://babijon.by/documents/${doc.id}`,
+    url: `https://babijon.by/documents/${doc.slug || doc.id}`,
     legislationLegalForce: doc.status === 'active' ? 'InForce' : 'NotInForce',
   };
 
@@ -487,18 +496,20 @@ export default function PublicDocumentView() {
     ? focusedSections
     : sections;
 
+  const docPath = `/documents/${doc.slug || doc.id}`;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <PageSEO
         title={`${doc.title} | Бабиджон`}
         description={(doc.content_text || '').slice(0, 155)}
-        path={`/documents/${doc.id}`}
+        path={docPath}
         type="article"
         jsonLd={[legalDocJsonLd]}
         breadcrumbs={[
           { name: 'Главная', path: '/' },
           { name: typeLabel, path: '/codex' },
-          { name: doc.short_title || doc.title, path: `/documents/${doc.id}` },
+          { name: doc.short_title || doc.title, path: docPath },
         ]}
       />
 
