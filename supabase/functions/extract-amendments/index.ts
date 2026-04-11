@@ -78,7 +78,16 @@ function parseAmendmentList(html: string): ParsedAmendment[] {
   return amendments;
 }
 
-function parseAmendmentEntry(text: string): ParsedAmendment | null {
+function parseAmendmentEntry(rawText: string): ParsedAmendment | null {
+  // Clean registry codes like <H10500037> and entities
+  let text = rawText
+    .replace(/&lt;[^&]*&gt;/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (text.length < 10) return null;
+
   // Extract law number: № XXX-З or N XXX-З
   const numMatch = text.match(/[№N]\s*(\d+[\-\/]?[А-Яа-яA-Z]*)/);
   const lawNumber = numMatch ? numMatch[1] : null;
