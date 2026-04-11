@@ -629,8 +629,9 @@ export default function DocumentViewer() {
         {/* Right: Sidebar */}
         {!isMobile && (
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20">
+            <div className="sticky top-20 space-y-4">
               <DocumentSidebar documentId={id!} />
+              <DocumentAmendments documentId={id!} onArticleClick={scrollToSection} />
             </div>
           </aside>
         )}
