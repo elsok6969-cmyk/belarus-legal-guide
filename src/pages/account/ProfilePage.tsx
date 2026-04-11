@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { PageSEO } from '@/components/shared/PageSEO';
@@ -75,7 +74,6 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['sidebar-profile'] });
       toast.success('Профиль обновлён');
     },
     onError: () => toast.error('Ошибка при сохранении'),
@@ -96,18 +94,18 @@ export default function ProfilePage() {
   const plan = profile?.subscription_plan || 'free';
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-lg mx-auto space-y-6">
       <PageSEO title="Профиль" description="Управление профилем" path="/app/account/profile" noindex />
-      <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+      <h1 className="text-2xl font-bold flex items-center gap-2">
         <User className="h-6 w-6 text-primary" /> Профиль
       </h1>
 
       {/* Subscription card */}
       <Card className="bg-accent/30 border-primary/20">
         <CardContent className="p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Crown className="h-7 w-7 text-primary" />
+              <Crown className="h-6 w-6 text-primary" />
               <div>
                 <p className="font-semibold">{planLabels[plan] || plan}</p>
                 {profile?.subscription_expires_at && (
@@ -159,23 +157,21 @@ export default function ProfilePage() {
             <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Название организации" />
           </div>
 
-          <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
-            {updateProfile.isPending ? 'Сохранение...' : 'Сохранить'}
-          </Button>
+          <div className="pt-2">
+            <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
+              {updateProfile.isPending ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Безопасность</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={handleChangePassword} className="gap-2">
-            <KeyRound className="h-4 w-4" /> Сменить пароль
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Security */}
+      <div className="border-t pt-8 mt-8">
+        <h2 className="text-base font-semibold mb-4">Безопасность</h2>
+        <Button variant="outline" onClick={handleChangePassword} className="gap-2">
+          <KeyRound className="h-4 w-4" /> Сменить пароль
+        </Button>
+      </div>
     </div>
   );
 }
