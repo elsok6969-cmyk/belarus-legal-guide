@@ -161,7 +161,7 @@ export default function CodexArticle() {
       <Breadcrumbs items={[
         { label: 'Главная', href: '/' },
         { label: 'Кодексы', href: '/documents?filter=codex' },
-        { label: codexTitle, href: `/documents/${codexDoc.id}` },
+        { label: codexTitle, href: `/documents/${(codexDoc as any).slug || codexDoc.id}` },
         { label: articleTitle },
       ]} />
 
@@ -218,7 +218,7 @@ export default function CodexArticle() {
             <p className="text-xs text-muted-foreground">Полное оглавление и все статьи</p>
           </div>
           <Button asChild size="sm">
-            <Link to={`/documents/${codexDoc.id}`}>Открыть</Link>
+            <Link to={`/documents/${(codexDoc as any).slug || codexDoc.id}`}>Открыть</Link>
           </Button>
         </CardContent>
       </Card>

@@ -210,7 +210,7 @@ export default function Landing() {
                   return (
                     <Link
                       key={doc.id}
-                      to={`/documents/${doc.id}`}
+                      to={`/documents/${(doc as any).slug || doc.id}`}
                       className="flex items-center gap-3 py-2 first:pt-0 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors group"
                     >
                       <div className="w-[50px] shrink-0 text-center">
