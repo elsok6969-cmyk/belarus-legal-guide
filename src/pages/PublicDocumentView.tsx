@@ -737,6 +737,9 @@ export default function PublicDocumentView() {
                 </CardContent>
               </Card>
               )}
+
+              {/* Amendment history */}
+              <DocumentAmendments documentId={id!} onArticleClick={handleArticleRefClick} />
             </div>
           </aside>
         )}
