@@ -211,32 +211,25 @@ export default function PublicDocumentView() {
       }));
     }
 
-    // Strip full content from gated sections so it never reaches the DOM
-    // Keep only a short plain-text snippet for the boundary teaser
-    const isPaid = userProfile?.subscription_plan === 'basic' ||
-                   userProfile?.subscription_plan === 'professional';
-    const docTitle = doc?.title || '';
-    const isFreeDoc = ['гражданский кодекс', 'трудовой кодекс', 'налоговый кодекс'].some(
-      p => docTitle.toLowerCase().includes(p)
-    ) && (!!user || false);
+    // Determine access limit: guest=3, free=10, paid=∞
+    const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+    const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
 
     let sectionLimit = Infinity;
     if (!user) {
-      // Progressive limit from localStorage
-      const visits = parseInt(localStorage.getItem('babijon_visit_count') || '0', 10);
-      sectionLimit = visits >= 8 ? 1 : visits >= 4 ? 3 : 5;
-    } else if (!isPaid && !isFreeDoc) {
+      sectionLimit = 3;
+    } else if (!isPaid) {
       sectionLimit = 10;
     }
 
     return raw.map((s, idx) => {
       if (idx < sectionLimit) return s; // Full content
-      // Gated: replace content with short snippet
+      // Gated: replace content with short snippet for blur teaser
       const plainText = s.content.replace(/[#*_`>\[\]()]/g, '');
       return {
         ...s,
-        content: '', // Empty — no real content
-        _snippet: plainText.slice(0, 150), // Short teaser only
+        content: '', // Empty — no real content in DOM
+        _snippet: plainText.slice(0, 200), // Short teaser for blur
       };
     });
   }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
@@ -293,17 +286,29 @@ export default function PublicDocumentView() {
   }, [sections, location.hash]);
 
   const handleSelectSection = useCallback((sectionId: string) => {
+    // Check if this section is gated — if so, scroll to paywall
+    const sIdx = sections.findIndex(s => s.id === sectionId);
+    const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+    const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
+    const limit = !user ? 3 : isPaid ? Infinity : 10;
+
+    if (sIdx >= limit) {
+      const gate = document.getElementById('paywall-gate');
+      if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTocOpen(false);
+      return;
+    }
+
     if (viewMode === 'focus') {
       setFocusedId(sectionId);
       window.history.replaceState(null, '', `#section-${sectionId}`);
       contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // Full mode — scroll to anchor
       const el = document.getElementById(`section-${sectionId}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     setTocOpen(false);
-  }, [viewMode]);
+  }, [viewMode, sections, user, userProfile?.subscription_plan]);
 
   const handleArticleRefClick = useCallback((artNum: string) => {
     const target = sections.find(s => {
@@ -473,8 +478,8 @@ export default function PublicDocumentView() {
     supersedes: 'Заменяет', superseded_by: 'Заменён',
   };
 
-  const isPaid = userProfile?.subscription_plan === 'basic' || userProfile?.subscription_plan === 'professional';
-  const showPaywall = !isPaid;
+  const paidPlansCheck = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+  const showPaywall = !paidPlansCheck.includes(userProfile?.subscription_plan || '');
 
   const legalDocJsonLd: any = {
     '@context': 'https://schema.org', '@type': 'Legislation',
@@ -676,29 +681,34 @@ export default function PublicDocumentView() {
             <Card className="border rounded-xl">
               <CardContent className="p-6 md:p-8 font-serif leading-relaxed" ref={contentRef}>
                 <div className="max-w-none">
-                  {displaySections.map((section, idx) => (
-                    <ContentGate
-                      key={section.id}
-                      sectionIndex={idx}
-                      sectionTitle={section.title}
-                      previewSnippet={section._snippet || ''}
-                      documentTitle={doc.title}
-                      totalSections={sections.length}
-                      userPlan={userProfile?.subscription_plan}
-                      renderContent={() => (
-                        <DocumentArticleRenderer
-                          id={section.id}
-                          title={section.title}
-                          number={section.number}
-                          content={section.content}
-                          level={section.level}
-                          searchQuery={searchQuery}
-                          onArticleClick={handleArticleRefClick}
-                          onAIExplain={handleAIExplain}
-                        />
-                      )}
-                    />
-                  ))}
+                  {displaySections.map((section, idx) => {
+                    // Use global index for gating, not display index
+                    const globalIdx = sections.findIndex(s => s.id === section.id);
+                    return (
+                      <ContentGate
+                        key={section.id}
+                        sectionIndex={globalIdx >= 0 ? globalIdx : idx}
+                        sectionTitle={section.title}
+                        sectionNumber={section.number}
+                        previewSnippet={section._snippet || ''}
+                        documentTitle={doc.title}
+                        totalSections={sections.length}
+                        userPlan={userProfile?.subscription_plan}
+                        renderContent={() => (
+                          <DocumentArticleRenderer
+                            id={section.id}
+                            title={section.title}
+                            number={section.number}
+                            content={section.content}
+                            level={section.level}
+                            searchQuery={searchQuery}
+                            onArticleClick={handleArticleRefClick}
+                            onAIExplain={handleAIExplain}
+                          />
+                        )}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Article navigation (focus mode) */}
