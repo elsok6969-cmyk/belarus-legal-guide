@@ -265,25 +265,38 @@ export default function Landing() {
           <Card className="border border-border rounded-xl p-4 max-h-none md:max-h-[550px] flex flex-col">
             <h2 className="text-base font-semibold mb-2">Курсы НБРБ</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
-              {rates && rates.length > 0 ? rates.map((r) => {
-                const change = Number(r.change_value) || 0;
-                const flag = CURRENCY_FLAGS[r.currency_code] || '';
-                return (
-                  <div key={r.currency_code} className="flex items-center justify-between py-1.5">
-                    <span className="text-sm font-medium">{flag} {r.currency_code}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
-                      <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                        {change > 0 ? <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</> : change < 0 ? <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</> : <><Minus className="h-3 w-3 mr-0.5" />0.0000</>}
-                      </span>
-                    </div>
+              {loadingRates ? (
+                ratesTimedOut ? (
+                  <p className="text-sm text-muted-foreground py-3">Не удалось загрузить курсы.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-7 w-full" />)}
                   </div>
-                );
-              }) : <p className="text-sm text-muted-foreground py-3">Обновление...</p>}
-
-              <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2 transition-colors">
-                Все курсы <ArrowRight className="h-3 w-3" />
-              </Link>
+                )
+              ) : rates && rates.length > 0 ? (
+                <>
+                  {rates.map((r) => {
+                    const change = Number(r.change_value) || 0;
+                    const flag = CURRENCY_FLAGS[r.currency_code] || '';
+                    return (
+                      <div key={r.currency_code} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm font-medium">{flag} {r.currency_code}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                          <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                            {change > 0 ? <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</> : change < 0 ? <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</> : <><Minus className="h-3 w-3 mr-0.5" />0.0000</>}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2 transition-colors">
+                    Все курсы <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-3">Нет данных о курсах</p>
+              )}
 
               <div className="border-t my-3" />
               <h3 className="text-base font-semibold mb-2">Показатели</h3>
