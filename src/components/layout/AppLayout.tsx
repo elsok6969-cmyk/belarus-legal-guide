@@ -17,7 +17,7 @@ import { TopBar } from './TopBar';
 
 const mainNav = [
   { to: '/app', label: 'Главная', icon: Home, end: true },
-  { to: '/app/new-documents', label: 'Документы', icon: FileText },
+  { to: '/app/documents', label: 'Документы', icon: FileText },
   { to: '/app/codex', label: 'Кодексы', icon: BookOpen },
   { to: '/app/search', label: 'Поиск', icon: Search },
   { to: '/app/calculator', label: 'Калькуляторы', icon: Calculator },
