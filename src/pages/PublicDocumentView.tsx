@@ -56,7 +56,6 @@ interface UnifiedSection {
   content: string;
   level: number;
   sort_order: number;
-  _snippet?: string;
 }
 
 /* ─── helpers ───────────────────────────────────── */
@@ -211,28 +210,34 @@ export default function PublicDocumentView() {
       }));
     }
 
-    // Determine access limit: guest=3, free=10, paid=∞
+    // Determine access limit: guest=5, free=10, paid=∞
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
 
     let sectionLimit = Infinity;
     if (!user) {
-      sectionLimit = 3;
+      sectionLimit = 5;
     } else if (!isPaid) {
       sectionLimit = 10;
     }
 
     return raw.map((s, idx) => {
       if (idx < sectionLimit) return s; // Full content
-      // Gated: replace content with short snippet for blur teaser
-      const plainText = s.content.replace(/[#*_`>\[\]()]/g, '');
+      // Gated: strip content entirely from DOM
       return {
         ...s,
-        content: '', // Empty — no real content in DOM
-        _snippet: plainText.slice(0, 200), // Short teaser for blur
+        content: '', // No content in DOM at all
       };
     });
   }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
+
+  const freeLimit = useMemo(() => {
+    const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+    const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
+    if (!user) return 5;
+    if (!isPaid) return 10;
+    return Infinity;
+  }, [user, userProfile?.subscription_plan]);
 
   const tocSections: TocEntry[] = useMemo(
     () => sections.filter(s => s.level <= 3).map(s => ({
@@ -290,9 +295,18 @@ export default function PublicDocumentView() {
     const sIdx = sections.findIndex(s => s.id === sectionId);
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
-    const limit = !user ? 3 : isPaid ? Infinity : 10;
+    const limit = !user ? 5 : isPaid ? Infinity : 10;
 
     if (sIdx >= limit) {
+      // In focus mode, navigate to the locked section — ContentGate will show paywall
+      if (viewMode === 'focus') {
+        setFocusedId(sectionId);
+        window.history.replaceState(null, '', `#section-${sectionId}`);
+        contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        setTocOpen(false);
+        return;
+      }
+      // In full mode, scroll to paywall gate
       const gate = document.getElementById('paywall-gate');
       if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTocOpen(false);
@@ -633,6 +647,7 @@ export default function PublicDocumentView() {
                 activeId={focusedId}
                 onSelect={handleSelectSection}
                 mode={viewMode}
+                freeLimit={freeLimit}
               />
             </SheetContent>
           </Sheet>
@@ -649,6 +664,7 @@ export default function PublicDocumentView() {
                 activeId={focusedId}
                 onSelect={handleSelectSection}
                 mode={viewMode}
+                freeLimit={freeLimit}
               />
           </aside>
         )}
@@ -690,7 +706,6 @@ export default function PublicDocumentView() {
                         sectionIndex={globalIdx >= 0 ? globalIdx : idx}
                         sectionTitle={section.title}
                         sectionNumber={section.number}
-                        previewSnippet={section._snippet || ''}
                         documentTitle={doc.title}
                         totalSections={sections.length}
                         userPlan={userProfile?.subscription_plan}
