@@ -76,8 +76,25 @@ export default function AppSearch() {
   });
 
   const hasSearch = submitted || filterType || filterStatus || filterDateFrom || filterDateTo || filterBody;
+  const hasAdvancedFilters = filterStatus || filterDateFrom || filterDateTo || filterBody || exactMatch || titleOnly;
 
-  const { data: results, isLoading } = useQuery({
+  // Use search_all for basic queries (handles codex abbreviations like "ук 205")
+  const { data: searchAllResults, isLoading: isLoadingAll } = useQuery({
+    queryKey: ['search-all', submitted, filterType],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('search_all', {
+        query: submitted,
+        filter_type: filterType || null,
+        result_limit: 50,
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!submitted && !hasAdvancedFilters,
+  });
+
+  // Use search_documents for advanced filters
+  const { data: advancedResults, isLoading: isLoadingAdv } = useQuery({
     queryKey: ['fts-search', submitted, filterType, filterStatus, filterDateFrom, filterDateTo, filterBody, exactMatch, titleOnly, page],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('search_documents', {
@@ -101,11 +118,36 @@ export default function AppSearch() {
         rank: number; total_count: number;
       }>;
     },
-    enabled: !!hasSearch,
+    enabled: !!hasSearch && !!hasAdvancedFilters,
   });
 
-  const totalCount = results?.[0]?.total_count || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const isLoading = isLoadingAll || isLoadingAdv;
+  const useAdvanced = !!hasAdvancedFilters;
+
+  // Normalize search_all results to a common shape
+  const results = useAdvanced
+    ? advancedResults
+    : searchAllResults?.map((r) => ({
+        id: r.document_id,
+        title: r.document_title,
+        short_title: r.document_short_title,
+        doc_number: r.doc_number,
+        doc_date: r.doc_date,
+        status: r.doc_status,
+        document_type_name: r.doc_type_name || '',
+        document_type_slug: r.doc_type_slug || '',
+        issuing_body_name: null as string | null,
+        snippet: r.snippet,
+        rank: r.rank,
+        total_count: 0,
+        result_type: r.result_type,
+        section_id: r.section_id,
+        section_title: r.section_title,
+        section_number: r.section_number,
+      }));
+
+  const totalCount = useAdvanced ? (advancedResults?.[0]?.total_count || 0) : (results?.length || 0);
+  const totalPages = useAdvanced ? Math.ceil(totalCount / PAGE_SIZE) : 1;
 
   const updateParams = (overrides: Record<string, string>) => {
     const params: Record<string, string> = {};
@@ -323,57 +365,78 @@ export default function AppSearch() {
           </p>
 
           <div className="space-y-2">
-            {results.map((doc) => (
-              <Link key={doc.id} to={`/app/documents/${doc.id}`}>
-                <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      {/* Badges row */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs">
-                          {doc.document_type_name}
-                        </Badge>
-                        <Badge variant="secondary" className={STATUS_COLORS[doc.status] || ''}>
-                          {STATUS_LABELS[doc.status] || doc.status}
-                        </Badge>
-                      </div>
+            {results.map((doc: any, idx: number) => {
+              const isSection = doc.result_type === 'section';
+              const linkTo = isSection && doc.section_id
+                ? `/app/documents/${doc.id}#${doc.section_id}`
+                : `/app/documents/${doc.id}`;
+              return (
+                <Link key={`${doc.id}-${doc.section_id || idx}`} to={linkTo}>
+                  <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {doc.document_type_name && (
+                            <Badge variant="outline" className="text-xs">
+                              {doc.document_type_name}
+                            </Badge>
+                          )}
+                          {doc.status && (
+                            <Badge variant="secondary" className={STATUS_COLORS[doc.status] || ''}>
+                              {STATUS_LABELS[doc.status] || doc.status}
+                            </Badge>
+                          )}
+                          {isSection && (
+                            <Badge variant="secondary" className="text-xs">Статья</Badge>
+                          )}
+                        </div>
 
-                      {/* Title */}
-                      <div className="flex items-start gap-2">
-                        <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                        <span className="font-medium text-sm leading-tight">{doc.title}</span>
-                      </div>
+                        <div className="flex items-start gap-2">
+                          {isSection ? (
+                            <Scale className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          ) : (
+                            <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          )}
+                          <div>
+                            {isSection && doc.section_number && (
+                              <span className="text-xs text-muted-foreground mr-2">{doc.section_number}</span>
+                            )}
+                            <span className="font-medium text-sm leading-tight">
+                              {isSection ? (doc.section_title || doc.title) : doc.title}
+                            </span>
+                            {isSection && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{doc.title}</p>
+                            )}
+                          </div>
+                        </div>
 
-                      {/* Metadata row */}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        {doc.doc_number && <span>№ {doc.doc_number}</span>}
-                        {doc.doc_date && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(doc.doc_date).toLocaleDateString('ru-RU')}
-                          </span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          {doc.doc_number && <span>№ {doc.doc_number}</span>}
+                          {doc.doc_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(doc.doc_date).toLocaleDateString('ru-RU')}
+                            </span>
+                          )}
+                          {doc.issuing_body_name && <span>{doc.issuing_body_name}</span>}
+                        </div>
+
+                        {doc.snippet && (
+                          <p
+                            className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/20 pl-3 [&_mark]:bg-yellow-200 [&_mark]:text-yellow-900 dark:[&_mark]:bg-yellow-800/40 dark:[&_mark]:text-yellow-200"
+                            dangerouslySetInnerHTML={{ __html: doc.snippet }}
+                          />
                         )}
-                        {doc.issuing_body_name && (
-                          <span>{doc.issuing_body_name}</span>
-                        )}
                       </div>
-
-                      {/* Snippet */}
-                      {doc.snippet && (
-                        <p
-                          className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/20 pl-3 [&_mark]:bg-yellow-200 [&_mark]:text-yellow-900 dark:[&_mark]:bg-yellow-800/40 dark:[&_mark]:text-yellow-200"
-                          dangerouslySetInnerHTML={{ __html: doc.snippet }}
-                        />
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {useAdvanced && totalPages > 1 && (
             <div className="flex items-center justify-center gap-1 pt-4">
               <Button
                 variant="outline"
