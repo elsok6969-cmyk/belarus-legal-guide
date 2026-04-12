@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ListTree } from 'lucide-react';
+import { ListTree, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,8 @@ interface DocumentTOCPanelProps {
   activeId: string | null;
   onSelect: (id: string) => void;
   mode: 'focus' | 'full';
+  /** Number of free articles visible (sections with index >= this are locked) */
+  freeLimit?: number;
 }
 
 function truncate(str: string, max: number) {
@@ -31,12 +33,9 @@ function formatTocLabel(entry: TocEntry): string {
   return '';
 }
 
-export function DocumentTOCPanel({ sections, activeId, onSelect, mode }: DocumentTOCPanelProps) {
+export function DocumentTOCPanel({ sections, activeId, onSelect, mode, freeLimit = Infinity }: DocumentTOCPanelProps) {
   const filteredSections = useMemo(
-    () => sections.filter(s => {
-      const label = formatTocLabel(s);
-      return label.length > 0;
-    }),
+    () => sections.filter(s => formatTocLabel(s).length > 0),
     [sections]
   );
 
@@ -48,9 +47,12 @@ export function DocumentTOCPanel({ sections, activeId, onSelect, mode }: Documen
       </div>
       <ScrollArea className="flex-1">
         <nav className="py-2 px-2">
-          {filteredSections.map(entry => {
+          {filteredSections.map((entry, idx) => {
             const label = formatTocLabel(entry);
             const isActive = activeId === entry.id;
+            // Use the index from the full sections array to determine lock status
+            const globalIdx = sections.indexOf(entry);
+            const isLocked = globalIdx >= freeLimit;
 
             return (
               <button
@@ -58,13 +60,18 @@ export function DocumentTOCPanel({ sections, activeId, onSelect, mode }: Documen
                 onClick={() => onSelect(entry.id)}
                 style={{ paddingLeft: `${Math.max(entry.level, 0) * 20 + 12}px` }}
                 className={cn(
-                  'w-full text-left text-[13px] py-1.5 pr-3 rounded-md transition-colors block',
+                  'w-full text-left text-[13px] py-1.5 pr-3 rounded-md transition-colors block cursor-pointer',
                   'hover:bg-accent/50',
-                  isActive && 'bg-blue-50 dark:bg-blue-950/40 text-primary font-medium border-l-[3px] border-primary',
-                  !isActive && 'text-muted-foreground border-l-[3px] border-transparent',
+                  isActive && !isLocked && 'bg-blue-50 dark:bg-blue-950/40 text-primary font-medium border-l-[3px] border-primary',
+                  isActive && isLocked && 'bg-blue-50 dark:bg-blue-950/40 text-muted-foreground font-medium border-l-[3px] border-primary',
+                  !isActive && !isLocked && 'text-muted-foreground border-l-[3px] border-transparent',
+                  !isActive && isLocked && 'text-muted-foreground/70 border-l-[3px] border-transparent',
                 )}
               >
-                <span className="line-clamp-2">{label}</span>
+                <span className="line-clamp-2 flex items-center gap-1.5">
+                  {label}
+                  {isLocked && <Lock className="w-3 h-3 text-muted-foreground shrink-0" />}
+                </span>
               </button>
             );
           })}
