@@ -73,10 +73,14 @@ function parseSections(markdown: string): FlatSection[] {
   const result: FlatSection[] = [];
   for (const sec of rawSections) {
     const key = `${sec.section_type}::${sec.number}::${sec.title}`;
+    // Debug: log article 4 matches
+    if (sec.number.includes('4') && sec.section_type === 'article') {
+      console.log(`[DEDUP] key="${key}" content_len=${sec.content_markdown.length} title="${sec.title.substring(0, 50)}"`);
+    }
     const prevIdx = seen.get(key);
     if (prevIdx !== undefined) {
-      // Always keep the one with more content
       if (sec.content_markdown.length > result[prevIdx].content_markdown.length) {
+        console.log(`[DEDUP] Replacing key="${key}" old_len=${result[prevIdx].content_markdown.length} new_len=${sec.content_markdown.length}`);
         result[prevIdx] = { ...sec, sort_order: result[prevIdx].sort_order };
       }
     } else {
