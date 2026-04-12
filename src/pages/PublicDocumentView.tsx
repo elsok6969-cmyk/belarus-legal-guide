@@ -689,7 +689,6 @@ export default function PublicDocumentView() {
                         sectionTitle={section.title}
                         sectionNumber={section.number}
                         documentTitle={doc.title}
-                        documentTitle={doc.title}
                         totalSections={sections.length}
                         userPlan={userProfile?.subscription_plan}
                         renderContent={() => (
