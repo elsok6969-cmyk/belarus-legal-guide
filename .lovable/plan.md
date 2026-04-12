@@ -1,41 +1,64 @@
 
 
-## Plan: Fix Auth Flow & Public/App Navigation
+## Plan: Revamp Profile & Subscription Pages
 
-### Problem Summary
-1. After login, user redirects to `/profile` instead of `/app`
-2. PublicHeader shows "Войти/Регистрация" even when logged in
-3. No "← На сайт" link in AppLayout sidebar
-4. Google OAuth `redirect_uri` goes to `/` instead of `/app`
+### Database Migration
+Add 3 columns to `user_profiles` and 2 columns to `subscription_requests`:
 
-### Changes
+```sql
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_name text;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS phone text;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS unp text;
 
-#### 1. Auth.tsx — Redirect to /app after login
-- Line 43: Change `<Navigate to="/profile" replace />` → `<Navigate to="/app" replace />`
-- Line 75: Change `emailRedirectTo` to `window.location.origin + '/app'`
-- Line 89: Change Google OAuth `redirect_uri` to `window.location.origin + '/app'`
+ALTER TABLE subscription_requests ADD COLUMN IF NOT EXISTS company_name text;
+ALTER TABLE subscription_requests ADD COLUMN IF NOT EXISTS unp text;
+```
 
-#### 2. PublicHeader.tsx — Show user menu when logged in
-- Import `useAuth`, `Avatar`, `DropdownMenu` components, `LogOut`/`User`/`Star`/`LayoutDashboard` icons
-- Add `const { user, signOut } = useAuth()`
-- Desktop right side: if `user` → show avatar (first letter of display_name or email) with dropdown:
-  - "Личный кабинет" → `/app`
-  - "Профиль" → `/app/account/profile`
-  - "Избранное" → `/app/account/favorites`
-  - Separator
-  - "Выйти" → `signOut()`
-- If `!user` → keep current "Войти" / "Регистрация" buttons
-- Mobile menu: same logic — if logged in show "Личный кабинет" + "Выйти" instead of login/register
+Update profession validator to include `'other'`:
+```sql
+CREATE OR REPLACE FUNCTION public.validate_user_profile_profession() ...
+  -- add 'other' to the allowed list
+```
 
-#### 3. AppLayout.tsx — Add "← На сайт" link
-- In sidebar, below the theme toggle (bottom section), add a link:
-  - `<Link to="/">← На сайт</Link>` styled like other sidebar items with `ExternalLink` or `ArrowLeft` icon
+### ProfilePage.tsx — Full Rewrite
 
-#### 4. No new routes needed
-- `/app/documents/:id` route already exists in App.tsx (line: `<Route path="/app/documents/:id" ...>`)
+**Form fields** (top to bottom):
+1. Имя (`full_name`) — text input
+2. Фамилия (`last_name`) — text input (new)
+3. Email — readonly, bg-muted
+4. Телефон (`phone`) — text input, placeholder "+375 29 123 45 67" (new)
+5. Профессия — select (add "Другое" option with value `other`)
+6. Организация (`company_name`) — text input
+7. УНП (`unp`) — text input, placeholder "123456789" (new)
+
+**Save button** → updates all fields in `user_profiles`, toast "Данные сохранены"
+
+**Security section:**
+- "Сменить пароль" button — sends reset email (keep existing logic)
+- "Удалить аккаунт" — red outline button → AlertDialog with double confirmation ("Вы уверены?" → type "УДАЛИТЬ" to confirm) → calls edge function or disables account
+
+**Remove** the subscription card from ProfilePage (it belongs on SubscriptionPage).
+
+### SubscriptionPage.tsx — Full Rewrite
+
+**Current plan card** (top):
+- "Ваш план: Пробный (бесплатный)" / "Персональный" / "Корпоративный"
+- Expiry date if paid plan
+- Usage limits section (keep existing)
+
+**Plan selection** (below, inline — no redirect to /pricing):
+- Two plan cards side by side: Персональный (69 BYN/мес) and Корпоративный (99 BYN/мес)
+- Each with feature list and "Оставить заявку" button
+- Current plan card shows "Текущий план" badge, button disabled
+
+**Request form** (Dialog or inline section when plan selected):
+- Pre-filled from profile: name, email, phone
+- For Корпоративный: show Организация + УНП fields (pre-filled from profile if available)
+- Submit → insert into `subscription_requests` with user_id, plan, full_name, email, phone, company_name, unp
+- Success: show "Спасибо! Мы свяжемся с вами для оформления подписки." toast + disable button
 
 ### Files to modify
-- `src/pages/Auth.tsx` (3 lines)
-- `src/components/layout/PublicHeader.tsx` (major rewrite of right-side + mobile menu)
-- `src/components/layout/AppLayout.tsx` (add "На сайт" link in sidebar bottom)
+1. **Database migration** — add columns to `user_profiles` and `subscription_requests`, update profession validator
+2. **src/pages/account/ProfilePage.tsx** — add new fields, remove subscription card, add delete account
+3. **src/pages/account/SubscriptionPage.tsx** — inline plan cards + request form instead of redirect to /pricing
 
