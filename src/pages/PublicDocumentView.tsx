@@ -211,25 +211,23 @@ export default function PublicDocumentView() {
       }));
     }
 
-    // Determine access limit: guest=3, free=10, paid=∞
+    // Determine access limit: guest=5, free=10, paid=∞
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
 
     let sectionLimit = Infinity;
     if (!user) {
-      sectionLimit = 3;
+      sectionLimit = 5;
     } else if (!isPaid) {
       sectionLimit = 10;
     }
 
     return raw.map((s, idx) => {
       if (idx < sectionLimit) return s; // Full content
-      // Gated: replace content with short snippet for blur teaser
-      const plainText = s.content.replace(/[#*_`>\[\]()]/g, '');
+      // Gated: strip content entirely from DOM
       return {
         ...s,
-        content: '', // Empty — no real content in DOM
-        _snippet: plainText.slice(0, 200), // Short teaser for blur
+        content: '', // No content in DOM at all
       };
     });
   }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
