@@ -286,17 +286,29 @@ export default function PublicDocumentView() {
   }, [sections, location.hash]);
 
   const handleSelectSection = useCallback((sectionId: string) => {
+    // Check if this section is gated — if so, scroll to paywall
+    const sIdx = sections.findIndex(s => s.id === sectionId);
+    const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+    const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
+    const limit = !user ? 3 : isPaid ? Infinity : 10;
+
+    if (sIdx >= limit) {
+      const gate = document.getElementById('paywall-gate');
+      if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTocOpen(false);
+      return;
+    }
+
     if (viewMode === 'focus') {
       setFocusedId(sectionId);
       window.history.replaceState(null, '', `#section-${sectionId}`);
       contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // Full mode — scroll to anchor
       const el = document.getElementById(`section-${sectionId}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     setTocOpen(false);
-  }, [viewMode]);
+  }, [viewMode, sections, user, userProfile?.subscription_plan]);
 
   const handleArticleRefClick = useCallback((artNum: string) => {
     const target = sections.find(s => {
