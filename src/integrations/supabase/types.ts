@@ -1112,6 +1112,7 @@ export type Database = {
       }
       subscription_requests: {
         Row: {
+          company_name: string | null
           created_at: string | null
           email: string
           full_name: string
@@ -1119,9 +1120,11 @@ export type Database = {
           phone: string | null
           plan: string
           status: string | null
+          unp: string | null
           user_id: string
         }
         Insert: {
+          company_name?: string | null
           created_at?: string | null
           email: string
           full_name: string
@@ -1129,9 +1132,11 @@ export type Database = {
           phone?: string | null
           plan: string
           status?: string | null
+          unp?: string | null
           user_id: string
         }
         Update: {
+          company_name?: string | null
           created_at?: string | null
           email?: string
           full_name?: string
@@ -1139,6 +1144,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           status?: string | null
+          unp?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1426,10 +1432,13 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
           profession: string | null
           settings: Json
           subscription_expires_at: string | null
           subscription_plan: string
+          unp: string | null
           updated_at: string
         }
         Insert: {
@@ -1437,10 +1446,13 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          last_name?: string | null
+          phone?: string | null
           profession?: string | null
           settings?: Json
           subscription_expires_at?: string | null
           subscription_plan?: string
+          unp?: string | null
           updated_at?: string
         }
         Update: {
@@ -1448,10 +1460,13 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           profession?: string | null
           settings?: Json
           subscription_expires_at?: string | null
           subscription_plan?: string
+          unp?: string | null
           updated_at?: string
         }
         Relationships: []
