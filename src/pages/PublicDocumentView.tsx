@@ -688,7 +688,7 @@ export default function PublicDocumentView() {
                         sectionIndex={globalIdx >= 0 ? globalIdx : idx}
                         sectionTitle={section.title}
                         sectionNumber={section.number}
-                        previewSnippet={section._snippet || ''}
+                        documentTitle={doc.title}
                         documentTitle={doc.title}
                         totalSections={sections.length}
                         userPlan={userProfile?.subscription_plan}
