@@ -76,8 +76,25 @@ export default function AppSearch() {
   });
 
   const hasSearch = submitted || filterType || filterStatus || filterDateFrom || filterDateTo || filterBody;
+  const hasAdvancedFilters = filterStatus || filterDateFrom || filterDateTo || filterBody || exactMatch || titleOnly;
 
-  const { data: results, isLoading } = useQuery({
+  // Use search_all for basic queries (handles codex abbreviations like "ук 205")
+  const { data: searchAllResults, isLoading: isLoadingAll } = useQuery({
+    queryKey: ['search-all', submitted, filterType],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('search_all', {
+        query: submitted,
+        filter_type: filterType || null,
+        result_limit: 50,
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!submitted && !hasAdvancedFilters,
+  });
+
+  // Use search_documents for advanced filters
+  const { data: advancedResults, isLoading: isLoadingAdv } = useQuery({
     queryKey: ['fts-search', submitted, filterType, filterStatus, filterDateFrom, filterDateTo, filterBody, exactMatch, titleOnly, page],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('search_documents', {
@@ -101,11 +118,36 @@ export default function AppSearch() {
         rank: number; total_count: number;
       }>;
     },
-    enabled: !!hasSearch,
+    enabled: !!hasSearch && !!hasAdvancedFilters,
   });
 
-  const totalCount = results?.[0]?.total_count || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const isLoading = isLoadingAll || isLoadingAdv;
+  const useAdvanced = !!hasAdvancedFilters;
+
+  // Normalize search_all results to a common shape
+  const results = useAdvanced
+    ? advancedResults
+    : searchAllResults?.map((r) => ({
+        id: r.document_id,
+        title: r.document_title,
+        short_title: r.document_short_title,
+        doc_number: r.doc_number,
+        doc_date: r.doc_date,
+        status: r.doc_status,
+        document_type_name: r.doc_type_name || '',
+        document_type_slug: r.doc_type_slug || '',
+        issuing_body_name: null as string | null,
+        snippet: r.snippet,
+        rank: r.rank,
+        total_count: 0,
+        result_type: r.result_type,
+        section_id: r.section_id,
+        section_title: r.section_title,
+        section_number: r.section_number,
+      }));
+
+  const totalCount = useAdvanced ? (advancedResults?.[0]?.total_count || 0) : (results?.length || 0);
+  const totalPages = useAdvanced ? Math.ceil(totalCount / PAGE_SIZE) : 1;
 
   const updateParams = (overrides: Record<string, string>) => {
     const params: Record<string, string> = {};
