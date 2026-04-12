@@ -218,7 +218,7 @@ export default function PublicDocumentView() {
     if (!user) {
       sectionLimit = 5;
     } else if (!isPaid) {
-      sectionLimit = 10;
+      sectionLimit = 15;
     }
 
     return raw.map((s, idx) => {
@@ -235,7 +235,7 @@ export default function PublicDocumentView() {
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
     if (!user) return 5;
-    if (!isPaid) return 10;
+    if (!isPaid) return 15;
     return Infinity;
   }, [user, userProfile?.subscription_plan]);
 
