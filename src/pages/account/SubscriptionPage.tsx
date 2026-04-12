@@ -107,7 +107,25 @@ export default function SubscriptionPage() {
     onError: () => toast.error('Ошибка при отправке заявки'),
   });
 
+  const cancelSubscription = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ subscription_plan: 'free', subscription_expires_at: null } as any)
+        .eq('id', user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setShowCancelDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['user-profile-sub'] });
+      queryClient.invalidateQueries({ queryKey: ['my-limits'] });
+      toast.success('Подписка отключена. Вы переведены на бесплатный план.');
+    },
+    onError: () => toast.error('Ошибка при отмене подписки'),
+  });
+
   const plan = profile?.subscription_plan || 'free';
+  const isPaid = plan !== 'free' && plan !== 'basic';
   const isCorporatePlan = selectedPlan === 'professional';
 
   const openRequestForm = (planId: string) => {
