@@ -37,6 +37,9 @@ import PublicCalculators from './pages/PublicCalculators';
 import PublicCalculatorRouter from './pages/PublicCalculatorRouter';
 import Index from './pages/Index';
 import AppSearch from './pages/AppSearch';
+import AppDocuments from './pages/AppDocuments';
+import AppDocumentView from './pages/AppDocumentView';
+import AppCodexes from './pages/AppCodexes';
 import DocumentViewer from './pages/DocumentViewer';
 import Bookmarks from './pages/Bookmarks';
 import AppTopics from './pages/AppTopics';
@@ -134,17 +137,17 @@ const App = () => (
           {/* App pages */}
           <Route path="/app" element={<AppLayout><Index /></AppLayout>} />
           <Route path="/app/search" element={<AppLayout><AppSearch /></AppLayout>} />
-          <Route path="/app/documents/:id" element={<AppLayout><DocumentViewer /></AppLayout>} />
+          <Route path="/app/documents" element={<AppLayout><AppDocuments /></AppLayout>} />
+          <Route path="/app/documents/:idOrSlug" element={<AppLayout><AppDocumentView /></AppLayout>} />
           <Route path="/app/topics" element={<AppLayout><AppTopics /></AppLayout>} />
           <Route path="/app/assistant" element={<AppLayout><AIChat /></AppLayout>} />
           <Route path="/app/services/rates" element={<AppLayout><CurrencyRates /></AppLayout>} />
           <Route path="/app/services/calendar" element={<AppLayout><DeadlineCalendar /></AppLayout>} />
-          <Route path="/app/codex" element={<AppLayout><Codexes /></AppLayout>} />
+          <Route path="/app/codex" element={<AppLayout><AppCodexes /></AppLayout>} />
           <Route path="/app/calculator" element={<AppLayout><Calculators /></AppLayout>} />
           <Route path="/app/calculator/:slug" element={<AppLayout><CalculatorRouter /></AppLayout>} />
           <Route path="/app/calendar" element={<AppLayout><DeadlinesCalendar /></AppLayout>} />
           <Route path="/app/guide" element={<AppLayout><Guide /></AppLayout>} />
-          {/* Forms page hidden — content is placeholder */}
           <Route path="/app/new-documents" element={<AppLayout><NewDocuments /></AppLayout>} />
 
           {/* Admin pages */}
