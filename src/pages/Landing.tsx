@@ -73,7 +73,7 @@ export default function Landing() {
     if (searchQuery.trim()) navigate(`/documents?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const { data: latestDocs } = useQuery({
+  const { data: latestDocs, isLoading: loadingDocs } = useQuery({
     queryKey: ['landing-latest-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
@@ -83,7 +83,7 @@ export default function Landing() {
     },
   });
 
-  const { data: rates } = useQuery({
+  const { data: rates, isLoading: loadingRates } = useQuery({
     queryKey: ['landing-rates'],
     queryFn: async () => {
       const { data } = await supabase.from('currency_rates')
@@ -100,7 +100,7 @@ export default function Landing() {
     },
   });
 
-  const { data: deadlines } = useQuery({
+  const { data: deadlines, isLoading: loadingDeadlines } = useQuery({
     queryKey: ['landing-deadlines'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
@@ -112,7 +112,7 @@ export default function Landing() {
     },
   });
 
-  const { data: latestNews } = useQuery({
+  const { data: latestNews, isLoading: loadingNews } = useQuery({
     queryKey: ['landing-news'],
     queryFn: async () => {
       const { data } = await supabase.from('articles')
@@ -123,13 +123,17 @@ export default function Landing() {
     },
   });
 
-  const { data: indicators } = useQuery({
+  const { data: indicators, isLoading: loadingIndicators } = useQuery({
     queryKey: ['landing-indicators'],
     queryFn: async () => {
       const { data } = await supabase.from('economic_indicators').select('*');
       return data ?? [];
     },
   });
+
+  const docsTimedOut = useLoadingTimeout(loadingDocs);
+  const ratesTimedOut = useLoadingTimeout(loadingRates);
+  const deadlinesTimedOut = useLoadingTimeout(loadingDeadlines);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
