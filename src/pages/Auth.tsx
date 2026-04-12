@@ -40,7 +40,7 @@ export default function Auth() {
     );
   }
 
-  if (user) return <Navigate to="/profile" replace />;
+  if (user) return <Navigate to="/app" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
