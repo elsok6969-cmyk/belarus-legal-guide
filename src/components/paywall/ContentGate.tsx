@@ -1,59 +1,50 @@
 import { useEffect, useRef, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock, Check } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useVisitTracking, getSessionId } from '@/hooks/useVisitTracking';
+import { getSessionId } from '@/hooks/useVisitTracking';
 import { supabase } from '@/integrations/supabase/client';
-
-const FREE_CODEX_PATTERNS = [
-  'гражданский кодекс',
-  'трудовой кодекс',
-  'налоговый кодекс.*общая часть',
-];
-
-function isFreeCodex(title: string): boolean {
-  const lower = title.toLowerCase();
-  return FREE_CODEX_PATTERNS.some(p => new RegExp(p, 'i').test(lower));
-}
 
 interface ContentGateProps {
   renderContent: () => ReactNode;
   sectionIndex: number;
   sectionTitle?: string | null;
+  sectionNumber?: string | null;
   previewSnippet?: string;
   documentTitle: string;
   totalSections: number;
   userPlan?: string;
 }
 
+/**
+ * Access tiers:
+ *   guest (no auth)        → 3 articles free
+ *   free (registered)      → 10 articles free
+ *   personal / corporate+  → unlimited
+ */
+function getLimit(user: any, userPlan?: string): number {
+  if (!user) return 3;
+  const plan = userPlan || 'free';
+  const paid = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+  if (paid.includes(plan)) return Infinity;
+  return 10;
+}
+
 export function ContentGate({
   renderContent,
   sectionIndex,
   sectionTitle,
+  sectionNumber,
   previewSnippet,
   documentTitle,
   totalSections,
   userPlan,
 }: ContentGateProps) {
   const { user } = useAuth();
-  const { getFreeSectionsLimit } = useVisitTracking();
   const impressionTracked = useRef(false);
 
-  const plan = userPlan || 'free';
-  const isPaid = plan === 'personal' || plan === 'corporate' || plan === 'basic' || plan === 'professional' || plan === 'enterprise';
-
-  let limit: number;
-  if (!user) {
-    limit = getFreeSectionsLimit();
-  } else if (isPaid) {
-    limit = Infinity;
-  } else if (isFreeCodex(documentTitle)) {
-    limit = Infinity;
-  } else {
-    limit = 10;
-  }
-
+  const limit = getLimit(user, userPlan);
   const isFullyVisible = sectionIndex < limit;
   const isBoundary = sectionIndex === limit;
   const isHidden = sectionIndex > limit;
@@ -81,72 +72,83 @@ export function ContentGate({
     }).then(() => {});
   };
 
+  // Fully visible
   if (isFullyVisible) {
     return <div className="free-content">{renderContent()}</div>;
   }
 
+  // Hidden sections beyond boundary — show title only (greyed out)
   if (isHidden) {
-    return sectionTitle ? (
-      <div className="py-2 px-4 text-sm text-muted-foreground/50 select-none">
-        {sectionTitle}
+    const displayTitle = sectionNumber
+      ? `${sectionNumber} ${sectionTitle || ''}`
+      : sectionTitle;
+    return displayTitle ? (
+      <div id={`section-${sectionIndex}`} className="py-2 scroll-mt-24">
+        <p className="text-sm text-muted-foreground/60 select-none">{displayTitle}</p>
       </div>
     ) : null;
   }
 
-  const snippet = previewSnippet || sectionTitle || '';
+  // Boundary section — blur teaser + paywall
+  const snippet = previewSnippet || '';
+  const displayTitle = sectionNumber
+    ? `${sectionNumber} ${sectionTitle || ''}`
+    : sectionTitle;
 
   return (
-    <div>
+    <div id="paywall-gate" className="scroll-mt-24">
+      {/* Section heading (visible) */}
+      {displayTitle && (
+        <h2 className="text-lg font-bold mt-8 mb-2 text-foreground font-serif">
+          {displayTitle}
+        </h2>
+      )}
+
+      {/* Blurred teaser text */}
       {snippet && (
-        <div className="relative max-h-[100px] overflow-hidden select-none pointer-events-none">
-          <div className="text-sm text-muted-foreground leading-relaxed px-1">
-            {sectionTitle && (
-              <p className="font-semibold text-foreground/60 mb-1">{sectionTitle}</p>
-            )}
-            <p className="text-foreground/40">{snippet.slice(0, 120)}...</p>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-[80px] bg-gradient-to-t from-background to-transparent" />
+        <div className="relative select-none pointer-events-none mb-2">
+          <p
+            className="text-base leading-[1.8] font-serif text-foreground"
+            style={{ filter: 'blur(4px)' }}
+          >
+            {snippet.slice(0, 200)}...
+          </p>
         </div>
       )}
 
-      <div className="my-6 rounded-xl border-2 border-primary/20 bg-card p-6 md:p-8 text-center">
-        <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Lock className="h-6 w-6 text-primary" />
-        </div>
+      {/* Paywall block */}
+      <div className="bg-background/90 backdrop-blur-sm border rounded-xl p-6 text-center mt-4">
+        <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
 
         {!user ? (
           <>
-            <h3 className="text-lg font-bold mb-2">Продолжение доступно после регистрации</h3>
-            <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Зарегистрируйтесь и получите доступ к основным разделам сервиса
+            <p className="font-semibold">Полный текст доступен по подписке</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Зарегистрируйтесь для пробного доступа
             </p>
-            <div className="flex gap-3 justify-center flex-wrap">
+            <div className="flex gap-3 justify-center mt-4">
               <Button asChild onClick={() => trackClick('click_register')}>
                 <Link to="/auth">Зарегистрироваться</Link>
               </Button>
-              <Button asChild variant="outline" onClick={() => trackClick('click_login')}>
-                <Link to="/auth">Войти</Link>
+              <Button variant="outline" asChild onClick={() => trackClick('click_pricing')}>
+                <Link to="/pricing">Тарифы</Link>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              Полный текст доступен по подписке.{' '}
-              <Link to="/pricing" className="text-primary hover:underline" onClick={() => trackClick('click_subscribe')}>
-                Тарифы
-              </Link>
-            </p>
           </>
         ) : (
           <>
-            <h3 className="text-lg font-bold mb-2">Полный текст доступен по подписке</h3>
-            <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-              Персональный — 69 BYN/мес, Корпоративный — 99 BYN/мес.
+            <p className="font-semibold">
+              Вы просмотрели {limit} статей бесплатно
             </p>
-            <div className="flex gap-3 justify-center flex-wrap">
+            <p className="text-sm text-muted-foreground mt-1">
+              Оформите подписку для полного доступа
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Персональный — 69 BYN/мес
+            </p>
+            <div className="flex gap-3 justify-center mt-4">
               <Button asChild onClick={() => trackClick('click_subscribe')}>
-                <Link to="/subscribe/personal">Оформить подписку</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/pricing">Тарифы</Link>
+                <Link to="/pricing">Оформить подписку</Link>
               </Button>
             </div>
           </>
