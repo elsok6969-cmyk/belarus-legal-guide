@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,9 +22,7 @@ function groupByDate(items: any[]) {
   const groups: Record<string, any[]> = {};
   for (const item of items) {
     const date = new Date(item.created_at).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+      day: 'numeric', month: 'long', year: 'numeric',
     });
     (groups[date] ??= []).push(item);
   }
@@ -34,6 +32,7 @@ function groupByDate(items: any[]) {
 export default function NotificationsPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -77,6 +76,11 @@ export default function NotificationsPage() {
     },
   });
 
+  const handleClick = (n: any) => {
+    if (!n.is_read) markRead.mutate(n.id);
+    if (n.document_id) navigate(`/app/documents/${n.document_id}`);
+  };
+
   const grouped = useMemo(() => groupByDate(notifications || []), [notifications]);
   const unreadCount = notifications?.filter((n) => !n.is_read).length || 0;
 
@@ -109,10 +113,7 @@ export default function NotificationsPage() {
                 <Card
                   key={n.id}
                   className={cn('cursor-pointer transition-colors', !n.is_read && 'border-primary/30 bg-primary/5')}
-                  onClick={() => {
-                    if (!n.is_read) markRead.mutate(n.id);
-                    if (n.document_id) window.location.href = `/app/documents/${n.document_id}`;
-                  }}
+                  onClick={() => handleClick(n)}
                 >
                   <CardContent className="p-4 flex items-start gap-3">
                     <div className="relative mt-0.5">

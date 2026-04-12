@@ -10,7 +10,7 @@ import { PageSEO } from '@/components/shared/PageSEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Star, Eye, EyeOff, Trash2, FileText, Calendar, Pencil, X } from 'lucide-react';
+import { Star, Eye, EyeOff, Trash2, FileText, Calendar, Pencil, X, Bell } from 'lucide-react';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Действующий',
@@ -34,7 +34,7 @@ export default function FavoritesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_favorites')
-        .select('*, documents(id, title, doc_number, status, doc_date)')
+        .select('*, documents(id, title, doc_number, status, doc_date, slug)')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -42,6 +42,18 @@ export default function FavoritesPage() {
     },
     enabled: !!user,
   });
+
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile-plan', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_profiles').select('subscription_plan').eq('id', user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const isPaid = profile?.subscription_plan && profile.subscription_plan !== 'free';
+  const watchLimit = isPaid ? Infinity : 5;
 
   const removeFavorite = useMutation({
     mutationFn: async (id: string) => {
@@ -58,7 +70,7 @@ export default function FavoritesPage() {
     mutationFn: async ({ id, on_watch }: { id: string; on_watch: boolean }) => {
       if (on_watch) {
         const watchedCount = favorites?.filter((f) => f.on_watch).length || 0;
-        if (watchedCount >= 5) throw new Error('Максимум 5 документов на контроле');
+        if (watchedCount >= watchLimit) throw new Error(`Максимум ${watchLimit} документов на контроле`);
       }
       const { error } = await supabase.from('user_favorites').update({ on_watch }).eq('id', id);
       if (error) throw error;
@@ -99,7 +111,7 @@ export default function FavoritesPage() {
         <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
           <Star className="h-6 w-6 text-primary" /> Избранное
         </h1>
-        <Badge variant="outline">{watchedCount}/5 на контроле</Badge>
+        <Badge variant="outline">{watchedCount}/{watchLimit === Infinity ? '∞' : watchLimit} на контроле</Badge>
       </div>
 
       <div className="flex gap-2">
@@ -125,11 +137,13 @@ export default function FavoritesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-1">
-                      <Link to={`/app/documents/${doc.id}`} className="hover:underline">
+                      <Link to={`/app/documents/${doc.slug || doc.id}`} className="hover:underline">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-primary shrink-0" />
                           <span className="font-medium text-sm line-clamp-1">{doc.title}</span>
-                          {fav.on_watch && <Badge variant="secondary" className="text-[10px] shrink-0">На контроле</Badge>}
+                          {fav.on_watch && (
+                            <Bell className="h-3.5 w-3.5 text-primary shrink-0" />
+                          )}
                         </div>
                       </Link>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -149,7 +163,6 @@ export default function FavoritesPage() {
                           onClick={() => openNoteEditor(fav.id, fav.note)}
                         />
                       </div>
-                      {/* Show existing note always */}
                       {fav.note && editingNoteId !== fav.id && (
                         <p
                           className="text-xs text-muted-foreground mt-1 cursor-pointer hover:text-foreground transition-colors"
@@ -158,7 +171,6 @@ export default function FavoritesPage() {
                           {fav.note}
                         </p>
                       )}
-                      {/* Note editor */}
                       {editingNoteId === fav.id && (
                         <div className="mt-1 flex gap-1.5 items-start">
                           <Textarea
@@ -172,12 +184,7 @@ export default function FavoritesPage() {
                               saveNote(fav.id, e.target.value);
                             }}
                           />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={closeNoteEditor}
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={closeNoteEditor}>
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -188,7 +195,7 @@ export default function FavoritesPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        title={fav.on_watch ? 'Снять с контроля' : 'Поставить на контроль'}
+                        title={fav.on_watch ? 'Снять с контроля' : 'На контроль'}
                         onClick={() => toggleWatch.mutate({ id: fav.id, on_watch: !fav.on_watch })}
                       >
                         {fav.on_watch ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
