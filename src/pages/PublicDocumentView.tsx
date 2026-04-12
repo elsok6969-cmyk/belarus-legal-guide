@@ -702,12 +702,32 @@ export default function PublicDocumentView() {
               <CardContent className="p-6 md:p-8 font-serif leading-relaxed" ref={contentRef}>
                 <div className="max-w-none">
                   {displaySections.map((section, idx) => {
-                    // Use global index for gating, not display index
-                    const globalIdx = sections.findIndex(s => s.id === section.id);
+                    const isStructural = section.section_type === 'part' || section.section_type === 'chapter' || section.section_type === 'section';
+                    
+                    // Structural headers: always render directly, no gate
+                    if (isStructural) {
+                      return (
+                        <DocumentArticleRenderer
+                          key={section.id}
+                          id={section.id}
+                          title={section.title}
+                          number={section.number}
+                          content={section.content}
+                          level={section.level}
+                          sectionType={section.section_type}
+                          searchQuery={searchQuery}
+                        />
+                      );
+                    }
+                    
+                    // Use global article index for gating (only count articles)
+                    const globalArticleIdx = sections
+                      .filter(s => s.section_type !== 'part' && s.section_type !== 'chapter' && s.section_type !== 'section')
+                      .findIndex(s => s.id === section.id);
                     return (
                       <ContentGate
                         key={section.id}
-                        sectionIndex={globalIdx >= 0 ? globalIdx : idx}
+                        sectionIndex={globalArticleIdx >= 0 ? globalArticleIdx : idx}
                         sectionTitle={section.title}
                         sectionNumber={section.number}
                         documentTitle={doc.title}
@@ -720,6 +740,7 @@ export default function PublicDocumentView() {
                             number={section.number}
                             content={section.content}
                             level={section.level}
+                            sectionType={section.section_type}
                             searchQuery={searchQuery}
                             onArticleClick={handleArticleRefClick}
                             onAIExplain={handleAIExplain}
