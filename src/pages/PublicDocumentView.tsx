@@ -56,6 +56,7 @@ interface UnifiedSection {
   content: string;
   level: number;
   sort_order: number;
+  section_type: string;
 }
 
 /* ─── helpers ───────────────────────────────────── */
@@ -198,6 +199,7 @@ export default function PublicDocumentView() {
         content: s.content_markdown || s.content_text || '',
         level: s.level,
         sort_order: s.sort_order,
+        section_type: s.section_type,
       }));
     } else if (virtualSections && virtualSections.length > 0) {
       raw = virtualSections.map(s => ({
@@ -207,6 +209,7 @@ export default function PublicDocumentView() {
         content: s.content,
         level: s.level,
         sort_order: s.sort_order,
+        section_type: 'article',
       }));
     }
 
@@ -221,13 +224,14 @@ export default function PublicDocumentView() {
       sectionLimit = 15;
     }
 
-    return raw.map((s, idx) => {
-      if (idx < sectionLimit) return s; // Full content
-      // Gated: strip content entirely from DOM
-      return {
-        ...s,
-        content: '', // No content in DOM at all
-      };
+    // Only count articles toward the paywall limit, not structural sections
+    let articleCount = 0;
+    return raw.map((s) => {
+      const isStructural = s.section_type === 'part' || s.section_type === 'chapter' || s.section_type === 'section';
+      if (isStructural) return s; // Always show structural headers
+      articleCount++;
+      if (articleCount <= sectionLimit) return s;
+      return { ...s, content: '' };
     });
   }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
 
