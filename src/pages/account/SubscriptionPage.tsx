@@ -156,6 +156,11 @@ export default function SubscriptionPage() {
                 </p>
               )}
             </div>
+            {isPaid && (
+              <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowCancelDialog(true)}>
+                Отменить подписку
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
