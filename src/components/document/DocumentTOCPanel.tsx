@@ -9,6 +9,7 @@ export interface TocEntry {
   number: string | null;
   level: number;
   sort_order: number;
+  section_type?: string;
 }
 
 interface DocumentTOCPanelProps {
@@ -50,9 +51,10 @@ export function DocumentTOCPanel({ sections, activeId, onSelect, mode, freeLimit
           {filteredSections.map((entry, idx) => {
             const label = formatTocLabel(entry);
             const isActive = activeId === entry.id;
-            // Use the index from the full sections array to determine lock status
-            const globalIdx = sections.indexOf(entry);
-            const isLocked = globalIdx >= freeLimit;
+            const isStructural = entry.section_type === 'part' || entry.section_type === 'chapter' || entry.section_type === 'section';
+            // Count only non-structural sections for lock
+            const articleIdx = isStructural ? -1 : filteredSections.filter((e, i) => i <= filteredSections.indexOf(entry) && e.section_type !== 'part' && e.section_type !== 'chapter' && e.section_type !== 'section').length - 1;
+            const isLocked = !isStructural && articleIdx >= freeLimit;
 
             return (
               <button

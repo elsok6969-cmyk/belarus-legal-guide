@@ -250,6 +250,7 @@ export default function PublicDocumentView() {
       number: s.number,
       level: s.level,
       sort_order: s.sort_order,
+      section_type: s.section_type,
     })),
     [sections]
   );
