@@ -11,6 +11,7 @@ interface ArticleRendererProps {
   number: string | null;
   content: string;
   level: number;
+  sectionType?: string;
   searchQuery?: string;
   onArticleClick?: (articleNum: string) => void;
   onAIExplain?: (title: string, content: string) => void;
