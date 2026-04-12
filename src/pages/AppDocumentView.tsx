@@ -190,10 +190,21 @@ export default function AppDocumentView() {
   // Track view
   useEffect(() => {
     if (id && user) {
-      supabase.from('user_document_history').upsert(
-        { user_id: user.id, document_id: id, viewed_at: new Date().toISOString() },
-        { onConflict: 'user_id,document_id' }
-      ).then(() => {});
+      (async () => {
+        // Check if viewed in last 5 min to avoid duplicates
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { data: last } = await supabase
+          .from('user_document_history')
+          .select('id, viewed_at')
+          .eq('user_id', user.id)
+          .eq('document_id', id)
+          .order('viewed_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!last || last.viewed_at < fiveMinAgo) {
+          await supabase.from('user_document_history').insert({ document_id: id, user_id: user.id });
+        }
+      })();
     }
   }, [id, user?.id]);
 

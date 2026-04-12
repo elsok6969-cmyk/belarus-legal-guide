@@ -70,7 +70,7 @@ export default function Index() {
     queryFn: async () => {
       const { data } = await supabase.rpc('check_limit', {
         p_user_id: user!.id,
-        p_feature: 'ai_assistant',
+        p_feature: 'ai_chat',
       });
       return data as unknown as { used: number; limit: number | null } | null;
     },
@@ -140,7 +140,7 @@ export default function Index() {
     { label: 'На контроле', value: watchCount ?? 0, icon: BellIcon, color: 'text-emerald-500' },
     {
       label: 'Вопросов помощнику',
-      value: aiUsage ? `${aiUsage.used} / ${aiUsage.limit ?? '∞'}` : '0',
+      value: aiUsage ? `${aiUsage.used} / ${aiUsage.limit ?? '∞'}` : '—',
       icon: MessageSquare,
       color: 'text-violet-500',
     },
@@ -211,7 +211,21 @@ export default function Index() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-6">Нет истории просмотров</p>
+              <div className="py-4 space-y-2">
+                <p className="text-sm text-muted-foreground">Начните с популярных документов:</p>
+                <div className="space-y-1">
+                  {[
+                    { label: 'Трудовой кодекс', to: '/app/documents/trudovoy-kodeks' },
+                    { label: 'Гражданский кодекс', to: '/app/documents/grazhdanskiy-kodeks' },
+                    { label: 'Налоговый кодекс', to: '/app/documents/nalogovyy-kodeks-obschaya' },
+                  ].map(d => (
+                    <Link key={d.to} to={d.to} className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors text-sm text-primary font-medium">
+                      <FileText className="h-4 w-4 shrink-0" />
+                      {d.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -245,7 +259,10 @@ export default function Index() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-6">Нет избранных документов</p>
+              <div className="flex flex-col items-center gap-2 py-6">
+                <Star className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Добавляйте документы в избранное для быстрого доступа</p>
+              </div>
             )}
           </CardContent>
         </Card>
