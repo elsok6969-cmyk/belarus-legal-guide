@@ -11,6 +11,7 @@ interface ArticleRendererProps {
   number: string | null;
   content: string;
   level: number;
+  sectionType?: string;
   searchQuery?: string;
   onArticleClick?: (articleNum: string) => void;
   onAIExplain?: (title: string, content: string) => void;
@@ -122,15 +123,18 @@ function processContent(
 }
 
 export function DocumentArticleRenderer({
-  id, title, number, content, level, searchQuery, onArticleClick, onAIExplain,
+  id, title, number, content, level, sectionType, searchQuery, onArticleClick, onAIExplain,
 }: ArticleRendererProps) {
   const [copied, setCopied] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
+  const isStructural = sectionType === 'part' || sectionType === 'chapter' || sectionType === 'section';
+
   const hasAmendments = useMemo(() => {
+    if (isStructural || !content) return false;
     AMENDMENT_RE.lastIndex = 0;
     return AMENDMENT_RE.test(content);
-  }, [content]);
+  }, [content, isStructural]);
 
   const handleCopy = useCallback(() => {
     const text = `${number ? number + ' ' : ''}${title || ''}\n\n${content}`;
@@ -149,6 +153,29 @@ export function DocumentArticleRenderer({
 
   const displayTitle = number ? `${number} ${title || ''}` : title;
 
+  const processedContent = useMemo(
+    () => content ? processContent(content, searchQuery, onArticleClick) : null,
+    [content, searchQuery, onArticleClick]
+  );
+
+  // Structural sections (РАЗДЕЛ, ГЛАВА): render as headers only
+  if (isStructural) {
+    return (
+      <div id={`section-${id}`} className="scroll-mt-24">
+        {sectionType === 'part' ? (
+          <h2 className="text-lg font-bold uppercase text-center py-4 border-b border-border text-foreground">
+            {displayTitle}
+          </h2>
+        ) : (
+          <h3 className="text-base font-semibold uppercase py-3 text-foreground">
+            {displayTitle}
+          </h3>
+        )}
+      </div>
+    );
+  }
+
+  // Articles
   const headingClass = cn(
     'font-serif',
     level <= 0 && 'text-xl font-bold tracking-tight mt-10 mb-4 first:mt-0 uppercase text-foreground',
@@ -157,52 +184,44 @@ export function DocumentArticleRenderer({
     level >= 3 && 'text-[18px] font-bold mt-8 mb-2 text-foreground',
   );
 
-  const processedContent = useMemo(
-    () => processContent(content, searchQuery, onArticleClick),
-    [content, searchQuery, onArticleClick]
-  );
-
   return (
-    <article
-      id={`section-${id}`}
-      className="scroll-mt-24"
-    >
+    <article id={`section-${id}`} className="scroll-mt-24">
       {displayTitle && (
         <div className="flex items-start justify-between gap-2">
           <h2 className={headingClass}>{displayTitle}</h2>
-          <div className="flex items-center gap-1 shrink-0 mt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
-              onClick={handleCopy}
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? 'Скопировано' : 'Копировать'}
-            </Button>
-            {onAIExplain && (
+          {content && content.trim().length > 0 && (
+            <div className="flex items-center gap-1 shrink-0 mt-1">
               <Button
                 variant="outline"
                 size="sm"
                 className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
-                onClick={handleAI}
+                onClick={handleCopy}
               >
-                <Bot className="h-3.5 w-3.5" />
-                Объяснить
+                {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? 'Скопировано' : 'Копировать'}
               </Button>
-            )}
-          </div>
+              {onAIExplain && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs gap-1.5 border-border/60 text-muted-foreground hover:text-foreground"
+                  onClick={handleAI}
+                >
+                  <Bot className="h-3.5 w-3.5" />
+                  Объяснить
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Content */}
-      <div className="font-serif text-base leading-[1.8] text-foreground">
-        {!content || content.trim().length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">Текст статьи не загружен</p>
-        ) : (
-          processedContent
-        )}
-      </div>
+      {/* Content — only render if there's actual text */}
+      {processedContent && content && content.trim().length > 0 && (
+        <div className="font-serif text-base leading-[1.8] text-foreground">
+          {processedContent}
+        </div>
+      )}
 
       {/* Amendment history button */}
       {hasAmendments && (
