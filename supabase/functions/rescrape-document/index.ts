@@ -22,7 +22,8 @@ const SECTION_PATTERNS: { re: RegExp; type: string; level: number }[] = [
 ];
 
 function matchSection(line: string) {
-  const cleaned = line.replace(/^#+\s*/, '').trim();
+  // Normalize non-breaking spaces (U+00A0) to regular spaces
+  const cleaned = line.replace(/^#+\s*/, '').replace(/\u00a0/g, ' ').trim();
   for (const pat of SECTION_PATTERNS) {
     const m = cleaned.match(pat.re);
     if (m) return { type: pat.type, number: m[1]?.trim() || '', title: m[2]?.trim() || '', level: pat.level };
