@@ -208,7 +208,15 @@ export default function Landing() {
             <h2 className="text-base font-semibold mb-2">Новые НПА</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
               <div className="divide-y divide-border/30">
-                {latestDocs?.map((doc) => {
+                {loadingDocs ? (
+                  docsTimedOut ? (
+                    <p className="text-sm text-muted-foreground py-4">Не удалось загрузить данные.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+                    </div>
+                  )
+                ) : latestDocs && latestDocs.length > 0 ? latestDocs.map((doc) => {
                   const dt = doc.document_types as any;
                   const dateObj = doc.created_at ? new Date(doc.created_at) : null;
                   const contentText = (doc as any).content_text as string | null;
@@ -243,8 +251,7 @@ export default function Landing() {
                       <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                   );
-                })}
-                {(!latestDocs || latestDocs.length === 0) && (
+                }) : (
                   <p className="text-sm text-muted-foreground py-4">Нет документов</p>
                 )}
               </div>
