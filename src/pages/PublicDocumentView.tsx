@@ -232,6 +232,14 @@ export default function PublicDocumentView() {
     });
   }, [dbSections, virtualSections, user, userProfile?.subscription_plan, doc?.title]);
 
+  const freeLimit = useMemo(() => {
+    const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+    const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
+    if (!user) return 5;
+    if (!isPaid) return 10;
+    return Infinity;
+  }, [user, userProfile?.subscription_plan]);
+
   const tocSections: TocEntry[] = useMemo(
     () => sections.filter(s => s.level <= 3).map(s => ({
       id: s.id,
