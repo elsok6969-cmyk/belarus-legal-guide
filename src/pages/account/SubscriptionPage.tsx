@@ -48,7 +48,9 @@ const plans = [
 
 export default function SubscriptionPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formCompany, setFormCompany] = useState('');
