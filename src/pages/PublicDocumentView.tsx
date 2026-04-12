@@ -648,6 +648,7 @@ export default function PublicDocumentView() {
                 activeId={focusedId}
                 onSelect={handleSelectSection}
                 mode={viewMode}
+                freeLimit={freeLimit}
               />
             </SheetContent>
           </Sheet>
@@ -664,6 +665,7 @@ export default function PublicDocumentView() {
                 activeId={focusedId}
                 onSelect={handleSelectSection}
                 mode={viewMode}
+                freeLimit={freeLimit}
               />
           </aside>
         )}
