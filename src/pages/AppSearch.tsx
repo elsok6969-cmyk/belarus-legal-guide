@@ -224,12 +224,12 @@ export default function AppSearch() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Тип документа</Label>
-                    <Select value={localType} onValueChange={setLocalType}>
+                    <Select value={localType || '__all__'} onValueChange={(v) => setLocalType(v === '__all__' ? '' : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все типы" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все типы</SelectItem>
+                        <SelectItem value="__all__">Все типы</SelectItem>
                         {docTypes?.map(dt => (
                           <SelectItem key={dt.slug} value={dt.slug}>{dt.name_ru}</SelectItem>
                         ))}
@@ -239,12 +239,12 @@ export default function AppSearch() {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Статус</Label>
-                    <Select value={localStatus} onValueChange={setLocalStatus}>
+                    <Select value={localStatus || '__all__'} onValueChange={(v) => setLocalStatus(v === '__all__' ? '' : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все статусы" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все статусы</SelectItem>
+                        <SelectItem value="__all__">Все статусы</SelectItem>
                         <SelectItem value="active">Действующий</SelectItem>
                         <SelectItem value="not_effective_yet">Не вступил в силу</SelectItem>
                         <SelectItem value="expired">Утратил силу</SelectItem>
