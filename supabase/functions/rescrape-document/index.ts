@@ -68,23 +68,43 @@ function parseSections(markdown: string): FlatSection[] {
     });
   }
 
-  // Dedup: keep the version with more content
+  // Dedup: keep the version with more content (body version over TOC stub)
   const seen = new Map<string, number>();
   const result: FlatSection[] = [];
   for (const sec of rawSections) {
-    const key = `${sec.number}||${sec.title}`;
+    const key = `${sec.section_type}::${sec.number}::${sec.title}`;
     const prevIdx = seen.get(key);
     if (prevIdx !== undefined) {
+      // Always keep the one with more content
       if (sec.content_markdown.length > result[prevIdx].content_markdown.length) {
-        result[prevIdx] = sec;
+        result[prevIdx] = { ...sec, sort_order: result[prevIdx].sort_order };
       }
     } else {
       seen.set(key, result.length);
       result.push(sec);
     }
   }
-  for (let i = 0; i < result.length; i++) result[i].sort_order = i;
-  return result;
+
+  // Remove TOC stubs: sections that have no content and whose title duplicates a later section
+  // (These are typically TOC entries at the top of the document)
+  const final: FlatSection[] = [];
+  for (const sec of result) {
+    // Keep structural headers (part, section, chapter) even without content
+    if (sec.section_type === 'part' || sec.section_type === 'section' || sec.section_type === 'chapter') {
+      final.push(sec);
+      continue;
+    }
+    // Keep articles with content
+    if (sec.content_markdown.length > 0) {
+      final.push(sec);
+      continue;
+    }
+    // Empty article — still include it (title-only), user will see it's missing
+    final.push(sec);
+  }
+
+  for (let i = 0; i < final.length; i++) final[i].sort_order = i;
+  return final;
 }
 
 // Simple HTML → text/markdown (basic)
