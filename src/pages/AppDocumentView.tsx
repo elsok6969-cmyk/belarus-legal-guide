@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   FileText, Clock, Download, Share2, Star, Eye, Lock,
   ExternalLink, Search, ChevronLeft, ChevronRight,
-  BookOpen, Menu, MoreVertical, MessageCircle,
+  BookOpen, Menu, MoreVertical, MessageCircle, BellRing,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -430,21 +430,21 @@ export default function AppDocumentView() {
         {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <Button
-            variant={favorite ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
-            className="gap-1.5"
+            className={`gap-1.5 ${favorite ? 'border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950' : ''}`}
             onClick={() => toggleFavorite.mutate()}
           >
-            <Star className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />
+            <Star className={`h-4 w-4 ${favorite ? 'fill-amber-500 text-amber-500' : ''}`} />
             {favorite ? 'В избранном' : 'Избранное'}
           </Button>
           <Button
-            variant={favorite?.on_watch ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
-            className="gap-1.5"
+            className={`gap-1.5 ${favorite?.on_watch ? 'border-primary text-primary hover:bg-primary/10' : ''}`}
             onClick={() => toggleWatch.mutate()}
           >
-            <Eye className={`h-4 w-4 ${favorite?.on_watch ? 'fill-current' : ''}`} />
+            <BellRing className={`h-4 w-4 ${favorite?.on_watch ? 'fill-primary' : ''}`} />
             {favorite?.on_watch ? 'На контроле' : 'На контроль'}
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleShare}>
