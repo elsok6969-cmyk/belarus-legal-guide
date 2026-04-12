@@ -15,7 +15,7 @@ const SECTION_PATTERNS: { re: RegExp; type: string; level: number }[] = [
 ];
 
 function matchSection(line: string): { type: string; number: string; title: string; level: number } | null {
-  const cleaned = line.replace(/^#+\s*/, '').trim();
+  const cleaned = line.replace(/^#+\s*/, '').replace(/\u00a0/g, ' ').trim();
   for (const pat of SECTION_PATTERNS) {
     const m = cleaned.match(pat.re);
     if (m) {
