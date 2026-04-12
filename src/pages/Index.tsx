@@ -70,7 +70,7 @@ export default function Index() {
     queryFn: async () => {
       const { data } = await supabase.rpc('check_limit', {
         p_user_id: user!.id,
-        p_feature: 'ai_assistant',
+        p_feature: 'ai_chat',
       });
       return data as unknown as { used: number; limit: number | null } | null;
     },
