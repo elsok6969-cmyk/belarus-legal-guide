@@ -285,6 +285,31 @@ export default function SubscriptionPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel subscription dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Отменить подписку?
+            </DialogTitle>
+            <DialogDescription>
+              Вы будете переведены на бесплатный план. Лимиты на поиск, AI-ассистент и другие функции будут снижены.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Оставить</Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelSubscription.mutate()}
+              disabled={cancelSubscription.isPending}
+            >
+              {cancelSubscription.isPending ? 'Отмена...' : 'Отменить подписку'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
