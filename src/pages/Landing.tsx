@@ -321,13 +321,22 @@ export default function Landing() {
 
               <div className="border-t my-3" />
               <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
-              {deadlines?.map((d) => (
+              {loadingDeadlines ? (
+                deadlinesTimedOut ? (
+                  <p className="text-sm text-muted-foreground">Не удалось загрузить сроки.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+                  </div>
+                )
+              ) : deadlines && deadlines.length > 0 ? deadlines.map((d) => (
                 <div key={d.id} className="mb-2">
                   <span className="text-xs font-medium text-primary">{formatDate(d.deadline_date)}</span>
                   <p className="text-sm">{d.title}</p>
                 </div>
-              ))}
-              {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет дедлайнов</p>}
+              )) : (
+                <p className="text-sm text-muted-foreground">Нет дедлайнов</p>
+              )}
             </div>
             <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 transition-colors">
               Календарь <ArrowRight className="h-3 w-3" />
