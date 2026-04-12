@@ -288,9 +288,18 @@ export default function PublicDocumentView() {
     const sIdx = sections.findIndex(s => s.id === sectionId);
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
-    const limit = !user ? 3 : isPaid ? Infinity : 10;
+    const limit = !user ? 5 : isPaid ? Infinity : 10;
 
     if (sIdx >= limit) {
+      // In focus mode, navigate to the locked section — ContentGate will show paywall
+      if (viewMode === 'focus') {
+        setFocusedId(sectionId);
+        window.history.replaceState(null, '', `#section-${sectionId}`);
+        contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        setTocOpen(false);
+        return;
+      }
+      // In full mode, scroll to paywall gate
       const gate = document.getElementById('paywall-gate');
       if (gate) gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTocOpen(false);
