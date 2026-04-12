@@ -224,7 +224,7 @@ export default function AppSearch() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Тип документа</Label>
-                    <Select value={localType} onValueChange={setLocalType}>
+                    <Select value={localType || '__all__'} onValueChange={(v) => setLocalType(v === '__all__' ? '' : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все типы" />
                       </SelectTrigger>
@@ -239,7 +239,7 @@ export default function AppSearch() {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Статус</Label>
-                    <Select value={localStatus} onValueChange={setLocalStatus}>
+                    <Select value={localStatus || '__all__'} onValueChange={(v) => setLocalStatus(v === '__all__' ? '' : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все статусы" />
                       </SelectTrigger>
