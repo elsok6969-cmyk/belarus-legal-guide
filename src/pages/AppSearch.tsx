@@ -229,7 +229,7 @@ export default function AppSearch() {
                         <SelectValue placeholder="Все типы" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все типы</SelectItem>
+                        <SelectItem value="__all__">Все типы</SelectItem>
                         {docTypes?.map(dt => (
                           <SelectItem key={dt.slug} value={dt.slug}>{dt.name_ru}</SelectItem>
                         ))}
@@ -244,7 +244,7 @@ export default function AppSearch() {
                         <SelectValue placeholder="Все статусы" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все статусы</SelectItem>
+                        <SelectItem value="__all__">Все статусы</SelectItem>
                         <SelectItem value="active">Действующий</SelectItem>
                         <SelectItem value="not_effective_yet">Не вступил в силу</SelectItem>
                         <SelectItem value="expired">Утратил силу</SelectItem>
