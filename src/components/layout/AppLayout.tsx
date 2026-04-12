@@ -1,8 +1,8 @@
 import { ReactNode, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  Home, BookOpen, FileText, Compass, Calculator, CalendarDays, Info,
-  Star, Bell, Clock, Bot, Settings, User, Crown, Sun, Moon, Menu, X, ArrowLeft,
+  Home, FileText, BookOpen, Search, Calculator, CalendarDays, Banknote,
+  Star, Clock, Bell, User, CreditCard, Settings, ArrowLeft, Sun, Moon, Menu, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,29 +12,29 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TopBar } from './TopBar';
 
 const mainNav = [
   { to: '/app', label: 'Главная', icon: Home, end: true },
+  { to: '/app/new-documents', label: 'Документы', icon: FileText },
   { to: '/app/codex', label: 'Кодексы', icon: BookOpen },
-  { to: '/app/new-documents', label: 'Новые документы', icon: FileText },
-  { to: '/app/guide', label: 'Справочник', icon: Compass },
+  { to: '/app/search', label: 'Поиск', icon: Search },
   { to: '/app/calculator', label: 'Калькуляторы', icon: Calculator },
-  { to: '/app/calendar', label: 'Календарь сроков', icon: CalendarDays },
-  { to: '/app/topics', label: 'Темы и обзоры', icon: Info },
+  { to: '/app/calendar', label: 'Календарь', icon: CalendarDays },
+  { to: '/app/services/rates', label: 'Курсы валют', icon: Banknote },
 ];
 
 const personalNav = [
   { to: '/app/account/favorites', label: 'Избранное', icon: Star },
-  { to: '/app/account/notifications', label: 'Уведомления', icon: Bell, badge: true },
   { to: '/app/account/history', label: 'История', icon: Clock },
+  { to: '/app/account/notifications', label: 'Уведомления', icon: Bell, badge: true },
 ];
 
 const bottomNav = [
-  { to: '/app/assistant', label: 'AI-помощник', icon: Bot },
   { to: '/app/account/profile', label: 'Профиль', icon: User },
+  { to: '/app/account/subscription', label: 'Подписка', icon: CreditCard },
   { to: '/app/account/settings', label: 'Настройки', icon: Settings },
-  { to: '/app/account/subscription', label: 'Подписка', icon: Crown },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -56,7 +56,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
     enabled: !!user,
   });
 
-  const showSidebar = isMobile ? sidebarOpen : sidebarOpen;
+  const { data: profile } = useQuery({
+    queryKey: ['sidebar-profile', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('full_name, subscription_plan')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 60000,
+  });
+
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Пользователь';
+  const planLabel = profile?.subscription_plan === 'free' ? 'Пробный' :
+    profile?.subscription_plan === 'basic' ? 'Персональный' :
+    profile?.subscription_plan === 'professional' ? 'Профессиональный' :
+    profile?.subscription_plan === 'enterprise' ? 'Корпоративный' : 'Пробный';
+  const initials = displayName.charAt(0).toUpperCase();
 
   const renderLink = (item: { to: string; label: string; icon: React.ElementType; end?: boolean; badge?: boolean }) => (
     <NavLink
@@ -68,7 +87,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         cn(
           'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           isActive
-            ? 'bg-primary/10 text-primary'
+            ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         )
       }
@@ -85,15 +104,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full">
-      {/* Overlay for mobile */}
       {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           'flex flex-col border-r bg-card w-60 shrink-0 transition-transform duration-200',
@@ -101,10 +115,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
           isMobile && !sidebarOpen && '-translate-x-full',
         )}
       >
-        <div className="flex items-center justify-between h-14 px-4 border-b">
-          <NavLink to="/app" className="text-lg font-bold text-primary">
-            Бабиджон
-          </NavLink>
+        {/* User info header */}
+        <div className="flex items-center gap-3 h-14 px-4 border-b">
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold truncate">{displayName}</p>
+            <p className="text-[11px] text-muted-foreground">{planLabel}</p>
+          </div>
           {isMobile && (
             <button onClick={() => setSidebarOpen(false)} className="p-1 rounded hover:bg-muted">
               <X className="h-5 w-5" />
@@ -138,7 +159,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <main className="flex-1 p-4 md:p-6">{children}</main>

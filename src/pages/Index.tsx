@@ -1,71 +1,25 @@
-import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  FileText, BookOpen, Compass, Calculator, FolderOpen, List,
-  CalendarDays, Info, Bot, Star, Clock, ChevronRight, ArrowRight,
-  Newspaper,
+  FileText, Star, Eye, Bell as BellIcon, ArrowRight, CalendarDays, MessageSquare,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-
-const quickNav = [
-  { icon: BookOpen, label: 'Кодексы', to: '/app/search?type=codex' },
-  { icon: FileText, label: 'Новые документы', to: '/app/search' },
-  { icon: Compass, label: 'Проводник', to: '/app/topics' },
-  { icon: Calculator, label: 'Калькуляторы', to: '/app/services/rates' },
-  { icon: FolderOpen, label: 'Формы', to: '/app/search?type=form' },
-  { icon: List, label: 'Классификаторы', to: '/app/search?type=classifier' },
-  { icon: CalendarDays, label: 'Календарь', to: '/app/services/calendar' },
-  { icon: Info, label: 'Справочная', to: '/app/topics' },
-  { icon: Bot, label: 'AI-помощник', to: '/app/assistant' },
-];
-
-const keyDocuments = [
-  { title: 'Гражданский кодекс', query: 'Гражданский кодекс' },
-  { title: 'Налоговый кодекс', query: 'Налоговый кодекс' },
-  { title: 'Трудовой кодекс', query: 'Трудовой кодекс' },
-  { title: 'Уголовный кодекс', query: 'Уголовный кодекс' },
-  { title: 'КоАП', query: 'Кодекс об административных правонарушениях' },
-  { title: 'Жилищный кодекс', query: 'Жилищный кодекс' },
-];
-
-const typeColors: Record<string, string> = {
-  codex: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  law: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  decree: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  resolution: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-};
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export default function Index() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('all');
-  const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
 
-  // Document types for tabs
-  const { data: docTypes } = useQuery({
-    queryKey: ['document-types'],
-    queryFn: async () => {
-      const { data } = await supabase.from('document_types').select('*').order('sort_order');
-      return data || [];
-    },
-    staleTime: 3600000,
-  });
-
-  // User profile for recommendations
-  const { data: userProfile } = useQuery({
-    queryKey: ['user-profile', user?.id],
+  const { data: profile } = useQuery({
+    queryKey: ['dashboard-profile', user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('full_name, subscription_plan, subscription_expires_at')
         .eq('id', user!.id)
         .maybeSingle();
       return data;
@@ -73,57 +27,59 @@ export default function Index() {
     enabled: !!user,
   });
 
-  // New documents (latest 10)
-  const { data: newDocs, isLoading: loadingDocs } = useQuery({
-    queryKey: ['new-documents', activeTab],
+  // Metrics
+  const { data: viewedCount } = useQuery({
+    queryKey: ['metric-viewed', user?.id],
     queryFn: async () => {
-      let q = supabase
-        .from('documents')
-        .select('id, title, short_title, doc_date, status, document_type_id, document_types(name_ru, slug), issuing_bodies(name_ru)')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (activeTab !== 'all') {
-        const type = docTypes?.find((t) => t.slug === activeTab);
-        if (type) q = q.eq('document_type_id', type.id);
-      }
-      const { data } = await q;
-      return data || [];
-    },
-    enabled: activeTab === 'all' || !!docTypes,
-  });
-
-  // Articles
-  const { data: articles } = useQuery({
-    queryKey: ['latest-articles'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('articles')
-        .select('id, slug, title, excerpt, published_at')
-        .not('published_at', 'is', null)
-        .order('published_at', { ascending: false })
-        .limit(4);
-      return data || [];
-    },
-  });
-
-  // Favorites
-  const { data: favorites } = useQuery({
-    queryKey: ['user-favorites', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('user_favorites')
-        .select('id, document_id, documents(id, title, short_title)')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      return data || [];
+      const { count } = await supabase
+        .from('user_document_history')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+      return count || 0;
     },
     enabled: !!user,
   });
 
-  // View history
-  const { data: history } = useQuery({
-    queryKey: ['view-history', user?.id],
+  const { data: favCount } = useQuery({
+    queryKey: ['metric-fav', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('user_favorites')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: watchCount } = useQuery({
+    queryKey: ['metric-watch', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('user_favorites')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('on_watch', true);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: aiUsage } = useQuery({
+    queryKey: ['metric-ai', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('check_limit', {
+        p_user_id: user!.id,
+        p_feature: 'ai_assistant',
+      });
+      return data as unknown as { used: number; limit: number | null } | null;
+    },
+    enabled: !!user,
+  });
+
+  // Recent history
+  const { data: history, isLoading: loadingHistory } = useQuery({
+    queryKey: ['dash-history', user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('user_document_history')
@@ -136,301 +92,207 @@ export default function Index() {
     enabled: !!user,
   });
 
-  // Deadlines for calendar
-  const { data: deadlines } = useQuery({
-    queryKey: ['calendar-deadlines'],
+  // Favorites
+  const { data: favorites, isLoading: loadingFav } = useQuery({
+    queryKey: ['dash-favorites', user?.id],
     queryFn: async () => {
-      const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('user_favorites')
+        .select('id, document_id, note, documents(id, title, short_title)')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Upcoming deadlines
+  const { data: deadlines, isLoading: loadingDeadlines } = useQuery({
+    queryKey: ['dash-deadlines'],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
       const { data } = await supabase
         .from('deadline_calendar')
-        .select('*')
-        .gte('deadline_date', start)
-        .lte('deadline_date', end);
+        .select('id, title, deadline_date, category')
+        .gte('deadline_date', today)
+        .order('deadline_date', { ascending: true })
+        .limit(3);
       return data || [];
     },
   });
 
-  const deadlineDates = useMemo(() => {
-    if (!deadlines) return [];
-    return deadlines.map((d) => new Date(d.deadline_date + 'T00:00:00'));
-  }, [deadlines]);
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Пользователь';
+  const planLabel = profile?.subscription_plan === 'free' ? 'Пробный (бесплатный)' :
+    profile?.subscription_plan === 'basic' ? 'Персональный' :
+    profile?.subscription_plan === 'professional' ? 'Профессиональный' :
+    profile?.subscription_plan === 'enterprise' ? 'Корпоративный' : 'Пробный (бесплатный)';
+  const isFree = !profile?.subscription_plan || profile.subscription_plan === 'free';
 
-  const selectedDayDeadlines = useMemo(() => {
-    if (!deadlines || !calendarDate) return [];
-    const sel = calendarDate.toISOString().split('T')[0];
-    return deadlines.filter((d) => d.deadline_date === sel);
-  }, [deadlines, calendarDate]);
+  const formatDate = (d: string | null) => {
+    if (!d) return '';
+    try { return format(new Date(d), 'd MMM yyyy', { locale: ru }); } catch { return d; }
+  };
 
-  const tabSlugs = useMemo(() => {
-    if (!docTypes) return [];
-    return docTypes.slice(0, 4);
-  }, [docTypes]);
-
-  const formatDate = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+  const metrics = [
+    { label: 'Просмотрено документов', value: viewedCount ?? 0, icon: Eye, color: 'text-blue-500' },
+    { label: 'В избранном', value: favCount ?? 0, icon: Star, color: 'text-amber-500' },
+    { label: 'На контроле', value: watchCount ?? 0, icon: BellIcon, color: 'text-emerald-500' },
+    {
+      label: 'Вопросов помощнику',
+      value: aiUsage ? `${aiUsage.used} / ${aiUsage.limit ?? '∞'}` : '0',
+      icon: MessageSquare,
+      color: 'text-violet-500',
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Quick Nav */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
-        {quickNav.map((item) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            className="flex flex-col items-center gap-1.5 min-w-[72px] rounded-lg p-3 text-center hover:bg-accent transition-colors group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <item.icon className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
-              {item.label}
-            </span>
-          </Link>
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-semibold">Добро пожаловать, {displayName}</h1>
+        <div className="flex items-center gap-3 mt-1">
+          <p className="text-sm text-muted-foreground">Ваш план: {planLabel}</p>
+          {isFree && (
+            <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+              <Link to="/app/account/subscription">Улучшить</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Metrics 2x2 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {metrics.map((m) => (
+          <Card key={m.label}>
+            <CardContent className="p-4 flex items-start gap-3">
+              <div className={`mt-0.5 ${m.color}`}>
+                <m.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{m.value}</p>
+                <p className="text-xs text-muted-foreground">{m.label}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Two-column layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] items-start">
-        {/* Left column */}
-        <div className="space-y-6 min-w-0">
-          {/* Recommendations */}
-          {userProfile?.profession && (
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">
-                  Рекомендации для вас
-                  <Badge variant="secondary" className="ml-2 text-xs font-normal">
-                    {userProfile.profession}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Настройте профессию в профиле для персональных рекомендаций.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+      {/* Two-column: history + favorites */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent history */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Последние просмотренные</CardTitle>
+            <Button asChild variant="ghost" size="sm" className="text-xs">
+              <Link to="/app/account/history">Все <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {loadingHistory ? (
+              <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            ) : history && history.length > 0 ? (
+              <div className="space-y-1">
+                {history.map((h: any) => (
+                  <Link
+                    key={h.id}
+                    to={`/app/documents/${h.document_id}`}
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-lg hover:bg-accent transition-colors group"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {h.documents?.short_title || h.documents?.title || 'Документ'}
+                      </p>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      {formatDate(h.viewed_at)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6">Нет истории просмотров</p>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* New documents */}
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Новые документы</CardTitle>
-              <Button asChild variant="ghost" size="sm" className="text-xs">
-                <Link to="/app/search">
-                  Все документы <ArrowRight className="ml-1 h-3 w-3" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mb-4 h-8">
-                  <TabsTrigger value="all" className="text-xs px-3 h-7">Все</TabsTrigger>
-                  {tabSlugs.map((t) => (
-                    <TabsTrigger key={t.slug} value={t.slug} className="text-xs px-3 h-7">
-                      {t.name_ru}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
+        {/* Favorites */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Избранное</CardTitle>
+            <Button asChild variant="ghost" size="sm" className="text-xs">
+              <Link to="/app/account/favorites">Все <ArrowRight className="ml-1 h-3 w-3" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {loadingFav ? (
+              <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            ) : favorites && favorites.length > 0 ? (
+              <div className="space-y-1">
+                {favorites.map((f: any) => (
+                  <Link
+                    key={f.id}
+                    to={`/app/documents/${f.document_id}`}
+                    className="block p-2.5 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <p className="text-sm font-medium truncate">
+                      {f.documents?.short_title || f.documents?.title || 'Документ'}
+                    </p>
+                    {f.note && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{f.note}</p>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6">Нет избранных документов</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-              {loadingDocs ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full" />
-                  ))}
-                </div>
-              ) : newDocs && newDocs.length > 0 ? (
-                <div className="space-y-3">
-                  {newDocs.map((doc: any) => (
-                    <Link
-                      key={doc.id}
-                      to={`/app/documents/${doc.id}`}
-                      className="flex items-start gap-3 p-4 rounded-lg hover:bg-accent transition-colors group"
-                    >
-                      <Badge
-                        variant="secondary"
-                        className={`text-[11px] shrink-0 mt-0.5 ${typeColors[doc.document_types?.slug] || ''}`}
-                      >
-                        {doc.document_types?.name_ru || 'Документ'}
-                      </Badge>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium line-clamp-2 leading-snug">{doc.short_title || doc.title}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                            {formatDate(doc.doc_date)}
-                          </span>
-                          {doc.issuing_bodies?.name_ru && (
-                            <>
-                              <span className="text-[11px] text-muted-foreground">•</span>
-                              <span className="text-[11px] text-muted-foreground truncate">{doc.issuing_bodies.name_ru}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0 mt-1" />
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-6">Документы не найдены</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Articles */}
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Статьи и обзоры</CardTitle>
-              <Button asChild variant="ghost" size="sm" className="text-xs">
-                <Link to="/news">
-                  Все статьи <ArrowRight className="ml-1 h-3 w-3" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {articles && articles.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {articles.map((a) => (
-                    <Link
-                      key={a.id}
-                      to={`/news/${a.slug}`}
-                      className="block p-4 rounded-lg border hover:bg-accent transition-colors h-full"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Newspaper className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="text-[11px] text-muted-foreground">{formatDate(a.published_at)}</span>
-                      </div>
-                      <p className="text-sm font-medium leading-tight line-clamp-2">{a.title}</p>
-                      {a.excerpt && (
-                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{a.excerpt}</p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-6">Нет статей</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* Key documents */}
-          <Card className="h-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Важнейшие НПА</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {keyDocuments.map((doc) => (
+      {/* Deadlines */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Ближайшие дедлайны
+          </CardTitle>
+          <Button asChild variant="ghost" size="sm" className="text-xs">
+            <Link to="/app/calendar">Календарь <ArrowRight className="ml-1 h-3 w-3" /></Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loadingDeadlines ? (
+            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : deadlines && deadlines.length > 0 ? (
+            <div className="space-y-1">
+              {deadlines.map((d) => (
                 <Link
-                  key={doc.query}
-                  to={`/app/search?q=${encodeURIComponent(doc.query)}`}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors text-sm group"
+                  key={d.id}
+                  to="/app/calendar"
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors"
                 >
-                  <BookOpen className="h-4 w-4 text-primary shrink-0" />
-                  <span className="truncate font-medium">{doc.title}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 shrink-0" />
+                  <div className="w-12 h-12 rounded-lg bg-destructive/10 flex flex-col items-center justify-center shrink-0">
+                    <span className="text-sm font-bold text-destructive leading-none">
+                      {new Date(d.deadline_date + 'T00:00:00').getDate()}
+                    </span>
+                    <span className="text-[10px] text-destructive/70">
+                      {format(new Date(d.deadline_date + 'T00:00:00'), 'MMM', { locale: ru })}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium line-clamp-1">{d.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{d.category}</p>
+                  </div>
                 </Link>
               ))}
-            </CardContent>
-          </Card>
-
-          {/* Favorites */}
-          {user && (
-            <Card className="h-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-500" /> Избранные
-                </CardTitle>
-                <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <Link to="/app/bookmarks">Все <ArrowRight className="ml-1 h-3 w-3" /></Link>
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {favorites && favorites.length > 0 ? (
-                  <div className="space-y-2">
-                    {favorites.map((f: any) => (
-                      <Link
-                        key={f.id}
-                        to={`/app/documents/${f.document_id}`}
-                        className="block p-3 rounded-lg hover:bg-accent text-sm truncate transition-colors font-medium"
-                      >
-                        {f.documents?.short_title || f.documents?.title || 'Документ'}
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">Нет избранных</p>
-                )}
-              </CardContent>
-            </Card>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">Нет предстоящих дедлайнов</p>
           )}
-
-          {/* View history */}
-          {user && (
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> Последние просмотренные
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {history && history.length > 0 ? (
-                  <div className="space-y-2">
-                    {history.map((h: any) => (
-                      <Link
-                        key={h.id}
-                        to={`/app/documents/${h.document_id}`}
-                        className="block p-3 rounded-lg hover:bg-accent text-sm truncate transition-colors font-medium"
-                      >
-                        {h.documents?.short_title || h.documents?.title || 'Документ'}
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">Нет истории</p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Mini calendar */}
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Календарь дедлайнов</CardTitle>
-              <Button asChild variant="ghost" size="sm" className="text-xs">
-                <Link to="/app/services/calendar">Открыть <ArrowRight className="ml-1 h-3 w-3" /></Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              <Calendar
-                mode="single"
-                selected={calendarDate}
-                onSelect={setCalendarDate}
-                className="p-0 pointer-events-auto"
-                modifiers={{ deadline: deadlineDates }}
-                modifiersClassNames={{
-                  deadline: 'bg-destructive/20 text-destructive font-bold',
-                }}
-              />
-              {selectedDayDeadlines.length > 0 && (
-                <div className="w-full mt-4 space-y-2">
-                  {selectedDayDeadlines.map((d) => (
-                    <div key={d.id} className="text-xs p-3 rounded-lg bg-muted">
-                      <p className="font-medium">{d.title}</p>
-                      <p className="text-muted-foreground">{d.category}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
