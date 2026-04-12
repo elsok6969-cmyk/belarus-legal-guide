@@ -12,8 +12,6 @@ interface ContentGateProps {
   documentTitle: string;
   totalSections: number;
   userPlan?: string;
-  /** In "full text" mode, show all locked titles as a list with one paywall block */
-  mode?: 'focus' | 'full';
 }
 
 function getLimit(user: any, userPlan?: string): number {
@@ -21,34 +19,46 @@ function getLimit(user: any, userPlan?: string): number {
   const plan = userPlan || 'free';
   const paid = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
   if (paid.includes(plan)) return Infinity;
-  return 10;
+  return 15;
 }
 
 export function PaywallBlock({ user }: { user: any }) {
   return (
     <div id="paywall-gate" className="border rounded-xl p-8 text-center mt-6">
       <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-lg font-semibold">Текст статьи доступен по подписке</h3>
-      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-        Оформите подписку для доступа ко всем статьям, поиску и калькуляторам
-      </p>
-      <p className="text-sm text-muted-foreground mt-1">
-        Персональный — 69 BYN/мес · Корпоративный — 99 BYN/мес
-      </p>
-      <div className="flex gap-3 justify-center mt-6">
-        <Button asChild>
-          <Link to="/pricing">Оформить подписку</Link>
-        </Button>
-        {!user ? (
-          <Button variant="outline" asChild>
-            <Link to="/auth">Войти</Link>
-          </Button>
-        ) : (
-          <Button variant="outline" asChild>
-            <Link to="/pricing">Тарифы</Link>
-          </Button>
-        )}
-      </div>
+
+      {!user ? (
+        <>
+          <h3 className="text-lg font-semibold">Текст статьи доступен после регистрации</h3>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+            Зарегистрируйтесь и получите доступ к 15 статьям каждого документа
+          </p>
+          <div className="flex gap-3 justify-center mt-6">
+            <Button asChild>
+              <Link to="/auth">Зарегистрироваться бесплатно</Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Уже есть аккаунт?{' '}
+            <Link to="/auth" className="text-primary hover:underline">Войти</Link>
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 className="text-lg font-semibold">Вы прочитали 15 статей бесплатно</h3>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+            Оформите подписку для полного доступа ко всем документам
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Персональный — 69 BYN/мес · Корпоративный — 99 BYN/мес
+          </p>
+          <div className="flex gap-3 justify-center mt-6">
+            <Button asChild>
+              <Link to="/pricing">Оформить подписку</Link>
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -68,12 +78,10 @@ export function ContentGate({
   const isBoundary = sectionIndex === limit;
   const isHidden = sectionIndex > limit;
 
-  // Fully visible
   if (isFullyVisible) {
     return <div className="free-content">{renderContent()}</div>;
   }
 
-  // Boundary section — show title + paywall block, NO content
   if (isBoundary) {
     const displayTitle = sectionNumber
       ? `${sectionNumber} ${sectionTitle || ''}`
@@ -90,7 +98,6 @@ export function ContentGate({
     );
   }
 
-  // Hidden sections beyond boundary — show title only (greyed out)
   if (isHidden) {
     const displayTitle = sectionNumber
       ? `${sectionNumber} ${sectionTitle || ''}`
