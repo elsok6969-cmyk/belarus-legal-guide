@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLoadingTimeout } from '@/hooks/useLoadingTimeout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,13 +68,12 @@ function formatDate(d: string | null) {
 export default function Landing() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  
 
   const handleSearch = () => {
     if (searchQuery.trim()) navigate(`/documents?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const { data: latestDocs } = useQuery({
+  const { data: latestDocs, isLoading: loadingDocs } = useQuery({
     queryKey: ['landing-latest-docs'],
     queryFn: async () => {
       const { data } = await supabase.from('documents')
@@ -82,7 +83,7 @@ export default function Landing() {
     },
   });
 
-  const { data: rates } = useQuery({
+  const { data: rates, isLoading: loadingRates } = useQuery({
     queryKey: ['landing-rates'],
     queryFn: async () => {
       const { data } = await supabase.from('currency_rates')
@@ -99,7 +100,7 @@ export default function Landing() {
     },
   });
 
-  const { data: deadlines } = useQuery({
+  const { data: deadlines, isLoading: loadingDeadlines } = useQuery({
     queryKey: ['landing-deadlines'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
@@ -111,7 +112,7 @@ export default function Landing() {
     },
   });
 
-  const { data: latestNews } = useQuery({
+  const { data: latestNews, isLoading: loadingNews } = useQuery({
     queryKey: ['landing-news'],
     queryFn: async () => {
       const { data } = await supabase.from('articles')
@@ -122,13 +123,17 @@ export default function Landing() {
     },
   });
 
-  const { data: indicators } = useQuery({
+  const { data: indicators, isLoading: loadingIndicators } = useQuery({
     queryKey: ['landing-indicators'],
     queryFn: async () => {
       const { data } = await supabase.from('economic_indicators').select('*');
       return data ?? [];
     },
   });
+
+  const docsTimedOut = useLoadingTimeout(loadingDocs);
+  const ratesTimedOut = useLoadingTimeout(loadingRates);
+  const deadlinesTimedOut = useLoadingTimeout(loadingDeadlines);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
@@ -203,7 +208,15 @@ export default function Landing() {
             <h2 className="text-base font-semibold mb-2">Новые НПА</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
               <div className="divide-y divide-border/30">
-                {latestDocs?.map((doc) => {
+                {loadingDocs ? (
+                  docsTimedOut ? (
+                    <p className="text-sm text-muted-foreground py-4">Не удалось загрузить данные.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+                    </div>
+                  )
+                ) : latestDocs && latestDocs.length > 0 ? latestDocs.map((doc) => {
                   const dt = doc.document_types as any;
                   const dateObj = doc.created_at ? new Date(doc.created_at) : null;
                   const contentText = (doc as any).content_text as string | null;
@@ -238,8 +251,7 @@ export default function Landing() {
                       <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                   );
-                })}
-                {(!latestDocs || latestDocs.length === 0) && (
+                }) : (
                   <p className="text-sm text-muted-foreground py-4">Нет документов</p>
                 )}
               </div>
@@ -253,25 +265,38 @@ export default function Landing() {
           <Card className="border border-border rounded-xl p-4 max-h-none md:max-h-[550px] flex flex-col">
             <h2 className="text-base font-semibold mb-2">Курсы НБРБ</h2>
             <div className="flex-1 overflow-y-auto min-h-0">
-              {rates && rates.length > 0 ? rates.map((r) => {
-                const change = Number(r.change_value) || 0;
-                const flag = CURRENCY_FLAGS[r.currency_code] || '';
-                return (
-                  <div key={r.currency_code} className="flex items-center justify-between py-1.5">
-                    <span className="text-sm font-medium">{flag} {r.currency_code}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
-                      <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                        {change > 0 ? <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</> : change < 0 ? <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</> : <><Minus className="h-3 w-3 mr-0.5" />0.0000</>}
-                      </span>
-                    </div>
+              {loadingRates ? (
+                ratesTimedOut ? (
+                  <p className="text-sm text-muted-foreground py-3">Не удалось загрузить курсы.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-7 w-full" />)}
                   </div>
-                );
-              }) : <p className="text-sm text-muted-foreground py-3">Обновление...</p>}
-
-              <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2 transition-colors">
-                Все курсы <ArrowRight className="h-3 w-3" />
-              </Link>
+                )
+              ) : rates && rates.length > 0 ? (
+                <>
+                  {rates.map((r) => {
+                    const change = Number(r.change_value) || 0;
+                    const flag = CURRENCY_FLAGS[r.currency_code] || '';
+                    return (
+                      <div key={r.currency_code} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm font-medium">{flag} {r.currency_code}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold tabular-nums">{Number(r.rate).toFixed(4)}</span>
+                          <span className={`flex items-center text-xs tabular-nums ${change > 0 ? 'text-red-500' : change < 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                            {change > 0 ? <><TrendingUp className="h-3 w-3 mr-0.5" />+{Math.abs(change).toFixed(4)}</> : change < 0 ? <><TrendingDown className="h-3 w-3 mr-0.5" />-{Math.abs(change).toFixed(4)}</> : <><Minus className="h-3 w-3 mr-0.5" />0.0000</>}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Link to="/currencies" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2 transition-colors">
+                    Все курсы <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-3">Нет данных о курсах</p>
+              )}
 
               <div className="border-t my-3" />
               <h3 className="text-base font-semibold mb-2">Показатели</h3>
@@ -296,13 +321,22 @@ export default function Landing() {
 
               <div className="border-t my-3" />
               <h3 className="text-base font-semibold mb-2">Ближайшие сроки</h3>
-              {deadlines?.map((d) => (
+              {loadingDeadlines ? (
+                deadlinesTimedOut ? (
+                  <p className="text-sm text-muted-foreground">Не удалось загрузить сроки.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+                  </div>
+                )
+              ) : deadlines && deadlines.length > 0 ? deadlines.map((d) => (
                 <div key={d.id} className="mb-2">
                   <span className="text-xs font-medium text-primary">{formatDate(d.deadline_date)}</span>
                   <p className="text-sm">{d.title}</p>
                 </div>
-              ))}
-              {(!deadlines || deadlines.length === 0) && <p className="text-sm text-muted-foreground">Нет дедлайнов</p>}
+              )) : (
+                <p className="text-sm text-muted-foreground">Нет дедлайнов</p>
+              )}
             </div>
             <Link to="/calendar" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-auto pt-3 transition-colors">
               Календарь <ArrowRight className="h-3 w-3" />
