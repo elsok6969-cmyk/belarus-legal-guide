@@ -478,8 +478,8 @@ export default function PublicDocumentView() {
     supersedes: 'Заменяет', superseded_by: 'Заменён',
   };
 
-  const isPaid = userProfile?.subscription_plan === 'basic' || userProfile?.subscription_plan === 'professional';
-  const showPaywall = !isPaid;
+  const paidPlansCheck = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
+  const showPaywall = !paidPlansCheck.includes(userProfile?.subscription_plan || '');
 
   const legalDocJsonLd: any = {
     '@context': 'https://schema.org', '@type': 'Legislation',
