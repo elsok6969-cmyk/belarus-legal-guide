@@ -239,6 +239,8 @@ export function AIChatWidget() {
           }
         }
         setIsStreaming(false);
+        // Track AI usage
+        supabase.from('usage_tracking').insert({ user_id: user.id, feature: 'ai_chat' }).then();
       } catch {
         setIsStreaming(false);
         toast({ title: 'Ошибка соединения', variant: 'destructive' });
