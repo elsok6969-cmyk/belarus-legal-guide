@@ -40,7 +40,7 @@ export default function Auth() {
     );
   }
 
-  if (user) return <Navigate to="/profile" replace />;
+  if (user) return <Navigate to="/app" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +72,7 @@ export default function Auth() {
       password: regPassword,
       options: {
         data: { display_name: regName, full_name: regName },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: window.location.origin + '/app',
       },
     });
     setRegSubmitting(false);
@@ -86,7 +86,7 @@ export default function Auth() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + '/app',
     });
     if (result.error) {
       toast({ variant: 'destructive', title: 'Ошибка', description: String(result.error) });

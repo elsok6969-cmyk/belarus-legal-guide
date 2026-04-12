@@ -1,9 +1,18 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, Moon, Sun } from 'lucide-react';
+import { Menu, X, Moon, Sun, LayoutDashboard, User, Star, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { label: 'Документы', to: '/documents' },
@@ -16,9 +25,11 @@ const navLinks = [
 
 export function PublicHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,23 +44,31 @@ export function PublicHeader() {
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
 
+  const userInitial = user?.user_metadata?.display_name?.[0]
+    || user?.user_metadata?.full_name?.[0]
+    || user?.email?.[0]
+    || '?';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
-    <header 
-      role="banner" 
+    <header
+      role="banner"
       className={cn(
         "sticky top-0 z-50 transition-all duration-200",
-        scrolled 
-          ? "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b shadow-sm" 
+        scrolled
+          ? "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b shadow-sm"
           : "bg-background border-b border-transparent"
       )}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5 font-extrabold text-lg tracking-tight text-foreground">
           Бабиджон
         </Link>
 
-        {/* Desktop nav — centered */}
         <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((l) => (
             <Link
@@ -65,7 +84,7 @@ export function PublicHeader() {
           ))}
         </nav>
 
-        {/* Right side */}
+        {/* Desktop right side */}
         <div className="hidden lg:flex items-center gap-2">
           <button
             onClick={toggleTheme}
@@ -74,12 +93,50 @@ export function PublicHeader() {
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <Button asChild variant="outline" size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/auth">Войти</Link>
-          </Button>
-          <Button asChild size="sm" className="text-xs font-medium rounded-lg">
-            <Link to="/auth">Регистрация</Link>
-          </Button>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                  <Avatar className="h-8 w-8 cursor-pointer">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                      {userInitial.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/app" className="flex items-center gap-2 cursor-pointer">
+                    <LayoutDashboard className="h-4 w-4" /> Личный кабинет
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/app/account/profile" className="flex items-center gap-2 cursor-pointer">
+                    <User className="h-4 w-4" /> Профиль
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/app/account/favorites" className="flex items-center gap-2 cursor-pointer">
+                    <Star className="h-4 w-4" /> Избранное
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                  <LogOut className="h-4 w-4" /> Выйти
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button asChild variant="outline" size="sm" className="text-xs font-medium rounded-lg">
+                <Link to="/auth">Войти</Link>
+              </Button>
+              <Button asChild size="sm" className="text-xs font-medium rounded-lg">
+                <Link to="/auth">Регистрация</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile controls */}
@@ -120,10 +177,26 @@ export function PublicHeader() {
             ))}
           </nav>
           <div className="flex flex-col gap-2 mt-3 pt-3 border-t">
-            <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5">Войти</Link>
-            <Link to="/register" onClick={() => setMobileOpen(false)}>
-              <Button size="sm" className="w-full">Регистрация</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/app" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-accent">
+                  <LayoutDashboard className="h-4 w-4" /> Личный кабинет
+                </Link>
+                <button
+                  onClick={() => { setMobileOpen(false); handleSignOut(); }}
+                  className="flex items-center gap-2 text-sm font-medium text-destructive px-3 py-2.5 rounded-lg hover:bg-accent text-left"
+                >
+                  <LogOut className="h-4 w-4" /> Выйти
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2.5">Войти</Link>
+                <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                  <Button size="sm" className="w-full">Регистрация</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import { ReactNode, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home, BookOpen, FileText, Compass, Calculator, CalendarDays, Info,
-  Star, Bell, Clock, Bot, Settings, User, Crown, Sun, Moon, Menu, X,
+  Star, Bell, Clock, Bot, Settings, User, Crown, Sun, Moon, Menu, X, ArrowLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
@@ -120,7 +120,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {bottomNav.map(renderLink)}
         </nav>
 
-        <div className="border-t p-3">
+        <div className="border-t p-3 space-y-1">
           <button
             onClick={toggleTheme}
             className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -128,6 +128,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             {theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
           </button>
+          <NavLink
+            to="/"
+            className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            На сайт
+          </NavLink>
         </div>
       </aside>
 
