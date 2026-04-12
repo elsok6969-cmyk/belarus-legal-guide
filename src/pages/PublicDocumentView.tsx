@@ -295,7 +295,7 @@ export default function PublicDocumentView() {
     const sIdx = sections.findIndex(s => s.id === sectionId);
     const paidPlans = ['personal', 'corporate', 'basic', 'professional', 'enterprise'];
     const isPaid = paidPlans.includes(userProfile?.subscription_plan || '');
-    const limit = !user ? 5 : isPaid ? Infinity : 10;
+    const limit = !user ? 5 : isPaid ? Infinity : 15;
 
     if (sIdx >= limit) {
       // In focus mode, navigate to the locked section — ContentGate will show paywall
