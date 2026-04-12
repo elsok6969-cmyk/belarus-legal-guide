@@ -31,11 +31,11 @@ export function PaywallBlock({ user }: { user: any }) {
         <>
           <h3 className="text-lg font-semibold">Текст статьи доступен после регистрации</h3>
           <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-            Зарегистрируйтесь и получите доступ к 15 статьям каждого документа
+            Зарегистрируйтесь и читайте ещё 10 статей бесплатно
           </p>
           <div className="flex gap-3 justify-center mt-6">
             <Button asChild>
-              <Link to="/auth">Зарегистрироваться бесплатно</Link>
+              <Link to="/auth">Зарегистрироваться</Link>
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
@@ -47,7 +47,7 @@ export function PaywallBlock({ user }: { user: any }) {
         <>
           <h3 className="text-lg font-semibold">Вы прочитали 15 статей бесплатно</h3>
           <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-            Оформите подписку для полного доступа ко всем документам
+            Оформите подписку для полного доступа
           </p>
           <p className="text-sm text-muted-foreground mt-1">
             Персональный — 69 BYN/мес · Корпоративный — 99 BYN/мес
