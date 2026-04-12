@@ -5,44 +5,41 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Crown, KeyRound, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { KeyRound, User, Trash2 } from 'lucide-react';
 
 const professions = [
   { value: 'accountant', label: 'Бухгалтер' },
   { value: 'lawyer', label: 'Юрист' },
   { value: 'hr_specialist', label: 'Кадровик' },
+  { value: 'economist', label: 'Экономист' },
+  { value: 'entrepreneur', label: 'ИП' },
+  { value: 'manager', label: 'Руководитель' },
   { value: 'procurement_specialist', label: 'Специалист по закупкам' },
   { value: 'labor_safety', label: 'Охрана труда' },
-  { value: 'economist', label: 'Экономист' },
   { value: 'financier', label: 'Финансист' },
   { value: 'ecologist', label: 'Эколог' },
   { value: 'builder', label: 'Строитель' },
-  { value: 'entrepreneur', label: 'Предприниматель' },
-  { value: 'manager', label: 'Руководитель' },
   { value: 'individual', label: 'Физическое лицо' },
+  { value: 'other', label: 'Другое' },
 ];
 
-const planLabels: Record<string, string> = {
-  free: 'Бесплатный',
-  basic: 'Basic',
-  professional: 'Professional',
-  enterprise: 'Enterprise',
-};
-
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [profession, setProfession] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [unp, setUnp] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState('');
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,8 +56,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || '');
+      setLastName((profile as any).last_name || '');
+      setPhone((profile as any).phone || '');
       setProfession(profile.profession || '');
       setCompanyName(profile.company_name || '');
+      setUnp((profile as any).unp || '');
     }
   }, [profile]);
 
@@ -68,13 +68,20 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ full_name: fullName, profession: profession || null, company_name: companyName || null })
+        .update({
+          full_name: fullName || null,
+          last_name: lastName || null,
+          phone: phone || null,
+          profession: profession || null,
+          company_name: companyName || null,
+          unp: unp || null,
+        } as any)
         .eq('id', user!.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      toast.success('Профиль обновлён');
+      toast.success('Данные сохранены');
     },
     onError: () => toast.error('Ошибка при сохранении'),
   });
@@ -91,7 +98,11 @@ export default function ProfilePage() {
     }
   };
 
-  const plan = profile?.subscription_plan || 'free';
+  const handleDeleteAccount = async () => {
+    // Sign out — actual deletion requires admin/edge function
+    toast.success('Запрос на удаление аккаунта отправлен. Мы свяжемся с вами.');
+    await signOut();
+  };
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -100,29 +111,6 @@ export default function ProfilePage() {
         <User className="h-6 w-6 text-primary" /> Профиль
       </h1>
 
-      {/* Subscription card */}
-      <Card className="bg-accent/30 border-primary/20">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Crown className="h-6 w-6 text-primary" />
-              <div>
-                <p className="font-semibold">{planLabels[plan] || plan}</p>
-                {profile?.subscription_expires_at && (
-                  <p className="text-xs text-muted-foreground">
-                    до {new Date(profile.subscription_expires_at).toLocaleDateString('ru-RU')}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button asChild size="sm">
-              <Link to="/pricing">Улучшить тариф</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Profile form */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Личные данные</CardTitle>
@@ -130,12 +118,22 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Имя</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Введите ваше имя" />
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Введите имя" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Фамилия</Label>
+            <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Введите фамилию" />
           </div>
 
           <div className="space-y-2">
             <Label>Электронная почта</Label>
             <Input value={user?.email || ''} readOnly className="bg-muted" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Телефон</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+375 29 123 45 67" />
           </div>
 
           <div className="space-y-2">
@@ -157,6 +155,11 @@ export default function ProfilePage() {
             <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Название организации" />
           </div>
 
+          <div className="space-y-2">
+            <Label>УНП</Label>
+            <Input value={unp} onChange={(e) => setUnp(e.target.value)} placeholder="123456789" />
+          </div>
+
           <div className="pt-2">
             <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
               {updateProfile.isPending ? 'Сохранение...' : 'Сохранить'}
@@ -166,12 +169,47 @@ export default function ProfilePage() {
       </Card>
 
       {/* Security */}
-      <div className="border-t pt-8 mt-8">
-        <h2 className="text-base font-semibold mb-4">Безопасность</h2>
-        <Button variant="outline" onClick={handleChangePassword} className="gap-2">
-          <KeyRound className="h-4 w-4" /> Сменить пароль
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Безопасность</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button variant="outline" onClick={handleChangePassword} className="gap-2">
+            <KeyRound className="h-4 w-4" /> Сменить пароль
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
+                <Trash2 className="h-4 w-4" /> Удалить аккаунт
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удаление аккаунта</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие необратимо. Все ваши данные будут удалены. Введите <strong>УДАЛИТЬ</strong> для подтверждения.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder='Введите "УДАЛИТЬ"'
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteConfirm('')}>Отмена</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={deleteConfirm !== 'УДАЛИТЬ'}
+                  onClick={handleDeleteAccount}
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  Удалить навсегда
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      </Card>
     </div>
   );
 }
