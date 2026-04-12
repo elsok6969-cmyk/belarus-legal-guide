@@ -38,7 +38,8 @@ interface FlatSection {
 }
 
 function parseSections(markdown: string): FlatSection[] {
-  const lines = markdown.split('\n');
+  // Normalize non-breaking spaces throughout
+  const lines = markdown.replace(/\u00a0/g, ' ').split('\n');
   const rawSections: FlatSection[] = [];
   let cur: { type: string; number: string; title: string; level: number; lines: string[] } | null = null;
 
