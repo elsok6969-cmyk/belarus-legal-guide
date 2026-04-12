@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { PageSEO } from '@/components/shared/PageSEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Crown, Zap, Search, Calculator, Star, Eye, Check } from 'lucide-react';
+import { Crown, Zap, Search, Calculator, Star, Eye, Check, AlertTriangle } from 'lucide-react';
 
 const planLabels: Record<string, string> = {
   free: 'Пробный (бесплатный)',
@@ -48,7 +48,9 @@ const plans = [
 
 export default function SubscriptionPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formCompany, setFormCompany] = useState('');
@@ -105,7 +107,25 @@ export default function SubscriptionPage() {
     onError: () => toast.error('Ошибка при отправке заявки'),
   });
 
+  const cancelSubscription = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ subscription_plan: 'free', subscription_expires_at: null } as any)
+        .eq('id', user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setShowCancelDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['user-profile-sub'] });
+      queryClient.invalidateQueries({ queryKey: ['my-limits'] });
+      toast.success('Подписка отключена. Вы переведены на бесплатный план.');
+    },
+    onError: () => toast.error('Ошибка при отмене подписки'),
+  });
+
   const plan = profile?.subscription_plan || 'free';
+  const isPaid = plan !== 'free' && plan !== 'basic';
   const isCorporatePlan = selectedPlan === 'professional';
 
   const openRequestForm = (planId: string) => {
@@ -136,6 +156,11 @@ export default function SubscriptionPage() {
                 </p>
               )}
             </div>
+            {isPaid && (
+              <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowCancelDialog(true)}>
+                Отменить подписку
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -256,6 +281,31 @@ export default function SubscriptionPage() {
               disabled={!formName || submitRequest.isPending}
             >
               {submitRequest.isPending ? 'Отправка...' : 'Отправить заявку'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel subscription dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Отменить подписку?
+            </DialogTitle>
+            <DialogDescription>
+              Вы будете переведены на бесплатный план. Лимиты на поиск, AI-ассистент и другие функции будут снижены.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>Оставить</Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelSubscription.mutate()}
+              disabled={cancelSubscription.isPending}
+            >
+              {cancelSubscription.isPending ? 'Отмена...' : 'Отменить подписку'}
             </Button>
           </div>
         </DialogContent>
